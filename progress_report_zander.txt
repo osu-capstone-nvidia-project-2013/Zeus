@@ -1,3 +1,4 @@
 Date: 10/25/2012
 Progress: Created a window, Hooked in DIrectX, cleared the back buffer and drew a triangle
 Todo: Draw a quad, circle and sphere, do simple shading and perform model and camera transformations.
+Blockers: None
