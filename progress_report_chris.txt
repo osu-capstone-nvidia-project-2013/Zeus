@@ -1,0 +1,8 @@
+=============
+10/25/2012
+
+Progress: Created a window and a simple shader to draw a plain triangle
+
+Todo: Create rectangle, circle, and sphere then do some transforms with the vertex shader.
+
+Blockers: None at this point.
