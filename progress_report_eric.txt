@@ -1,0 +1,5 @@
+Progress: Created a window. Drew triangle, rectangle, circle. Implemented simple shaders.
+
+Todo: Create Sphere, Draw multiple objects, and Transformations.
+
+Blockers: None.
