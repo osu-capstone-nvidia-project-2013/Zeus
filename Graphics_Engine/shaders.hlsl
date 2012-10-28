@@ -1,9 +1,12 @@
 float4 VShader(float4 position : POSITION) : SV_POSITION
-{
+{	
     return position;
 }
 
-float4 PShader() : SV_TARGET
+float4 PShader(float4 position: SV_POSITION) : SV_TARGET
 {
-    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	if(position.x > 400) {
+	    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	return float4(1.0f, 0.0f, 0.0f, 1.0f);
 }
