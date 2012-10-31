@@ -5,10 +5,10 @@
 #ifndef ZEUS_GRAPHICS_H
 #define ZEUS_GRAPHICS_H
 
-#include <windows.h>
-
-// So we load only the right files
-#define DX_V_10 // DX_V_11
+#include "d3d.h"
+#include "geometry.h"
+#include "colorshader.h"
+#include "camera.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -18,28 +18,25 @@ const float SCREEN_NEAR = 0.1f;
 
 // Wraps up all the graphics functions to interact with 
 // SystemClass and windows.
-class GraphicsClass {
+class GraphicsClass
+{
 public:
-    //Constructors
-    GraphicsClass();
-    GraphicsClass(const GraphicsClass&);
+	GraphicsClass();
+	GraphicsClass(const GraphicsClass&);
+	~GraphicsClass();
 
-    //Destructors
-    ~GraphicsClass();
-
-    //Methods
-    bool Initialize(int, int, HWND);
-    void Shutdown();
-    bool Frame();
+	bool Initialize(int, int, HWND);
+	void Shutdown();
+	bool Frame();
 
 private:
-    bool Render();
+	bool Render();
 
+private:
+	D3DClass* m_D3D;
+	CameraClass* m_Camera;
+	ModelClass* m_Model;
+	ColorShaderClass* m_ColorShader;
 };
-/*
-#include <d3d11.h>
-#include <d3dx11.h>
-#include <d3dcompiler.h>
-#include <xnamath.h>
-*/
+
 #endif // ZEUS_GRAPHICS_H

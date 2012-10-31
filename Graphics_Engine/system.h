@@ -10,43 +10,50 @@
 
 #include <windows.h>
 
+#include "input.h"
 #include "graphics.h"
 
 // Handles creation of a window, running the graphics program
 // and exiting cleanly.
-class SystemClass {
+class SystemClass
+{
 public:
-    //Constructors
-    SystemClass();
-    SystemClass(const SystemClass&);
+	SystemClass();
+	SystemClass(const SystemClass&);
+	~SystemClass();
 
-    //Destructors
-    ~SystemClass();
+	bool Initialize();
+	void Shutdown();
+	void Run();
 
-    //Methods
-    bool Initialize();
-    void Shutdown();
-    void Run();
-
-    //LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
+	LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
 
 private:
-    //Methods
-    bool Frame();
-    void InitializeWindows(int&, int&);
-    void ShutdownWindows();
+	bool Frame();
+	void InitializeWindows(int&, int&);
+	void ShutdownWindows();
 
-    //Data Members
-    LPCWSTR m_application_name_;
-    HINSTANCE m_hinstance_;
-    HWND m_hwnd_;
+private:
+	LPCWSTR m_applicationName;
+	HINSTANCE m_hinstance;
+	HWND m_hwnd;
 
-    GraphicsClass* m_Graphics_;
+	InputClass* m_Input;
+	GraphicsClass* m_Graphics;
 };
 
+
+/////////////////////////
+// FUNCTION PROTOTYPES //
+/////////////////////////
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+
+/////////////
+// GLOBALS //
+/////////////
 static SystemClass* ApplicationHandle = 0;
+
 
 #endif // ZEUS_SYSTEM_H
 
