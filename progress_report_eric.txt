@@ -1,5 +1,5 @@
-Progress: Created a window. Drew triangle, rectangle, circle. Implemented simple shaders.
+Progress: Created a window. Drew triangle, rectangle, circle. Implemented simple shaders. Drew multiple objects. 
 
-Todo: Create Sphere, Draw multiple objects, and Transformations.
+Todo: Create Sphere via obj file. Draw better circle, point-radius-normal.
 
-Blockers: None.
+Blockers: Normal.
