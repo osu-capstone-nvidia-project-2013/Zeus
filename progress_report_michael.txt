@@ -1,3 +1,12 @@
+11-1
+
+Progress: Made a circle triangle and box with an index vector
+
+Todo: Finish milestone 1
+
+Blocks: none
+
+
 10-25
 
 Progress: Render a Triangle
