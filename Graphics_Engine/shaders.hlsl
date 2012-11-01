@@ -1,12 +1,33 @@
-float4 VShader(float4 position : POSITION) : SV_POSITION
-{	
-    return position;
+cbuffer ConstantBuffer
+{
+    float4x4 matFinal;
 }
 
-float4 PShader(float4 position: SV_POSITION) : SV_TARGET
+struct VOut
 {
-	if(position.x > 400) {
-	    return float4(1.0f, 1.0f, 1.0f, 1.0f);
-	}
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
+
+VOut VShader(float4 position : POSITION, float4 color : COLOR)
+{
+    VOut output;
+
+    output.position = mul(matFinal, position);    // transform the vertex from 3D to 2D
+    output.color = color;
+
+    return output;
+}
+
+float4 PShaderInterp(float4 position : SV_POSITION, float4 color : COLOR) : SV_TARGET
+{
+    return color;
+}
+
+float4 PShader(float4 position : SV_POSITION, float4 color : COLOR) : SV_TARGET
+{
+	color.r = 0.25f;
+	color.g = 0.0f;
+	color.b = 0.75f;
+    return color;
 }

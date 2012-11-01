@@ -1,7 +1,6 @@
 // include the basic windows header files and the Direct3D header files
 #include <windows.h>
 #include <windowsx.h>
-#include <cmath>
 #include <d3d11.h>
 #include <d3dx11.h>
 #include <d3dx10.h>
@@ -14,21 +13,27 @@
 // define the screen resolution
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
+#define PI 3.14159265358979323846f
 
 // global declarations
-IDXGISwapChain *swapchain;               // the pointer to the swap chain interface
+IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 ID3D11InputLayout *pLayout;            // the pointer to the input layout
 ID3D11VertexShader *pVS;               // the pointer to the vertex shader
 ID3D11PixelShader *pPS;                // the pointer to the pixel shader
+ID3D11PixelShader *pShaderInterp;	   // the pointer to the pixel shader that interpolates
 ID3D11Buffer *pVBuffer;                // the pointer to the vertex buffer
-ID3D11Buffer *circleBuff;
-ID3D11Buffer *indexBuff;
+ID3D11Buffer *pCBuffer;                // the pointer to the constant buffer
+ID3D11Buffer *circleBuff;			   // the pointer to the circle vertex buffer
+ID3D11Buffer *circleIndex;			   // the pointer to the circle index buffer
+ID3D11RasterizerState *noCull;		   // the pointer to the rasterizer state
+									   // this will disable back side culling
 
-// a struct to define a single vertex
+// various buffer structs
 struct VERTEX{FLOAT X, Y, Z; D3DXCOLOR Color;};
+struct PERFRAME{D3DXCOLOR Color; FLOAT X, Y, Z;};
 
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
@@ -139,7 +144,7 @@ void InitD3D(HWND hWnd)
     scd.BufferDesc.Height = SCREEN_HEIGHT;                 // set the back buffer height
     scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;     // how swap chain is to be used
     scd.OutputWindow = hWnd;                               // the window to be used
-    scd.SampleDesc.Count = 4;                              // how many multisamples
+    scd.SampleDesc.Count = 4;                             // how many multisamples
     scd.Windowed = TRUE;                                   // windowed/full-screen mode
     scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;    // allow full-screen switching
 
@@ -189,35 +194,74 @@ void InitD3D(HWND hWnd)
 // this is the function used to render a single frame
 void RenderFrame(void)
 {
+    D3DXMATRIX matTranslate, matRotate, matView, matProjection, matFinal;
+
+	
+    static float Time = 0.0f; Time += 0.001f;
+
+    // create a rotation matrix
+    D3DXMatrixRotationY(&matRotate, Time);
+
+    // create a view matrix
+    D3DXMatrixLookAtLH(&matView,
+                       &D3DXVECTOR3(1.5f, 0.5f, 1.5f),    // the camera position
+                       &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
+                       &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
+
+    // create a projection matrix
+    D3DXMatrixPerspectiveFovLH(&matProjection,
+                               (FLOAT)D3DXToRadian(45),                    // field of view
+                               (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
+                               1.0f,                                       // near view-plane
+                               100.0f);                                    // far view-plane
+
+	// create translate matrix
+	D3DXMatrixTranslation(&matTranslate, 0.5f, 0.5f, 0.0f);
+
+    // create the final transform
+    matFinal = matRotate * matTranslate * matView * matProjection;
+
+    // set the new values for the constant buffer
+    devcon->UpdateSubresource(pCBuffer, 0, 0, &matFinal, 0, 0);
+
+
     // clear the back buffer to a deep blue
     devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
-	//================================================================
-	// Draw triangles
-  //      // select which vertex buffer to display
-		UINT stride = sizeof(VERTEX);
-	    UINT offset = 0;
+        // select which vertex buffer to display
+        UINT stride = sizeof(VERTEX);
+        UINT offset = 0;
         devcon->IASetVertexBuffers(0, 1, &pVBuffer, &stride, &offset);
-		
-		//Draws triangles
-		// select which primtive type we are using
-        devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
-		
+
+        // select which primtive type we are using
+        devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		// set desired pixel shader
+		devcon->PSSetShader(pPS, 0, 0);
         // draw the vertex buffer to the back buffer
-		devcon->Draw(4,0);
-	//================================================================
+        devcon->Draw(3, 0);
 
 	//================================================================
 	// Draw Circle
 
 		devcon->IASetVertexBuffers(0, 1, &circleBuff, &stride, &offset);
 
-		devcon->IASetIndexBuffer(indexBuff, DXGI_FORMAT_R32_UINT, 0);
+		devcon->IASetIndexBuffer(circleIndex, DXGI_FORMAT_R32_UINT, 0);
+		// create the final transform
+		
+		D3DXMatrixTranslation(&matTranslate, -0.5f, 0.5f, 0.0f);
 
-		devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		matFinal = matRotate * matTranslate * matView * matProjection;
+
+		// set the new values for the constant buffer
+		devcon->UpdateSubresource(pCBuffer, 0, 0, &matFinal, 0, 0);
+
+		// set desired pixel shader
+		devcon->PSSetShader(pShaderInterp, 0, 0);
 
 		devcon->DrawIndexed(1080,0,0);
-				
+	//================================================================
+
+
     // switch the back buffer and the front buffer
     swapchain->Present(0, 0);
 }
@@ -233,8 +277,7 @@ void CleanD3D(void)
     pVS->Release();
     pPS->Release();
     pVBuffer->Release();
-	indexBuff->Release();
-	circleBuff->Release();
+    pCBuffer->Release();
     swapchain->Release();
     backbuffer->Release();
     dev->Release();
@@ -245,31 +288,47 @@ void CleanD3D(void)
 // this is the function that creates the shape to render
 void InitGraphics()
 {
-	int i;
-	float rad, radius, x, y;
+    // create a triangle using the VERTEX struct
     VERTEX OurVertices[] =
     {
-		
-        {-1.0f, 0.0f, 0.0f, D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f)},
-        {-1.0f, 1.0f, 0.0f, D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f)},
-        {0.0f,  0.0f, 0.0f, D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f)},
-		{0.0f,  1.0f, 0.0f, D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f)},
-		
+        {0.0f, 0.25f, 0.0f, D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f)},
+        {0.25f, 0.0f, 0.0f, D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f)},
+        {-0.25f, 0.0f, 0.0f, D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f)}
     };
+
+
+    // create the vertex buffer
+    D3D11_BUFFER_DESC bd;
+    ZeroMemory(&bd, sizeof(bd));
+
+    bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
+    bd.ByteWidth = sizeof(VERTEX) * 3;             // size is the VERTEX struct * 3
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
+    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
+
+    dev->CreateBuffer(&bd, NULL, &pVBuffer);       // create the buffer
+
+    // copy the vertices into the buffer
+    D3D11_MAPPED_SUBRESOURCE ms;
+    devcon->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
+    memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
+    devcon->Unmap(pVBuffer, NULL);                                      // unmap the buffer
 
 
 	//==========================================================
 	// Create circle vertices
 	VERTEX Circle[361];
+	float radius, rad, x, y;
+	int i;
 	//set the center
-	Circle[0].X = 0.5f;
-	Circle[0].Y = -0.5f;
+	Circle[0].X = 0.0f;
+	Circle[0].Y = 0.0f;
 	Circle[0].Z = 0.0f;
 	Circle[0].Color = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
-	radius = .5;
-	rad = 0;
-	const float  PI_F=3.14159265358979f;
-	float deltaRad = PI_F/180.0f;
+	radius = 0.25f;
+	rad = 0.0f;
+	
+	float deltaRad = PI/180.0f;
 
 	for(i = 1; i < 361; i++)
 	{
@@ -279,11 +338,16 @@ void InitGraphics()
 		Circle[i].X = x + Circle[0].X;
 		Circle[i].Y = y + Circle[0].Y;
 		Circle[i].Z = 0.0f + Circle[0].Z;
-		Circle[i].Color = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
+		if (i % 5 == 0)
+			Circle[i].Color = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
+		else if (i % 2 == 0)
+			Circle[i].Color = D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f);
+		else
+			Circle[i].Color = D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f);
 
 		rad += deltaRad;
 	}
-
+	
 	//Assign vertex indices for the index buffer
 	unsigned int indices[1080];
 	int highInd = 2;
@@ -304,26 +368,6 @@ void InitGraphics()
 	//====================================================
 
 	//====================================================================
-    // create the vertex buffer for the triangle
-    D3D11_BUFFER_DESC bd;
-    ZeroMemory(&bd, sizeof(bd));
-
-    bd.Usage = D3D11_USAGE_DYNAMIC;                // write access access by CPU and GPU
-    bd.ByteWidth = sizeof(VERTEX) * 4;             // size is the VERTEX struct * 3
-    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;       // use as a vertex buffer
-    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // allow CPU to write in buffer
-
-    dev->CreateBuffer(&bd, NULL, &pVBuffer);       // create the buffer
-
-
-    // copy the vertices into the buffer
-    D3D11_MAPPED_SUBRESOURCE ms;
-    devcon->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);    // map the buffer
-    memcpy(ms.pData, OurVertices, sizeof(OurVertices));                 // copy the data
-    devcon->Unmap(pVBuffer, NULL);                                      // unmap the buffer
-	//====================================================================
-
-	//====================================================================
     // create the vertex buffer for the Circle
     D3D11_BUFFER_DESC bd2;
     ZeroMemory(&bd2, sizeof(bd2));
@@ -342,7 +386,6 @@ void InitGraphics()
     devcon->Unmap(circleBuff, NULL);										// unmap the buffer
 	//====================================================================
 
-
 	//====================================================================
 	// Create index buffer for the circle
 	D3D11_BUFFER_DESC bufferDesc;
@@ -357,8 +400,7 @@ void InitGraphics()
 	initData.SysMemPitch = 0;
 	initData.SysMemSlicePitch = 0;
 
-	dev->CreateBuffer(&bufferDesc, &initData, &indexBuff);
-
+	dev->CreateBuffer(&bufferDesc, &initData, &circleIndex);
 	//=====================================================================
 }
 
@@ -366,14 +408,27 @@ void InitGraphics()
 // this function loads and prepares the shaders
 void InitPipeline()
 {
+	D3D11_RASTERIZER_DESC rastDesc;
+	
+	//Set up for no back culling
+	ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+	rastDesc.FillMode = D3D11_FILL_SOLID;
+	rastDesc.CullMode = D3D11_CULL_NONE;
+
+	dev->CreateRasterizerState(&rastDesc, &noCull);
+
+	devcon->RSSetState(noCull);
+
     // load and compile the two shaders
-    ID3D10Blob *VS, *PS;
+    ID3D10Blob *VS, *PS, *PSI;
     D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "VShader", "vs_5_0", 0, 0, 0, &VS, 0, 0);
     D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "PShader", "ps_5_0", 0, 0, 0, &PS, 0, 0);
+    D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "PShaderInterp", "ps_5_0", 0, 0, 0, &PSI, 0, 0);
 
     // encapsulate both shaders into shader objects
     dev->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &pVS);
     dev->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &pPS);
+	dev->CreatePixelShader(PSI->GetBufferPointer(), PSI->GetBufferSize(), NULL, &pShaderInterp);
 
     // set the shader objects
     devcon->VSSetShader(pVS, 0, 0);
@@ -388,4 +443,14 @@ void InitPipeline()
 
     dev->CreateInputLayout(ied, 2, VS->GetBufferPointer(), VS->GetBufferSize(), &pLayout);
     devcon->IASetInputLayout(pLayout);
+
+    D3D11_BUFFER_DESC bd;
+    ZeroMemory(&bd, sizeof(bd));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = 64;
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+    dev->CreateBuffer(&bd, NULL, &pCBuffer);
+    devcon->VSSetConstantBuffers(0, 1, &pCBuffer);
 }
