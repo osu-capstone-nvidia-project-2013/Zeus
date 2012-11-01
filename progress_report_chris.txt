@@ -1,4 +1,15 @@
 =============
+11/1/2012
+
+Progress: Circle created (without normal). Translation and rotation (over time) added to both a triangle and circle. 
+Added flat and smooth shading. 
+
+Todo: Add given normal to circle, create a sphere.
+
+Blockers: Figuring out how to connect sphere coordinates together 
+
+
+=============
 10/25/2012
 
 Progress: Created a window and a simple shader to draw a plain triangle
