@@ -1,3 +1,9 @@
+Date: 11/1/2012
+Progress: Created a quad, and a basic circle. Did world rotations of the scene and coloring on a per vertex basis.
+Todo: Working on fixing circle normals. Draw a sphere, per object rotation and transformations over time.
+Blockers: None
+
+////////////////////
 Date: 10/25/2012
 Progress: Created a window, Hooked in DIrectX, cleared the back buffer and drew a triangle
 Todo: Draw a quad, circle and sphere, do simple shading and perform model and camera transformations.
