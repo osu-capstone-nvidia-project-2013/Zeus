@@ -143,7 +143,7 @@ bool GraphicsClass::Frame()
 
 bool GraphicsClass::Render()
 {
-	D3DXMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	D3DXMATRIX worldMatrix, worldMatrix1, viewMatrix, projectionMatrix;
 	static float t = 0.0f;
 	t += (float) D3DX_PI * 0.0125f;
 	
@@ -160,9 +160,11 @@ bool GraphicsClass::Render()
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
 	// Rotate the world view
+	/*D3DXMatrixRotationY( &worldMatrix1, t);
 	D3DXMatrixRotationX( &worldMatrix, t);
-	D3DXMatrixRotationZ( &worldMatrix, t);
-	
+	worldMatrix = worldMatrix * worldMatrix1;
+	D3DXMatrixRotationZ( &worldMatrix1, t);
+	worldMatrix = worldMatrix * worldMatrix1;*/
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	m_Model->Render(m_D3D->GetDevice());

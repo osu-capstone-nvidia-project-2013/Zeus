@@ -8,6 +8,9 @@
 //Includes
 #include <D3D10.h>
 #include <D3DX10math.h>
+#include <vector>
+
+using namespace std;
 
 class ModelClass
 {
@@ -34,10 +37,13 @@ private:
 	bool InitializeBuffers(ID3D10Device*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D10Device*);
-	void DrawCircle(VertexType, float, int, VertexType*&, unsigned long*&);
+	void DrawCircle(VertexType, float, int);
+	void DrawSphere(VertexType, float, int, int);
 	void HSVtoRGB(float[3], float[3]);
 
 private:
+	vector<VertexType> vert_balls_;
+	vector<unsigned long> ind_balls_;
 	ID3D10Buffer *m_vertexBuffer, *m_indexBuffer;
 	int m_vertexCount, m_indexCount;
 };

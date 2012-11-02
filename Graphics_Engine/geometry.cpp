@@ -77,10 +77,11 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
 	m_indexCount = 0;
 
 	VertexType circle_center;
-	circle_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	circle_center.color = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
-	circle_center.normal = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
-	DrawCircle(circle_center, 1.0f, 60, vertices, indices);
+	circle_center.position = D3DXVECTOR3(2.0f, 2.0f, 0.0f);
+	circle_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+	circle_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+	DrawCircle(circle_center, 1.0f, 60);
+
 
 
 	// Set up the description of the vertex buffer.
@@ -128,9 +129,85 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
 }
 
 // Draws a circle at the given center point with the given radius and resolution. The vertex and index arrays are passed by reference.
-void ModelClass::DrawCircle(VertexType center_point, float radius, int resolution, VertexType* & vertices, unsigned long* & indices) {
+void ModelClass::DrawCircle(VertexType center_point, float radius, int resolution) {
 	//  Check for resolution min
 	if( resolution < 4 ) {
+		return;
+	}
+	
+	int temp_vert_count = m_vertexCount;
+	int temp_ind_count = m_indexCount;
+
+	m_vertexCount += resolution + 1;
+	m_indexCount += (resolution * 3); // resolution times for the center point, 2 times for each of the resolution points left 
+
+	// Add the center point
+	vert_balls_.push_back(center_point);
+	//vertices[temp_vert_count] = center_point;
+	
+	// Add the circle's points
+	float rotate_x = atan2(center_point.normal.y, center_point.normal.z);
+	float rotate_y = atan2(center_point.normal.x, center_point.normal.z);
+	D3DXMATRIX transform_x;
+	D3DXMatrixRotationX(&transform_x, rotate_x);
+	D3DXMATRIX transform_y;
+	D3DXMatrixRotationY(&transform_y, rotate_y);
+	D3DXMATRIX transform_inv = transform_x * transform_y;
+	D3DXMatrixInverse(&transform_inv, NULL, &transform_inv);
+	for(int i = temp_vert_count + 1; i < m_vertexCount; i++) {
+		float pos_x = cos( (i - (temp_vert_count + 1)) * ((2 * D3DX_PI) / resolution) ) ;
+		float pos_y = sin( (i - (temp_vert_count + 1)) * ((2 * D3DX_PI) / resolution) );
+
+		//Generate a rainbow circle!
+		float hue = (i - (temp_vert_count + 1)) * (300.0f / resolution);
+		float hsv[] = {hue, 1.0f, 1.0f};
+		float rgb[] = {0.0f, 0.0f, 0.0f};
+		HSVtoRGB(hsv, rgb);
+		
+		VertexType circle_point;
+		circle_point.position = D3DXVECTOR3(pos_x, pos_y, 0.0f);
+		circle_point.color = D3DXVECTOR4(rgb[0], rgb[1], rgb[2], 1.0f);
+		circle_point.normal = center_point.normal;
+		
+		vertices[i] = circle_point;
+
+		D3DXVECTOR4 transform_v = D3DXVECTOR4(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.0f);
+		
+		D3DXVec4Transform(&transform_v, &transform_v, &transform_inv);
+		
+		vertices[i].position.x = transform_v.x;
+		vertices[i].position.y = transform_v.y;
+		vertices[i].position.z = transform_v.z;
+
+		vertices[i].position.x = vertices[i].position.x + center_point.position.x;
+		vertices[i].position.y = vertices[i].position.y + center_point.position.y;
+		vertices[i].position.z = vertices[i].position.z + center_point.position.z;
+	}
+
+	// Add the indices
+	int curr_vert = temp_vert_count + 1;
+	for(int i = temp_ind_count; i < m_indexCount; i++) {
+		indices[i] = temp_vert_count; //The first point of each triangle is always the center point.
+		i++;
+		if(curr_vert + 1 < m_vertexCount) {
+			indices[i] = curr_vert + 1;
+		} else {
+			indices[i] = temp_vert_count + 1; // Points back to the beginning point
+		} 
+		i++;
+		indices[i] = curr_vert;
+		
+		// Don't need another i++ because the for loop takes care of it
+		curr_vert++;
+	}
+
+	return;
+}
+
+// Draws a circle at the given center point with the given radius and resolution. The vertex and index arrays are passed by reference.
+void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, int stacks, VertexType* & vertices, unsigned long* & indices) {
+	//  Check for resolution min
+	if( slices < 4 || stacks < 4 ) {
 		return;
 	}
 	
@@ -157,8 +234,8 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 	int temp_vert_count = m_vertexCount;
 	int temp_ind_count = m_indexCount;
 
-	m_vertexCount += resolution + 1;
-	m_indexCount += (resolution * 3); // resolution times for the center point, 2 times for each of the resolution points left 
+	m_vertexCount += stacks * slices;
+	m_indexCount += (stacks * slices * 8); // resolution times for the center point, 2 times for each of the resolution points left 
 	
 	// Recreate the vertex and index array.
 	vertices = new VertexType[m_vertexCount];
@@ -174,6 +251,14 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 	vertices[temp_vert_count] = center_point;
 	
 	// Add the circle's points
+	float rotate_x = atan2(center_point.normal.y, center_point.normal.z);
+	float rotate_y = atan2(center_point.normal.x, center_point.normal.z);
+	D3DXMATRIX transform_x;
+	D3DXMatrixRotationX(&transform_x, rotate_x);
+	D3DXMATRIX transform_y;
+	D3DXMatrixRotationY(&transform_y, rotate_y);
+	D3DXMATRIX transform_inv = transform_x * transform_y;
+	D3DXMatrixInverse(&transform_inv, NULL, &transform_inv);
 	for(int i = temp_vert_count + 1; i < m_vertexCount; i++) {
 		float pos_x = cos( (i - (temp_vert_count + 1)) * ((2 * D3DX_PI) / resolution) ) ;
 		float pos_y = sin( (i - (temp_vert_count + 1)) * ((2 * D3DX_PI) / resolution) );
@@ -190,13 +275,19 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 		circle_point.normal = center_point.normal;
 		
 		vertices[i] = circle_point;
-	}
 
-	// Rotate circle to align normals
-    // -------------------------
-    // Guys who are copying this, still need to look at center_point.normal
-    // and rotate each point to the correct spot to align with the normal
-    // --------------------------
+		D3DXVECTOR4 transform_v = D3DXVECTOR4(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.0f);
+		
+		D3DXVec4Transform(&transform_v, &transform_v, &transform_inv);
+		
+		vertices[i].position.x = transform_v.x;
+		vertices[i].position.y = transform_v.y;
+		vertices[i].position.z = transform_v.z;
+
+		vertices[i].position.x = vertices[i].position.x + center_point.position.x;
+		vertices[i].position.y = vertices[i].position.y + center_point.position.y;
+		vertices[i].position.z = vertices[i].position.z + center_point.position.z;
+	}
 
 	// Add the indices
 	int curr_vert = temp_vert_count + 1;
