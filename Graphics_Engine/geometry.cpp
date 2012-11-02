@@ -63,26 +63,55 @@ int ModelClass::GetIndexCount()
 
 bool ModelClass::InitializeBuffers(ID3D10Device* device)
 {
-	VertexType* vertices;
-	unsigned long* indices;
 	D3D10_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
     D3D10_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
-	
 	// Set the number of vertices in the vertex array.
 	m_vertexCount = 0;
 
 	// Set the number of indices in the index array.
 	m_indexCount = 0;
 
+    // Draw a triangle
+    VertexType triangle1;
+    triangle1.position = D3DXVECTOR3(-2.0f, 2.0f, 0.0f);
+    triangle1.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
+    triangle1.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    VertexType triangle2;
+    triangle2.position = D3DXVECTOR3(-3.0f, 2.0f, 0.0f);
+    triangle2.color = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
+    triangle2.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    VertexType triangle3;
+    triangle3.position = D3DXVECTOR3(-2.5f, 3.0f, 0.0f);
+    triangle3.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+    triangle3.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    DrawTriangle(triangle1, triangle2, triangle3);
+
+    // Draw a quad
+    VertexType quad1;
+    quad1.position = D3DXVECTOR3(-3.5f, -1.5f, 0.0f);
+    quad1.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
+    quad1.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    VertexType quad2;
+    quad2.position = D3DXVECTOR3(-1.5f, -3.5f, 0.0f);
+    quad2.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
+    quad2.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    DrawQuad(quad1, quad2);
+
+    // Draw a circle
 	VertexType circle_center;
 	circle_center.position = D3DXVECTOR3(2.0f, 2.0f, 0.0f);
 	circle_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
 	circle_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	DrawCircle(circle_center, 1.0f, 60);
+	DrawCircle(circle_center, 1.0f, 40);
 
-
+    // Draw a sphere
+    VertexType sphere_center;
+	sphere_center.position = D3DXVECTOR3(2.0f, 2.0f, 0.0f);
+	sphere_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+	DrawSphere(circle_center, 1.0f, 20, 20);
 
 	// Set up the description of the vertex buffer.
     vertexBufferDesc.Usage = D3D10_USAGE_DEFAULT;
@@ -92,7 +121,7 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
     vertexBufferDesc.MiscFlags = 0;
 
 	// Give the subresource structure a pointer to the vertex data.
-    vertexData.pSysMem = vertices;
+    vertexData.pSysMem = &vertices_[0];
 
 	// Now finally create the vertex buffer.
     result = device->CreateBuffer(&vertexBufferDesc, &vertexData, &m_vertexBuffer);
@@ -109,7 +138,7 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
     indexBufferDesc.MiscFlags = 0;
 
 	// Give the subresource structure a pointer to the index data.
-    indexData.pSysMem = indices;
+    indexData.pSysMem = &indices_[0];
 
 	// Create the index buffer.
 	result = device->CreateBuffer(&indexBufferDesc, &indexData, &m_indexBuffer);
@@ -118,14 +147,55 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
 		return false;
 	}
 
-	// Release the arrays now that the vertex and index buffers have been created and loaded.
-	delete [] vertices;
-	vertices = 0;
-
-	delete [] indices;
-	indices = 0;
-
 	return true;
+}
+
+// Draws a triangle object out of the three points, as long as all of the normals are the same.
+// Draws in order of points given
+void ModelClass::DrawTriangle(VertexType point1, VertexType point2, VertexType point3) {
+    // Store the object
+    objects_.push_back(m_vertexCount);
+
+    vertices_.push_back(point1);
+    vertices_.push_back(point2);
+    vertices_.push_back(point3);
+
+    indices_.push_back(m_vertexCount++);
+    indices_.push_back(m_vertexCount++);
+    indices_.push_back(m_vertexCount++);
+    m_indexCount += 3;
+}
+
+// Draws a Quad object with two given corners. THe corners make up the opposite sides of the Quad.
+void ModelClass::DrawQuad(VertexType corner1, VertexType corner3) {
+    // Store the object
+    objects_.push_back(m_vertexCount);
+
+    // Corners are numbered clockwise
+    VertexType corner2;
+    corner2.position = D3DXVECTOR3(corner3.position.x, corner1.position.y, corner1.position.z);
+    corner2.color = corner1.color;
+	corner2.normal = corner1.normal;
+
+    VertexType corner4;
+    corner4.position = D3DXVECTOR3(corner1.position.x, corner3.position.y, 0.0f);
+	corner4.color = corner3.color;
+	corner4.normal = corner1.normal;
+
+    vertices_.push_back(corner1);
+    vertices_.push_back(corner2);
+    vertices_.push_back(corner3);
+    vertices_.push_back(corner4);
+
+    indices_.push_back(m_vertexCount);
+    indices_.push_back(m_vertexCount + 1);
+    indices_.push_back(m_vertexCount + 2);
+    indices_.push_back(m_vertexCount);
+    indices_.push_back(m_vertexCount + 2);
+    indices_.push_back(m_vertexCount + 3);
+
+    m_vertexCount += 4;
+    m_indexCount += 6;
 }
 
 // Draws a circle at the given center point with the given radius and resolution. The vertex and index arrays are passed by reference.
@@ -138,12 +208,14 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 	int temp_vert_count = m_vertexCount;
 	int temp_ind_count = m_indexCount;
 
+    //Save this object as a distinct object
+    objects_.push_back(m_vertexCount);
+
 	m_vertexCount += resolution + 1;
 	m_indexCount += (resolution * 3); // resolution times for the center point, 2 times for each of the resolution points left 
 
 	// Add the center point
-	vert_balls_.push_back(center_point);
-	//vertices[temp_vert_count] = center_point;
+	vertices_.push_back(center_point);
 	
 	// Add the circle's points
 	float rotate_x = atan2(center_point.normal.y, center_point.normal.z);
@@ -169,33 +241,33 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 		circle_point.color = D3DXVECTOR4(rgb[0], rgb[1], rgb[2], 1.0f);
 		circle_point.normal = center_point.normal;
 		
-		vertices[i] = circle_point;
+        vertices_.push_back(circle_point);
 
-		D3DXVECTOR4 transform_v = D3DXVECTOR4(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.0f);
+		D3DXVECTOR4 transform_v = D3DXVECTOR4(vertices_[i].position.x, vertices_[i].position.y, vertices_[i].position.z, 1.0f);
 		
 		D3DXVec4Transform(&transform_v, &transform_v, &transform_inv);
 		
-		vertices[i].position.x = transform_v.x;
-		vertices[i].position.y = transform_v.y;
-		vertices[i].position.z = transform_v.z;
+		vertices_[i].position.x = transform_v.x;
+		vertices_[i].position.y = transform_v.y;
+		vertices_[i].position.z = transform_v.z;
 
-		vertices[i].position.x = vertices[i].position.x + center_point.position.x;
-		vertices[i].position.y = vertices[i].position.y + center_point.position.y;
-		vertices[i].position.z = vertices[i].position.z + center_point.position.z;
+		vertices_[i].position.x = vertices_[i].position.x + center_point.position.x;
+		vertices_[i].position.y = vertices_[i].position.y + center_point.position.y;
+		vertices_[i].position.z = vertices_[i].position.z + center_point.position.z;
 	}
 
 	// Add the indices
 	int curr_vert = temp_vert_count + 1;
 	for(int i = temp_ind_count; i < m_indexCount; i++) {
-		indices[i] = temp_vert_count; //The first point of each triangle is always the center point.
+		indices_.push_back(temp_vert_count); //The first point of each triangle is always the center point.
 		i++;
 		if(curr_vert + 1 < m_vertexCount) {
-			indices[i] = curr_vert + 1;
+            indices_.push_back(curr_vert + 1);
 		} else {
-			indices[i] = temp_vert_count + 1; // Points back to the beginning point
+            indices_.push_back(temp_vert_count + 1); // Points back to the beginning point
 		} 
 		i++;
-		indices[i] = curr_vert;
+		indices_.push_back(curr_vert);
 		
 		// Don't need another i++ because the for loop takes care of it
 		curr_vert++;
@@ -205,106 +277,54 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 }
 
 // Draws a circle at the given center point with the given radius and resolution. The vertex and index arrays are passed by reference.
-void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, int stacks, VertexType* & vertices, unsigned long* & indices) {
-	//  Check for resolution min
-	if( slices < 4 || stacks < 4 ) {
-		return;
-	}
-	
-	// Transfer existing vertices to a temp vertex array
-	VertexType* temp_vertices;
-	unsigned long* temp_indices;
-	if(m_vertexCount > 0) {
-		temp_vertices = new VertexType[m_vertexCount];
-		for(int i = 0; i < m_vertexCount; i++) {
-			temp_vertices[i] = vertices[i];
-		}
-		delete [] vertices;
-		vertices = 0;
-	}
-	if(m_indexCount > 0) {
-		temp_indices = new unsigned long[m_indexCount];
-		for(int i = 0; i < m_indexCount; i++) {
-			temp_indices[i] = indices[i];
-		}
-		delete [] indices;
-		indices = 0;
-	}
+void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, int stacks) {
+    //Save this object as a distinct object
+    objects_.push_back(m_vertexCount);
+        
+    VertexType top;
+    top.position = center_point.position;
+    top.position.y += radius;
+    top.color = center_point.color;
+    top.normal = top.position;
+    vertices_.push_back(top);
 
-	int temp_vert_count = m_vertexCount;
-	int temp_ind_count = m_indexCount;
+    VertexType bottom;
+    bottom.position = center_point.position;
+    bottom.position.y -= radius;
+    bottom.color = center_point.color;
+    bottom.normal = bottom.position;
+    vertices_.push_back(bottom);
 
-	m_vertexCount += stacks * slices;
-	m_indexCount += (stacks * slices * 8); // resolution times for the center point, 2 times for each of the resolution points left 
-	
-	// Recreate the vertex and index array.
-	vertices = new VertexType[m_vertexCount];
-	for(int i = 0; i < temp_vert_count; i++) {
-		vertices[i] = temp_vertices[i];
-	}
-	indices = new unsigned long[m_indexCount];
-	for(int i = 0; i < temp_ind_count; i++) {
-		indices[i] = temp_indices[i];
-	}
+    // Add the bulk of the 
+    vector< vector<VertexType> > sphere (slices, vector<VertexType> (stacks));
+    for( int m = 0; m < slices; m++) {
+        for( int n = 1; n < stacks - 1; n++) { // Reduced because of top and bottom points
+            sphere[m][n].position.x = sin(D3DX_PI * (m / slices)) * cos(2 * D3DX_PI * (n / stacks)) + center_point.position.x;
+            sphere[m][n].position.y = sin(D3DX_PI * (m / slices)) * sin(2 * D3DX_PI * (n / stacks)) + center_point.position.y;
+            sphere[m][n].position.z = cos(D3DX_PI * (m / slices)) + center_point.position.z;
+            sphere[m][n].color = center_point.color;
+            sphere[m][n].normal = sphere[m][n].position;
+            vertices_.push_back(sphere[m][n]);
+        }
+    }
 
-	// Add the center point
-	vertices[temp_vert_count] = center_point;
-	
-	// Add the circle's points
-	float rotate_x = atan2(center_point.normal.y, center_point.normal.z);
-	float rotate_y = atan2(center_point.normal.x, center_point.normal.z);
-	D3DXMATRIX transform_x;
-	D3DXMatrixRotationX(&transform_x, rotate_x);
-	D3DXMATRIX transform_y;
-	D3DXMatrixRotationY(&transform_y, rotate_y);
-	D3DXMATRIX transform_inv = transform_x * transform_y;
-	D3DXMatrixInverse(&transform_inv, NULL, &transform_inv);
-	for(int i = temp_vert_count + 1; i < m_vertexCount; i++) {
-		float pos_x = cos( (i - (temp_vert_count + 1)) * ((2 * D3DX_PI) / resolution) ) ;
-		float pos_y = sin( (i - (temp_vert_count + 1)) * ((2 * D3DX_PI) / resolution) );
+    //Create the top and the bottom
+    int top_ind = m_vertexCount;
+    int bot_ind = m_vertexCount + 1;
+    for(int i = 0; i < slices; i++) {
+        indices_.push_back(top_ind);
+        indices_.push_back( (top_ind + 1) + (i * (stacks - 1)) );
+        indices_.push_back( (top_ind + 1) +  ((i + 1) * (stacks - 1)));
+    }
+    /*for(int i = 0; i < slices; i++) {
+        indices_.push_back(bot_ind);
+        indices_.push_back( i );
+        indices_.push_back( i + 1);
+    }*/
 
-		//Generate a rainbow circle!
-		float hue = (i - (temp_vert_count + 1)) * (300.0f / resolution);
-		float hsv[] = {hue, 1.0f, 1.0f};
-		float rgb[] = {0.0f, 0.0f, 0.0f};
-		HSVtoRGB(hsv, rgb);
-		
-		VertexType circle_point;
-		circle_point.position = D3DXVECTOR3(pos_x, pos_y, 0.0f);
-		circle_point.color = D3DXVECTOR4(rgb[0], rgb[1], rgb[2], 1.0f);
-		circle_point.normal = center_point.normal;
-		
-		vertices[i] = circle_point;
 
-		D3DXVECTOR4 transform_v = D3DXVECTOR4(vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.0f);
-		
-		D3DXVec4Transform(&transform_v, &transform_v, &transform_inv);
-		
-		vertices[i].position.x = transform_v.x;
-		vertices[i].position.y = transform_v.y;
-		vertices[i].position.z = transform_v.z;
-
-		vertices[i].position.x = vertices[i].position.x + center_point.position.x;
-		vertices[i].position.y = vertices[i].position.y + center_point.position.y;
-		vertices[i].position.z = vertices[i].position.z + center_point.position.z;
-	}
-
-	// Add the indices
-	int curr_vert = temp_vert_count + 1;
-	for(int i = temp_ind_count; i < m_indexCount; i++) {
-		indices[i] = temp_vert_count; //The first point of each triangle is always the center point.
-		i++;
-		if(curr_vert + 1 < m_vertexCount) {
-			indices[i] = curr_vert + 1;
-		} else {
-			indices[i] = temp_vert_count + 1; // Points back to the beginning point
-		} 
-		i++;
-		indices[i] = curr_vert;
-		
-		// Don't need another i++ because the for loop takes care of it
-		curr_vert++;
-	}
+    m_vertexCount += (slices) * (stacks - 2) + 2;
+    m_indexCount += (8 * (slices) * (stacks - 2)) + (2 * slices);
 
 	return;
 }

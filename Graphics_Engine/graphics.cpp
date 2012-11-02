@@ -160,11 +160,11 @@ bool GraphicsClass::Render()
 	m_D3D->GetProjectionMatrix(projectionMatrix);
 
 	// Rotate the world view
-	/*D3DXMatrixRotationY( &worldMatrix1, t);
-	D3DXMatrixRotationX( &worldMatrix, t);
-	worldMatrix = worldMatrix * worldMatrix1;
-	D3DXMatrixRotationZ( &worldMatrix1, t);
-	worldMatrix = worldMatrix * worldMatrix1;*/
+	//D3DXMatrixRotationY( &worldMatrix1, t);
+	//D3DXMatrixRotationX( &worldMatrix, t);
+	//worldMatrix = worldMatrix * worldMatrix1;
+	//D3DXMatrixRotationZ( &worldMatrix1, t);
+	//worldMatrix = worldMatrix * worldMatrix1;
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	m_Model->Render(m_D3D->GetDevice());
