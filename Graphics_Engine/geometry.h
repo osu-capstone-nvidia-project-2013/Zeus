@@ -47,7 +47,7 @@ private:
 	vector<VertexType> vertices_;
 	vector<unsigned long> indices_;
     vector<unsigned long> objects_;
-	ID3D10Buffer *m_vertexBuffer, *m_indexBuffer;
+	ID3D10Buffer *m_vertexBuffer, *m_indexBuffer, *pCBuffer;
 	int m_vertexCount, m_indexCount;
 };
 

@@ -24,8 +24,7 @@ ModelClass::~ModelClass()
 bool ModelClass::Initialize(ID3D10Device* device)
 {
 	bool result;
-
-
+	
 	// Initialize the vertex and index buffer that hold the geometry for the triangle.
 	result = InitializeBuffers(device);
 	if(!result)
@@ -75,15 +74,15 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
 
     // Draw a triangle
     VertexType triangle1;
-    triangle1.position = D3DXVECTOR3(-2.0f, 2.0f, 0.0f);
+    triangle1.position = D3DXVECTOR3(-2.0f, 2.0f, -1.0f);
     triangle1.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
     triangle1.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
     VertexType triangle2;
-    triangle2.position = D3DXVECTOR3(-3.0f, 2.0f, 0.0f);
+    triangle2.position = D3DXVECTOR3(-3.0f, 2.0f, -2.0f);
     triangle2.color = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
     triangle2.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
     VertexType triangle3;
-    triangle3.position = D3DXVECTOR3(-2.5f, 3.0f, 0.0f);
+    triangle3.position = D3DXVECTOR3(-2.5f, 3.0f, -1.0f);
     triangle3.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
     triangle3.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
     DrawTriangle(triangle1, triangle2, triangle3);
@@ -101,17 +100,23 @@ bool ModelClass::InitializeBuffers(ID3D10Device* device)
 
     // Draw a circle
 	VertexType circle_center;
-	circle_center.position = D3DXVECTOR3(2.0f, 2.0f, 0.0f);
+	circle_center.position = D3DXVECTOR3(2.0f, 2.0f, -1.0f);
 	circle_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
-	circle_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+	circle_center.normal = D3DXVECTOR3(-1.0f, -1.0f, 1.0f);
 	DrawCircle(circle_center, 1.0f, 40);
 
     // Draw a sphere
     VertexType sphere_center;
-	sphere_center.position = D3DXVECTOR3(2.0f, 2.0f, 0.0f);
+	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	sphere_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
 	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	DrawSphere(circle_center, 1.0f, 20, 20);
+	DrawSphere(sphere_center, 1.5f, 20, 20);
+	// Draw a sphere
+    VertexType sphere_center2;
+	sphere_center2.position = D3DXVECTOR3(2.0f, -2.0f, 2.0f);
+	sphere_center2.color = D3DXVECTOR4(0.5f, 0.0f, 0.5f, 1.0f);
+	sphere_center2.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+	DrawSphere(sphere_center2, 0.5f, 20, 20);
 
 	// Set up the description of the vertex buffer.
     vertexBufferDesc.Usage = D3D10_USAGE_DEFAULT;
@@ -280,22 +285,82 @@ void ModelClass::DrawCircle(VertexType center_point, float radius, int resolutio
 void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, int stacks) {
     //Save this object as a distinct object
     objects_.push_back(m_vertexCount);
-        
+
+	float theta, phi;
+	int i, j, t, u;
+
+	for(t=0,j=1; j < stacks - 1; j++ ) {
+		for( i = 0; i < slices; i++) {
+			theta = float(j) / (stacks - 1) * D3DX_PI;
+			phi = float(i) / (slices - 1) * D3DX_PI * 2;
+			VertexType point;
+			point.position.x = (radius) * (sinf(theta) * cosf(phi)) + center_point.position.x;
+			point.position.y = (radius) * (cosf(theta)) + center_point.position.y;
+			point.position.z = (radius) * (-sinf(theta) * sinf(phi)) + center_point.position.z;
+			point.color = center_point.color;
+			point.normal = point.position;
+			t++;
+			vertices_.push_back(point);
+		}
+	}
+	int top_ind = m_vertexCount + t;
     VertexType top;
     top.position = center_point.position;
     top.position.y += radius;
-    top.color = center_point.color;
+	top.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
     top.normal = top.position;
     vertices_.push_back(top);
+	t++;
 
+	int bot_ind = m_vertexCount + t;
     VertexType bottom;
     bottom.position = center_point.position;
     bottom.position.y -= radius;
-    bottom.color = center_point.color;
+    bottom.color = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
     bottom.normal = bottom.position;
     vertices_.push_back(bottom);
+	t++;
 
-    // Add the bulk of the 
+	
+	for(i = 0; i < slices - 1; i++) {
+		// Make top
+		indices_.push_back(top_ind);
+		indices_.push_back(m_vertexCount + i);
+		indices_.push_back(m_vertexCount + i + 1);
+		m_indexCount += 3;
+		// Make bottom
+		indices_.push_back(bot_ind);
+		indices_.push_back((top_ind - 1) - i);
+		indices_.push_back((top_ind - 1) - (i + 1));
+		m_indexCount += 3;
+	}
+	// Make inbetween
+	for(u = 0, j = 0; j < (stacks - 3); j++) {
+		for( i = 0; i < (slices - 1); i++) {
+			indices_.push_back( (j) * slices + i + m_vertexCount);
+			indices_.push_back( (j + 1) * slices + i + 1 + m_vertexCount);
+			indices_.push_back( (j) * slices + i + 1 + m_vertexCount);
+			m_indexCount += 3;
+			indices_.push_back( (j) * slices + i + m_vertexCount);
+			indices_.push_back( (j + 1) * slices + i + m_vertexCount);
+			indices_.push_back( (j + 1) * slices + i + 1 + m_vertexCount);
+			m_indexCount += 3;
+		}
+	}
+	
+
+	m_vertexCount += t;
+	
+	/*
+	for(t=0, j=0; j < (stacks - 3); j++) {
+		for( i = 0; i < slices - 1; i++) {
+
+		}
+	}
+	
+	/*
+    // Add the bulk of the points
+	int t = 0;
     vector< vector<VertexType> > sphere (slices, vector<VertexType> (stacks));
     for( int m = 0; m < slices; m++) {
         for( int n = 1; n < stacks - 1; n++) { // Reduced because of top and bottom points
@@ -305,17 +370,25 @@ void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, i
             sphere[m][n].color = center_point.color;
             sphere[m][n].normal = sphere[m][n].position;
             vertices_.push_back(sphere[m][n]);
+			t++;
         }
     }
 
     //Create the top and the bottom
     int top_ind = m_vertexCount;
     int bot_ind = m_vertexCount + 1;
-    for(int i = 0; i < slices; i++) {
+	indices_.push_back(top_ind);
+	indices_.push_back(bot_ind + 1);
+	indices_.push_back(bot_ind);
+	
+	m_indexCount += 3;
+	m_vertexCount += (t + 2);
+
+	/*for(int i = 0; i < stacks; i++) {
         indices_.push_back(top_ind);
-        indices_.push_back( (top_ind + 1) + (i * (stacks - 1)) );
-        indices_.push_back( (top_ind + 1) +  ((i + 1) * (stacks - 1)));
-    }
+        indices_.push_back( (top_ind + 2) + (i));
+        indices_.push_back( (top_ind + 2) +  ((i + 1)));
+    }*/
     /*for(int i = 0; i < slices; i++) {
         indices_.push_back(bot_ind);
         indices_.push_back( i );
@@ -323,8 +396,8 @@ void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, i
     }*/
 
 
-    m_vertexCount += (slices) * (stacks - 2) + 2;
-    m_indexCount += (8 * (slices) * (stacks - 2)) + (2 * slices);
+    //m_vertexCount += (slices) * (stacks - 2) + 2;
+    //m_indexCount += (8 * (slices) * (stacks - 2)) + (2 * slices);
 
 	return;
 }
