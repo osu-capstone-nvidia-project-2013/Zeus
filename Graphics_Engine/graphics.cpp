@@ -145,9 +145,10 @@ bool GraphicsClass::Frame()
 bool GraphicsClass::Render()
 {
 	D3DXMATRIX worldMatrix, worldMatrix1, viewMatrix, projectionMatrix;
-	static float t = 0.0f;
-	t += (float) D3DX_PI * 0.00125f;
-	
+	static float t = 0.0f, t2 = 0.0f, t3 = 0.0f;
+	t += (float) D3DX_PI * 0.0025f;
+	t2 += (float) D3DX_PI * 0.025f;
+    t3 += (float) D3DX_PI * 0.125f;
 
 	// Clear the buffers to begin the scene.
 	m_D3D->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -162,35 +163,26 @@ bool GraphicsClass::Render()
 
 	// Rotate the world view
 	//D3DXMatrixRotationY( &worldMatrix1, t);
-	//D3DXMatrixRotationX( &worldMatrix, t);
+	D3DXMatrixRotationX( &worldMatrix, t);
 	//worldMatrix = worldMatrix * worldMatrix1;
 	//D3DXMatrixRotationZ( &worldMatrix1, t);
 	//worldMatrix = worldMatrix * worldMatrix1;
-	D3DXMATRIX matRotate, matView, matProjection, matFinal;
+	D3DXMATRIX matRotate, matView, matProjection, matFinal, matTranslate;
 
-    static float Time = 0.0f; Time += 0.001f;
-
+    // This stuff didn't do anything....
     // create a rotation matrix
-    D3DXMatrixRotationY(&matRotate, Time);
+    D3DXMatrixRotationX(&matRotate, t2);
 
-    // create a view matrix
-    D3DXMatrixLookAtLH(&matView,
-                       &D3DXVECTOR3(1.5f, 0.5f, 1.5f),    // the camera position
-                       &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
-                       &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
-
-    // create a projection matrix
-    D3DXMatrixPerspectiveFovLH(&matProjection,
-                               (FLOAT)D3DXToRadian(45),                    // field of view
-                               (FLOAT)512 / (FLOAT)512, // aspect ratio
-                               1.0f,                                       // near view-plane
-                               100.0f);                                    // far view-plane
+    // create a translation matrix
+    D3DXMatrixTranslation(&matTranslate, -2.5f, -2.5f, 0.0f);
 
     // create the final transform
-    matFinal = matRotate * matView * matProjection; // add a translate after rotate
-	
-	m_D3D->GetDevice()->UpdateSubresource(pCBuffer, 0, 0, &matFinal, 0, 0);
+    matFinal = matRotate * matTranslate; // add a translate after rotate
+    m_Model->TransformObject(1, matFinal);
 
+    // create a rotation matrix
+    D3DXMatrixRotationZ(&matRotate, t3);
+    m_Model->TransformObject(4, matRotate);
 
 	// Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing.
 	m_Model->Render(m_D3D->GetDevice());

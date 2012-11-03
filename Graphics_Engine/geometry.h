@@ -30,6 +30,7 @@ public:
 	bool Initialize(ID3D10Device*);
 	void Shutdown();
 	void Render(ID3D10Device*);
+    void TransformObject(int, D3DXMATRIX);
 
 	int GetIndexCount();
 
@@ -41,6 +42,7 @@ private:
     void DrawQuad(VertexType, VertexType);
 	void DrawCircle(VertexType, float, int);
 	void DrawSphere(VertexType, float, int, int);
+    
 	void HSVtoRGB(float[3], float[3]);
 
 private:

@@ -350,56 +350,27 @@ void ModelClass::DrawSphere(VertexType center_point, float radius, int slices, i
 	
 
 	m_vertexCount += t;
-	
-	/*
-	for(t=0, j=0; j < (stacks - 3); j++) {
-		for( i = 0; i < slices - 1; i++) {
-
-		}
-	}
-	
-	/*
-    // Add the bulk of the points
-	int t = 0;
-    vector< vector<VertexType> > sphere (slices, vector<VertexType> (stacks));
-    for( int m = 0; m < slices; m++) {
-        for( int n = 1; n < stacks - 1; n++) { // Reduced because of top and bottom points
-            sphere[m][n].position.x = sin(D3DX_PI * (m / slices)) * cos(2 * D3DX_PI * (n / stacks)) + center_point.position.x;
-            sphere[m][n].position.y = sin(D3DX_PI * (m / slices)) * sin(2 * D3DX_PI * (n / stacks)) + center_point.position.y;
-            sphere[m][n].position.z = cos(D3DX_PI * (m / slices)) + center_point.position.z;
-            sphere[m][n].color = center_point.color;
-            sphere[m][n].normal = sphere[m][n].position;
-            vertices_.push_back(sphere[m][n]);
-			t++;
-        }
-    }
-
-    //Create the top and the bottom
-    int top_ind = m_vertexCount;
-    int bot_ind = m_vertexCount + 1;
-	indices_.push_back(top_ind);
-	indices_.push_back(bot_ind + 1);
-	indices_.push_back(bot_ind);
-	
-	m_indexCount += 3;
-	m_vertexCount += (t + 2);
-
-	/*for(int i = 0; i < stacks; i++) {
-        indices_.push_back(top_ind);
-        indices_.push_back( (top_ind + 2) + (i));
-        indices_.push_back( (top_ind + 2) +  ((i + 1)));
-    }*/
-    /*for(int i = 0; i < slices; i++) {
-        indices_.push_back(bot_ind);
-        indices_.push_back( i );
-        indices_.push_back( i + 1);
-    }*/
-
-
-    //m_vertexCount += (slices) * (stacks - 2) + 2;
-    //m_indexCount += (8 * (slices) * (stacks - 2)) + (2 * slices);
 
 	return;
+}
+
+// Transforms the object at the index with the given matrix
+void ModelClass::TransformObject(int index, D3DXMATRIX matFinal) {
+    int object_size = 0;
+    if(objects_.size() > index) {
+        if(objects_.size() < (index + 1)) {
+            object_size = objects_[index+1] - objects_[index];
+        } else {
+            object_size = vertices_.size() - objects_[index];
+        }
+    } else {
+        return;
+    }
+    
+    for( int i = 0; i < object_size; i++) {
+        D3DXVec3TransformCoord(&vertices_[objects_[index] + i].position, &vertices_[objects_[index] + i].position, &matFinal) ;
+    }
+    return;
 }
 
 // the HSV color model will be as follows

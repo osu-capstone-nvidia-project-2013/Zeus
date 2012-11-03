@@ -22,6 +22,11 @@ struct PixelInputType
     float4 color : COLOR;
 };
 
+cbuffer ConstantBuffer
+{
+    float4x4 matFinal;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Shader
