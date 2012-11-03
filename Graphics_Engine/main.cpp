@@ -28,11 +28,14 @@ ID3D11Buffer *pVBuffer;                // the pointer to the vertex buffer
 ID3D11Buffer *pCBuffer;                // the pointer to the constant buffer
 ID3D11Buffer *circleBuff;			   // the pointer to the circle vertex buffer
 ID3D11Buffer *circleIndex;			   // the pointer to the circle index buffer
+ID3D11Buffer *sphereBuff;			   // the pointer to the sphere vertex buffer
+ID3D11Buffer *sphereIndex;			   // the pointer to the sphere index buffer
 ID3D11RasterizerState *noCull;		   // the pointer to the rasterizer state
 									   // this will disable back side culling
 
+
 // various buffer structs
-struct VERTEX{FLOAT X, Y, Z; D3DXCOLOR Color;};
+struct VERTEX{D3DXVECTOR3 vec; D3DXCOLOR Color;};
 struct PERFRAME{D3DXCOLOR Color; FLOAT X, Y, Z;};
 
 // function prototypes
@@ -41,7 +44,7 @@ void RenderFrame(void);     // renders a single frame
 void CleanD3D(void);        // closes Direct3D and releases memory
 void InitGraphics(void);    // creates the shape to render
 void InitPipeline(void);    // loads and prepares the shaders
-
+void createSphere(float radius);
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -194,8 +197,18 @@ void InitD3D(HWND hWnd)
 // this is the function used to render a single frame
 void RenderFrame(void)
 {
-    D3DXMATRIX matTranslate, matRotate, matView, matProjection, matFinal;
+    D3DXMATRIX matTranslate, matRotate, matRotX, matRotY, matRotZ, matView, matProjection, matFinal;
 
+	D3D11_RASTERIZER_DESC rastDesc;
+	
+	//Set up for no back culling
+	ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
+	rastDesc.FillMode = D3D11_FILL_SOLID;
+	rastDesc.CullMode = D3D11_CULL_NONE;
+
+	dev->CreateRasterizerState(&rastDesc, &noCull);
+
+	devcon->RSSetState(noCull);
 	
     static float Time = 0.0f; Time += 0.001f;
 
@@ -249,6 +262,10 @@ void RenderFrame(void)
 		// create the final transform
 		
 		D3DXMatrixTranslation(&matTranslate, -0.5f, 0.5f, 0.0f);
+		
+		D3DXMatrixRotationZ(&matRotZ, Time*10);
+
+		matRotate *= matRotZ;
 
 		matFinal = matRotate * matTranslate * matView * matProjection;
 
@@ -261,7 +278,32 @@ void RenderFrame(void)
 		devcon->DrawIndexed(1080,0,0);
 	//================================================================
 
+	rastDesc.CullMode = D3D11_CULL_FRONT;
 
+	dev->CreateRasterizerState(&rastDesc, &noCull);
+
+	devcon->RSSetState(noCull);
+	//================================================================
+	// draw sphere
+		devcon->IASetVertexBuffers(0,1,&sphereBuff,&stride, &offset);
+
+		devcon->IASetIndexBuffer(sphereIndex, DXGI_FORMAT_R32_UINT, 0);
+
+		D3DXMatrixTranslation(&matTranslate, 0.0f, 0.5f, 0.0f);
+	
+		D3DXMatrixRotationZ(&matRotZ, Time);
+		D3DXMatrixRotationY(&matRotY, Time);
+
+		matRotate = matRotZ * matRotY;
+
+		matFinal = matRotate * matView * matProjection;
+
+		// set the new values for the constant buffer
+		devcon->UpdateSubresource(pCBuffer, 0, 0, &matFinal, 0, 0);
+		devcon->DrawIndexed(16284,0,0);
+
+
+	//
     // switch the back buffer and the front buffer
     swapchain->Present(0, 0);
 }
@@ -291,9 +333,9 @@ void InitGraphics()
     // create a triangle using the VERTEX struct
     VERTEX OurVertices[] =
     {
-        {0.0f, 0.25f, 0.0f, D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f)},
-        {0.25f, 0.0f, 0.0f, D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f)},
-        {-0.25f, 0.0f, 0.0f, D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f)}
+        {D3DXVECTOR3(0.0f, 0.25f, 0.0f), D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f)},
+        {D3DXVECTOR3(0.25f, 0.0f, 0.0f), D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f)},
+        {D3DXVECTOR3(-0.25f, 0.0f, 0.0f), D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f)}
     };
 
 
@@ -317,27 +359,60 @@ void InitGraphics()
 
 	//==========================================================
 	// Create circle vertices
-	VERTEX Circle[361];
+	VERTEX Circle[181];
+	D3DXVECTOR3 normal, current, direction_vec;
+	D3DXVECTOR4 result;
+	D3DXMATRIX finalRot, rotateMatX, rotateMatY, rotateMatZ;
+
 	float radius, rad, x, y;
+	float thetaX, thetaY, thetaZ;
 	int i;
-	//set the center
-	Circle[0].X = 0.0f;
-	Circle[0].Y = 0.0f;
-	Circle[0].Z = 0.0f;
+	//set the center in local coords
+	Circle[0].vec.x = 0.0f;
+	Circle[0].vec.y = 0.0f;
+	Circle[0].vec.z = 0.0f;
 	Circle[0].Color = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
 	radius = 0.25f;
 	rad = 0.0f;
 	
 	float deltaRad = PI/180.0f;
 
-	for(i = 1; i < 361; i++)
+	//our current normal (0,0,-1) and normalize
+	current = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+	D3DXVec3Normalize(&current, &current);
+
+	//normal we want and normalize it
+	normal = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+	D3DXVec3Normalize(&normal, &normal);
+
+	direction_vec = normal - current;
+
+	thetaX = 2.0f*atan2(direction_vec.z, direction_vec.y);
+	thetaY = 2.0f*atan2(direction_vec.x, direction_vec.z);
+	thetaZ = 2.0f*atan2(direction_vec.x, direction_vec.y);
+
+	D3DXMatrixRotationX(&rotateMatX, thetaX);
+	D3DXMatrixRotationY(&rotateMatY, thetaY);
+	D3DXMatrixRotationZ(&rotateMatZ, thetaZ);
+
+	finalRot  = rotateMatX * rotateMatY * rotateMatZ;
+
+
+	for(i = 1; i < 181; i++)
 	{
 		y = sin(rad) * radius;
 		x = cos(rad) * radius;
 		
-		Circle[i].X = x + Circle[0].X;
-		Circle[i].Y = y + Circle[0].Y;
-		Circle[i].Z = 0.0f + Circle[0].Z;
+		Circle[i].vec.x = x + Circle[0].vec.x;
+		Circle[i].vec.y = y + Circle[0].vec.y;
+		Circle[i].vec.z = 0.0f + Circle[0].vec.z;
+
+		D3DXVec3Transform(&result, &Circle[i].vec, &finalRot);
+
+		Circle[i].vec.x = result.x;
+		Circle[i].vec.y = result.y; 
+		Circle[i].vec.z = result.z;
+
 		if (i % 5 == 0)
 			Circle[i].Color = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
 		else if (i % 2 == 0)
@@ -345,17 +420,17 @@ void InitGraphics()
 		else
 			Circle[i].Color = D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f);
 
-		rad += deltaRad;
+		rad += deltaRad*2.0f;
 	}
 	
 	//Assign vertex indices for the index buffer
-	unsigned int indices[1080];
+	unsigned int indices[540];
 	int highInd = 2;
 
-	for (i = 0; i < 1080; i+=3) {
+	for (i = 0; i < 540; i+=3) {
 
 		indices[i] = 0;
-		if(highInd == 361){
+		if(highInd == 181){
 			indices[i + 1] = 1;
 			indices[i + 2] = highInd - 1;
 		}
@@ -366,6 +441,7 @@ void InitGraphics()
 		highInd++;
 	}
 	//====================================================
+	createSphere(0.5f); 
 
 	//====================================================================
     // create the vertex buffer for the Circle
@@ -373,7 +449,7 @@ void InitGraphics()
     ZeroMemory(&bd2, sizeof(bd2));
 
     bd2.Usage = D3D11_USAGE_DYNAMIC;                  // write access access by CPU and GPU
-    bd2.ByteWidth = sizeof(VERTEX) * 361;             // size is the VERTEX struct * 3
+    bd2.ByteWidth = sizeof(VERTEX) * 181;             // size is the VERTEX struct * 3
     bd2.BindFlags = D3D11_BIND_VERTEX_BUFFER;	      // use as a vertex buffer
     bd2.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	  // allow CPU to write in buffer
 
@@ -390,7 +466,7 @@ void InitGraphics()
 	// Create index buffer for the circle
 	D3D11_BUFFER_DESC bufferDesc;
 	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.ByteWidth = sizeof( unsigned int ) * 1080;
+	bufferDesc.ByteWidth = sizeof( unsigned int ) * 540;
 	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bufferDesc.CPUAccessFlags = 0;
 	bufferDesc.MiscFlags = 0;
@@ -408,16 +484,6 @@ void InitGraphics()
 // this function loads and prepares the shaders
 void InitPipeline()
 {
-	D3D11_RASTERIZER_DESC rastDesc;
-	
-	//Set up for no back culling
-	ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC));
-	rastDesc.FillMode = D3D11_FILL_SOLID;
-	rastDesc.CullMode = D3D11_CULL_NONE;
-
-	dev->CreateRasterizerState(&rastDesc, &noCull);
-
-	devcon->RSSetState(noCull);
 
     // load and compile the two shaders
     ID3D10Blob *VS, *PS, *PSI;
@@ -450,7 +516,163 @@ void InitPipeline()
     bd.Usage = D3D11_USAGE_DEFAULT;
     bd.ByteWidth = 64;
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-
+	 
     dev->CreateBuffer(&bd, NULL, &pCBuffer);
     devcon->VSSetConstantBuffers(0, 1, &pCBuffer);
+}
+
+void createSphere(float radius)
+{
+	VERTEX sphere[180*15+2];
+	int layers = 16;
+	int verticesPerCircle = 180;
+	int count = 0;
+	float theta, phi, deltaTheta, deltaPhi;
+
+	deltaTheta = PI/90.0f;
+	deltaPhi = PI/16.0f;
+	phi = 0.0f;
+	theta = 0.0f;
+	//create cap point
+	sphere[count].vec = D3DXVECTOR3((radius*sin(phi)*cos(theta)), 
+									(radius*sin(phi)*sin(theta)),
+									(radius*cos(phi)));
+	sphere[count++].Color = D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f);
+
+	theta += deltaTheta;
+	phi += deltaPhi;
+	
+	for(int i = 0; i < layers-1; i++)
+	{
+		theta = 0.0f;
+
+		for(int j = 0; j < verticesPerCircle; j++)
+		{
+			sphere[count].vec = D3DXVECTOR3((radius*sin(phi)*cos(theta)), 
+											(radius*sin(phi)*sin(theta)),
+											(radius*cos(phi)));
+
+		if (i% 10 == 0)
+			sphere[count++].Color = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
+		else if (i % 5 == 0)
+			sphere[count++].Color = D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f);
+		else
+			sphere[count++].Color = D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f);
+
+			theta += deltaTheta;
+		}
+		phi += deltaPhi;
+	}
+
+	//create other cap point
+	sphere[count].vec = D3DXVECTOR3((radius*sin(phi)*cos(theta)), 
+									(radius*sin(phi)*sin(theta)),
+									(radius*cos(phi)));
+	sphere[count++].Color = D3DXCOLOR(1.0f, 0.0f, 1.0f, 1.0f);
+
+
+
+	//assign indices
+	unsigned int indices[(540*2)+(3*(14*360))+84];
+	int highInd = 2;
+	int countInd;
+	count = 0;
+	//for one cap of sphere
+	for (int i = 0; i < 540; i+=3) {
+		indices[count++] = 0;
+		if(highInd == 181){
+			indices[count++] = 1;
+			indices[count++] = highInd - 1;
+		}
+		else{
+			indices[count++] = highInd;
+			indices[count++] = highInd - 1;
+		}
+		highInd++;
+	}
+	
+
+	int J, j;
+	//body of the sphere
+	for(int i = 0; i < layers - 2; i++)
+	{
+		for(j = 0; j < 180; j++)
+		{
+			J = j + (i*verticesPerCircle)+1;
+			indices[count++] = J;
+			indices[count++] = J + verticesPerCircle + 1;
+			indices[count++] = J + verticesPerCircle;
+
+			indices[count++] = J;
+			indices[count++] = J + 1;
+			indices[count++] = J + verticesPerCircle + 1;
+		}
+		J = j + (i*verticesPerCircle);
+		indices[count++] = J; 
+		indices[count++] = J + 1;
+		indices[count++] = J + verticesPerCircle;
+
+		indices[count++] = J;
+		indices[count++] = J - (verticesPerCircle - 1);
+		indices[count++] = J + 1;
+
+	}
+
+	highInd = 2699;
+	//other cap of sphere
+	for (int i = 0; i < 540; i+=3) {
+
+		indices[count++] = 2701;
+
+		if(highInd == 2701-180){
+			
+			indices[count++] = highInd - 1;
+			indices[count++] = 2699;
+		}
+		else{
+			indices[count++] = highInd - 1;
+			indices[count++] = highInd;
+			
+		}
+		
+		highInd--;
+	}
+
+
+
+	//====================================================================
+    // create the vertex buffer for the Circle
+    D3D11_BUFFER_DESC bd2;
+    ZeroMemory(&bd2, sizeof(bd2));
+
+    bd2.Usage = D3D11_USAGE_DYNAMIC;                  // write access access by CPU and GPU
+    bd2.ByteWidth = sizeof(VERTEX) * 2702;             // size is the VERTEX struct * 3
+    bd2.BindFlags = D3D11_BIND_VERTEX_BUFFER;	      // use as a vertex buffer
+    bd2.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	  // allow CPU to write in buffer
+
+    dev->CreateBuffer(&bd2, NULL, &sphereBuff);       // create the buffer
+
+    // copy the vertices into the buffer
+    D3D11_MAPPED_SUBRESOURCE ms2;
+    devcon->Map(sphereBuff, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms2);		// map the buffer
+    memcpy(ms2.pData, sphere, sizeof(sphere));								// copy the data
+    devcon->Unmap(sphereBuff, NULL);										// unmap the buffer
+	//====================================================================
+
+	//====================================================================
+	// Create index buffer for the circle
+	D3D11_BUFFER_DESC bufferDesc;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.ByteWidth = sizeof( unsigned int ) * 16284;
+	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bufferDesc.CPUAccessFlags = 0;
+	bufferDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA initData;
+	initData.pSysMem = indices;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	dev->CreateBuffer(&bufferDesc, &initData, &sphereIndex);
+	//=====================================================================
 }
