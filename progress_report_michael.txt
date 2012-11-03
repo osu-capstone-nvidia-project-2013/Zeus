@@ -1,3 +1,10 @@
+11-2
+Progress: Got the world spinning and a sphere with a lil tear in it.
+
+Todo: work on milestone 1 saturday and sunday ( completeness and neatness )
+
+Blocks: 6am shifts and poor cooking abilities and school
+
 11-1
 
 Progress: Made a circle triangle and box with an index vector
