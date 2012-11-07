@@ -46,7 +46,7 @@ public:
 	ModelClass(const ModelClass&);
 	~ModelClass();
 
-	bool Initialize(ID3D11Device*, char*, WCHAR*);
+	bool Initialize(ID3D11Device*);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 	void TransformObject(int, D3DXMATRIX);
