@@ -1,7 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Graphics_Engine", "Graphics_Engine.vcxproj", "{3BD40022-8786-4B8E-9114-7B8BCBDDC395}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Graphics_Engine", "Graphics_Engine.vcxproj", "{5A1A5E03-D95A-4514-8BCE-00D6F13A94D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +9,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3BD40022-8786-4B8E-9114-7B8BCBDDC395}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3BD40022-8786-4B8E-9114-7B8BCBDDC395}.Debug|Win32.Build.0 = Debug|Win32
-		{3BD40022-8786-4B8E-9114-7B8BCBDDC395}.Release|Win32.ActiveCfg = Release|Win32
-		{3BD40022-8786-4B8E-9114-7B8BCBDDC395}.Release|Win32.Build.0 = Release|Win32
+		{5A1A5E03-D95A-4514-8BCE-00D6F13A94D3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5A1A5E03-D95A-4514-8BCE-00D6F13A94D3}.Debug|Win32.Build.0 = Debug|Win32
+		{5A1A5E03-D95A-4514-8BCE-00D6F13A94D3}.Release|Win32.ActiveCfg = Release|Win32
+		{5A1A5E03-D95A-4514-8BCE-00D6F13A94D3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
