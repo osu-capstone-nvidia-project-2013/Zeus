@@ -8,4 +8,5 @@ Todo:
   Finish shadow mapping and game timing.
   Work on; diffuse texturing, blending + alpha kill, normal mapping, and environment mapping.
 
-Blockers: None.
+Blockers: 
+  None.
