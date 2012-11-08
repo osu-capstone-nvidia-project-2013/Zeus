@@ -1,3 +1,15 @@
+--- 11/01/12 ---
+Progress: 
+  Window, triangle, quad, circle, transformations, and shaders completed. 
+
+Todo: 
+  Sphere.
+
+Blockers: 
+  None.
+
+
+--- 11/08/12 ---
 Progress: 
   Milestone 1 completed. 
   Phong shading also done. 
