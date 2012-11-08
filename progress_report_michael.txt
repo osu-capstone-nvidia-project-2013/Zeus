@@ -1,3 +1,10 @@
+11-8
+Progress: Let me see that Phhhhonnnnng. phong, phong phong phong
+
+Todo: Texturing, tools, tranformation matrix's
+
+Blocks: Github and DirectX missing as of 10:45 today. Claims to be done this week.
+
 11-2
 Progress: Got the world spinning and a sphere with a lil tear in it.
 
