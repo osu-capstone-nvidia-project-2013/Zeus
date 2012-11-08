@@ -1,4 +1,21 @@
 =============
+11/8/2012
+
+Progress: Phong shading is nearing completion. 
+
+Todo: Continue modulizing our program, finish phong, and start texturing.
+
+Blockers: The way our code is now, we are not able to transform multiple objects. The one spot in code where we are
+          rendering the objects is too specific and need to redesign it where we have something such as:
+          
+          setRotate()
+          setTrans()
+          finalMatrix()
+          setConstantBuff()
+          
+          render(&vBuffer, &iBuffer)
+
+=============
 11/1/2012
 
 Progress: Circle created (without normal). Translation and rotation (over time) added to both a triangle and circle. 
