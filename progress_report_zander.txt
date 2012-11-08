@@ -1,3 +1,10 @@
+Date: 11/8/2012
+Progress: Phong shading is close to being done
+Todo: Continue to modularize code
+Blockers: CGEL still doesn't have DIRECTX or Git. 
+Need to redo structure of code to allow for individual object manipulation.
+
+////////////////
 Date: 11/1/2012
 Progress: Created a quad, and a basic circle. Did world rotations of the scene and coloring on a per vertex basis.
 Todo: Working on fixing circle normals. Draw a sphere, per object rotation and transformations over time.
