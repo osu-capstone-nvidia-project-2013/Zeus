@@ -1,5 +1,11 @@
-Progress: Milestone 1 completed. Phong shading also done. Shadow mapping is about half-completed. Game timing is about a quarter of the way done. 
+Progress: 
+  Milestone 1 completed. 
+  Phong shading also done. 
+  Shadow mapping is about half-completed. 
+  Game timing is about a quarter of the way done. 
 
-Todo: Finish shadow mapping and game timing as well as work on; diffuse texturing, blending + alpha kill, normal mapping, and environment mapping.
+Todo: 
+  Finish shadow mapping and game timing.
+  Work on; diffuse texturing, blending + alpha kill, normal mapping, and environment mapping.
 
 Blockers: None.
