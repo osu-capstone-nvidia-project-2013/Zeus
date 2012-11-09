@@ -1,14 +1,3 @@
---- 11/01/12 ---
-Progress: 
-  Window, triangle, quad, circle, transformations, and shaders completed. 
-
-Todo: 
-  Sphere.
-
-Blockers: 
-  None.
-
-
 --- 11/08/12 ---
 Progress: 
   Milestone 1 completed. 
@@ -19,6 +8,18 @@ Progress:
 Todo: 
   Finish shadow mapping and game timing.
   Work on; diffuse texturing, blending + alpha kill, normal mapping, and environment mapping.
+
+Blockers: 
+  None.
+
+
+
+--- 11/01/12 ---
+Progress: 
+  Window, triangle, quad, circle, transformations, and shaders completed. 
+
+Todo: 
+  Sphere.
 
 Blockers: 
   None.
