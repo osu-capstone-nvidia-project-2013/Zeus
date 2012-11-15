@@ -1,3 +1,10 @@
+11-15
+Progress: Blending
+
+Todo: Make the code moduler and pretty
+
+Blocks: Redesigning code base needed
+
 11-8
 Progress: Let me see that Phhhhonnnnng. phong, phong phong phong
 
