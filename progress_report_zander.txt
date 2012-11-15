@@ -1,3 +1,10 @@
+Date: 11/15/2012
+Progress: Phong shading done, blending mostly works, alpha kill needs some work. Close to finish on texturing.
+Todo: Finish alpha kill and texturing. Include toggling features on/off. Refactor code to support multiple objects.
+Blockers: Our blending\alpha kill doesn't quite work right I believe because we aren't drawing from back to fron when
+we move the scene around. Not quite sure how to implement that.
+
+///////////////////
 Date: 11/8/2012
 Progress: Phong shading is close to being done
 Todo: Continue to modularize code
