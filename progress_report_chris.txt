@@ -1,4 +1,14 @@
 =============
+11/15/2012
+
+Progress: We have blending, but are having issues with alpha killing. Texturing has also been worked on and near complete
+
+Todo: Continue to refactor code in order to maintain multiple objects.
+
+Blockers: None 
+
+
+=============
 11/8/2012
 
 Progress: Phong shading is nearing completion. 
