@@ -69,7 +69,7 @@ void GeometryClass::Initialize()
 
 }
 
-void GeometryClass::LoadObject(string obj_name)
+void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, string obj_name)
 {
     ifstream stream (obj_name);
     if(!stream)
@@ -112,6 +112,8 @@ void GeometryClass::LoadObject(string obj_name)
         vertex.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
         vertices.push_back(vertex);
     }
+
+	CreateObject(dev, devcon, vertices, indices);
 }
 
 void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon, VERTEX center_point, float radius, int slices, int stacks) 
@@ -174,7 +176,6 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 	}
 
     
-
     CreateObject(dev, devcon, vertices, indices);
 
 	return;

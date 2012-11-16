@@ -37,7 +37,7 @@ public:
 	~GeometryClass();
 
 	void Initialize();
-    void LoadObject(string);
+    void LoadObject(ID3D11Device *, ID3D11DeviceContext *, string);
     void CreateSphere(ID3D11Device *, ID3D11DeviceContext *, VERTEX, float, int, int);
 
     void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain);

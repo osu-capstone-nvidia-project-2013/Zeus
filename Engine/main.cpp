@@ -74,7 +74,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	sphere_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
 	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+	geometry->LoadObject(dev, devcon, "cow.obj");
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
+	
 
     // enter the main loop:
 
@@ -93,17 +95,17 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     D3DXMATRIX matRotate, matTrans, matView, matProjection, matFinal;
 
-    static float Time = 0.0f; Time += 0.00025f;
+    static float Time = 0.0f; Time += 0.0001f;
 
     // create a rotation matrix
     D3DXMatrixRotationY(&matRotate, Time);
 
     // create a translation matrix
-    D3DXMatrixTranslation(&matTrans, 0.5, 0.0f, 0.0f);
+    D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
 
     // create a view matrix
     D3DXMatrixLookAtLH(&matView,
-                       &D3DXVECTOR3(0.0f, 1.5f, 3.5f),    // the camera position
+                       &D3DXVECTOR3(0.0f, 1.5f, 5.5f),    // the camera position
                        &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
                        &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
 
