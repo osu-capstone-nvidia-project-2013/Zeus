@@ -1,9 +1,5 @@
 // include the basic windows header files and the Direct3D header files
-#include <windows.h>
-#include <windowsx.h>
-#include "geometryclass.h"
-#include "objectclass.h"
-#include "shaderclass.h"
+#include "main.h"
 // define the screen resolution
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
@@ -15,6 +11,7 @@ ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device con
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 ID3D11Buffer *pCBuffer;                // the pointer to the constant buffer
 ObjectClass	*triangleObj;
+GeometryClass *geometry;
 ShaderClass *shaderclass;
 
 // function prototypes
@@ -71,9 +68,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	shaderclass->SetShaders(dev, devcon);
 
 	triangleObj = new ObjectClass();
-
-	SetTriangle(triangleObj, dev, devcon);
-	
+    SetTriangle(triangleObj, dev, devcon);
+    geometry = new GeometryClass();
+    VERTEX sphere_center;
+	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	sphere_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
 
     // enter the main loop:
 
@@ -90,14 +91,38 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-		D3DXMATRIX matFinal;
-		static float Time = 0.0f; Time += 0.001f;
+    D3DXMATRIX matRotate, matTrans, matView, matProjection, matFinal;
 
+    static float Time = 0.0f; Time += 0.00025f;
+
+    // create a rotation matrix
+    D3DXMatrixRotationY(&matRotate, Time);
+
+    // create a translation matrix
+    D3DXMatrixTranslation(&matTrans, 0.5, 0.0f, 0.0f);
+
+    // create a view matrix
+    D3DXMatrixLookAtLH(&matView,
+                       &D3DXVECTOR3(0.0f, 1.5f, 3.5f),    // the camera position
+                       &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
+                       &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
+
+    // create a projection matrix
+    D3DXMatrixPerspectiveFovLH(&matProjection,
+                               (FLOAT)D3DXToRadian(45),                    // field of view
+                               (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
+                               1.0f,                                       // near view-plane
+                               100.0f);                                    // far view-plane
+
+    // create the final transform
+    matFinal =  matTrans * matRotate *  matView * matProjection;
+        //D3DXMatrixIdentity(&matFinal);
 		// create a rotation matrix
-		D3DXMatrixRotationY(&matFinal, Time);
+		//D3DXMatrixRotationY(&matFinal, Time);
 		// set the new values for the constant buffer
 		devcon->UpdateSubresource(pCBuffer, 0, 0, &matFinal, 0, 0);				
-		triangleObj->Render(dev, devcon, backbuffer, swapchain);
+        geometry->Render(dev, devcon, backbuffer, swapchain);
+        //triangleObj->Render(dev, devcon, backbuffer, swapchain);
 						
 	}
 
