@@ -69,7 +69,7 @@ void GeometryClass::Initialize()
 
 }
 
-void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, string obj_name)
+void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, string obj_name,D3DXVECTOR4 color)
 {
     ifstream stream (obj_name);
     if(!stream)
@@ -109,7 +109,8 @@ void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, s
         VERTEX vertex;
         vertex.position = verts[i];
         vertex.normal = norms[i];
-        vertex.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+        vertex.color = color;
+		vertex.texcord = D3DXVECTOR2((norms[i].x/2.0f) + 0.5f, (norms[i].y)/2 + 0.5f);
         vertices.push_back(vertex);
     }
 
@@ -134,6 +135,7 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 			point.position.z = (radius) * (-sinf(theta) * sinf(phi)) + center_point.position.z;
 			point.color = center_point.color;
 			point.normal = point.position;
+			point.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
 			vertices.push_back(point);
 		}
 	}
@@ -143,6 +145,7 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     top.position.y += radius;
 	top.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
     top.normal = top.position;
+	top.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
     vertices.push_back(top);
 
     int bot_ind = vertices.size();
@@ -151,6 +154,7 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     bottom.position.y -= radius;
     bottom.color = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
     bottom.normal = bottom.position;
+	bottom.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
     vertices.push_back(bottom);
 
 	for(i = 0; i < slices - 1; i++) {
@@ -186,8 +190,9 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 {
     ObjectClass *obj = new ObjectClass();
     obj->numIndices = indices.size();
-    
-
+	obj->matrices = new MATRICES();
+	obj->light = new LIGHT();
+	
     // create the vertex buffer
     D3D11_BUFFER_DESC bd;
     ZeroMemory(&bd, sizeof(bd));
@@ -224,25 +229,43 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     return;
 }
 
-void GeometryClass::SetMatrix(D3DXMATRIX mat, int objNum)
+void GeometryClass::SetMatrices(MATRICES *mats, int objNum)
 {
-	objects[objNum]->transMat = mat;
+	D3DXMatrixTranspose(&objects[objNum]->matrices->matProjection, &mats->matProjection);
+	D3DXMatrixTranspose(&objects[objNum]->matrices->matView, &mats->matView);
+	D3DXMatrixTranspose(&objects[objNum]->matrices->matWorld, &mats->matWorld);
+	objects[objNum]->matrices->cameraPosition = mats->cameraPosition;
 }
 
-void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer)
+
+void GeometryClass::SetLight(LIGHT *light, int objNum)
+{
+	objects[objNum]->light = light;
+}
+
+void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
+							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer, 
+							ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
+							ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS)
 {
 
     // clear the back buffer to a deep blue
     devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-
+	// clear the depth buffer
+	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	
+    // set the various states
+    devcon->RSSetState(pRS);
+    devcon->PSSetSamplers(0, 1, &pSS);
+    devcon->OMSetBlendState(pBS, 0, 0xffffffff);
     // Draw it all
     for(int i = 0; i < objects.size(); i++ )
     {
 
 		// update constant buffer
-		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->transMat, 0, 0);	
-
-        objects[i]->Render(dev, devcon, backbuffer, swapchain);
+		devcon->UpdateSubresource(vCBuffer, 0, 0, objects[i]->matrices, 0, 0);	
+		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->light, 0, 0);
+		objects[i]->Render(dev, devcon, backbuffer, swapchain, pTexture);
     }
 	
     // switch the back buffer and the front buffer

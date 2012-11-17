@@ -83,13 +83,14 @@
     <ClCompile Include="shaderclass.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="geometryclass.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="objectclass.h" />
     <ClInclude Include="shaderclass.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pShader.hlsl" />
+    <None Include="vShader.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
