@@ -11,6 +11,9 @@ ID3D11DepthStencilView *zbuffer;
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 ID3D11Buffer *vCBuffer;                // the pointer to the constant buffer
+
+ID3D11ShaderResourceView *pTexture;    // the pointer to the texture
+
 ID3D11Buffer *pCBuffer;
 ObjectClass	*triangleObj;
 GeometryClass *geometry;
@@ -75,10 +78,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
     geometry = new GeometryClass();
     VERTEX sphere_center;
 	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	sphere_center.color = D3DXVECTOR4(0.0f, 0.55f, 0.75f, 1.0f);
+	sphere_center.color = D3DXVECTOR4(-1.0f, 0.55f, 0.75f, 1.0f);
 	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	geometry->LoadObject(dev, devcon, "cow.obj");
+	geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(0.45f, 0.65f, 0.20f, 1.0f));
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
+	geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.0f, 0.65f, 0.20f, 1.0f));
 	
 	//Set lighting
 	light = new LIGHT();
@@ -87,7 +91,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	light->diffusecolor = D3DXVECTOR4(1.0f, 0.8f, 0.0f, 1.0f);
 	light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
 	light->specularpower = 32.0f;
-	light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
+	light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
 
 	geometry->SetLight(light, 0);
 	geometry->SetLight(light, 1);
@@ -112,12 +116,15 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-		D3DXMATRIX matRotate, matTrans, matView, matProjection, matFinal;
+		D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matView, matProjection, matScale, matFinal;
+		D3DXVECTOR4 tempVec4;
 
 		static float Time = 0.0f; Time += 0.001f;
+		static float LightTime = 0.0f; LightTime = +0.001f;
 
 		// create a rotation matrix
-		D3DXMatrixRotationY(&matRotate, Time);
+		D3DXMatrixRotationY(&matRotateY, Time);
+		D3DXMatrixRotationZ(&matRotateZ, Time);
 
 		// create a translation matrix
 		D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
@@ -138,29 +145,42 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		// create the final transform
 	    //matFinal =  matRotate * matTrans *  matView * matProjection;
 
-		matrices->matWorld = matRotate * matTrans;
+		matrices->matWorld = matRotateY * matRotateZ * matTrans;
 		matrices->matProjection = matProjection;
 		matrices->matView = matView;
 		matrices->cameraPosition = D3DXVECTOR3(0.0f, 1.5f, 5.5f);
 
 		//update light
-		
+		D3DXMatrixRotationY(&matRotateY, LightTime);
+		D3DXVec3Transform(&tempVec4, &light->lightdirection, &matRotateY);
+		light->lightdirection.x = tempVec4.x;
+		light->lightdirection.y = tempVec4.y;
+		light->lightdirection.z = tempVec4.z;
+
 		geometry->SetLight(light, 0);
 		geometry->SetLight(light, 1);
+		geometry->SetLight(light, 2);
 
 		geometry->SetMatrices(matrices, 0);
 
 		// set matrix for second object
-
+		D3DXMatrixRotationX(&matRotateX, Time);
 		D3DXMatrixTranslation(&matTrans, 0.0f, 1.5f, 0.0f);
 
-		D3DXMatrixRotationZ(&matRotate, Time);
 
-		matrices->matWorld = matRotate * matTrans;
+		matrices->matWorld = matRotateX * matTrans;
 
 		geometry->SetMatrices(matrices, 1);
-		
-        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer);
+
+
+
+		//set matrix for third
+		D3DXMatrixTranslation(&matTrans, 0.0f, 1.5f, 2.0f);
+
+		matrices->matWorld = matRotateY * matRotateZ * matTrans;
+		geometry->SetMatrices(matrices, 2);
+
+        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer, pTexture);
 						
 	}
 
@@ -318,4 +338,10 @@ void InitPipeline()
     dev->CreateBuffer(&bd, NULL, &pCBuffer);
     devcon->PSSetConstantBuffers(0, 1, &pCBuffer);
     
-}
+	D3DX11CreateShaderResourceViewFromFile(dev,        // the Direct3D device
+										   L"Wood.png",    // load Wood.png in the local folder
+										   NULL,           // no additional information
+										   NULL,           // no multithreading
+										   &pTexture,      // address of the shader-resource-view
+										   NULL);          // no multithreading
+	}

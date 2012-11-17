@@ -69,7 +69,7 @@ void GeometryClass::Initialize()
 
 }
 
-void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, string obj_name)
+void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, string obj_name,D3DXVECTOR4 color)
 {
     ifstream stream (obj_name);
     if(!stream)
@@ -109,7 +109,8 @@ void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, s
         VERTEX vertex;
         vertex.position = verts[i];
         vertex.normal = norms[i];
-        vertex.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+        vertex.color = color;
+		vertex.texcord = D3DXVECTOR2((norms[i].x/2.0f) + 0.5f, (norms[i].y)/2 + 0.5f);
         vertices.push_back(vertex);
     }
 
@@ -134,6 +135,7 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 			point.position.z = (radius) * (-sinf(theta) * sinf(phi)) + center_point.position.z;
 			point.color = center_point.color;
 			point.normal = point.position;
+			point.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
 			vertices.push_back(point);
 		}
 	}
@@ -143,6 +145,7 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     top.position.y += radius;
 	top.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
     top.normal = top.position;
+	top.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
     vertices.push_back(top);
 
     int bot_ind = vertices.size();
@@ -151,6 +154,7 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     bottom.position.y -= radius;
     bottom.color = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
     bottom.normal = bottom.position;
+	bottom.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
     vertices.push_back(bottom);
 
 	for(i = 0; i < slices - 1; i++) {
@@ -240,7 +244,8 @@ void GeometryClass::SetLight(LIGHT *light, int objNum)
 }
 
 void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
-							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer, ID3D11DepthStencilView *zbuffer)
+							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer, 
+							ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture)
 {
 
     // clear the back buffer to a deep blue
@@ -254,7 +259,7 @@ void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D1
 		// update constant buffer
 		devcon->UpdateSubresource(vCBuffer, 0, 0, objects[i]->matrices, 0, 0);	
 		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->light, 0, 0);
-        objects[i]->Render(dev, devcon, backbuffer, swapchain);
+		objects[i]->Render(dev, devcon, backbuffer, swapchain, pTexture);
     }
 	
     // switch the back buffer and the front buffer

@@ -15,9 +15,10 @@ struct VOut
     float4 color : COLOR;
 	float3 normal : NORMAL;
 	float3 viewDirection : VIEWDIRECTION;
+	float2 texcord : TEXCORD;
 };
 
-VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : NORMAL)
+VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : NORMAL, float2 texcord : TEXCORD)
 {
     VOut output;
     float4 worldPosition;
@@ -28,6 +29,8 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : N
 
     output.color = color;
     
+	output.texcord = texcord;
+
     // Calculate the normal vector against the world matrix only.
     output.normal = mul(normal, (float3x3)matWorld);
 	

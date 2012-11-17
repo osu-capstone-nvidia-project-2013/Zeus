@@ -6,7 +6,7 @@ ObjectClass::ObjectClass()
 {
 }
 
-void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain)
+void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11ShaderResourceView *pTexture)
 {
 
 
@@ -21,6 +21,8 @@ void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11R
 		// select which primtive type we are using
         devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		
+        devcon->PSSetShaderResources(0, 1, &pTexture);
 
         // draw the vertex buffer to the back buffer
         devcon->DrawIndexed(numIndices, 0, 0);

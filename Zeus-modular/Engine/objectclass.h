@@ -33,7 +33,7 @@ public:
 	ObjectClass();
 	~ObjectClass();
 
-	void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain);
+	void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11ShaderResourceView *pTexture);
 
 	MATRICES *matrices;
 	unsigned int numIndices;

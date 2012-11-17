@@ -13,11 +13,15 @@ struct VOut
     float4 color : COLOR;
 	float3 normal : NORMAL;
 	float3 viewDirection : VIEWDIRECTION;
+	float2 texcord : TEXCORD;
 };
+
+Texture2D Texture;
+SamplerState ss;
 
 float4 PShader(VOut input) : SV_TARGET
 {
-	//float4 textureColor;
+	float4 textureColor;
     float3 lightDir;
     float lightIntensity;
     float4 color;
@@ -26,7 +30,10 @@ float4 PShader(VOut input) : SV_TARGET
 
 
     // Sample the pixel color from the texture using the sampler at this texture coordinate location.
-    //textureColor = shaderTexture.Sample(SampleType, input.tex);
+	if(input.color.x < 0)
+	{
+		textureColor = Texture.Sample(ss, input.texcord);
+	}
 
     // Set the default output color to the ambient light value for all pixels.
     color = ambientColor;
@@ -57,8 +64,15 @@ float4 PShader(VOut input) : SV_TARGET
     }
 
     // Multiply the texture pixel and the input color to get the textured result.
-    color = color * input.color;
 
+	if(input.color.x >= 0)
+	{
+		color = color * input.color;
+	}
+	else
+	{
+		color = color * textureColor;
+	}
     // Add the specular component last to the output color.
     color = saturate(color + specular);
 
