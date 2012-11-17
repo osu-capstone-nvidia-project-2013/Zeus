@@ -7,6 +7,7 @@
 // global declarations
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
+ID3D11DepthStencilView *zbuffer;    
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
 ID3D11Buffer *vCBuffer;                // the pointer to the constant buffer
@@ -15,7 +16,7 @@ ObjectClass	*triangleObj;
 GeometryClass *geometry;
 ShaderClass *shaderclass;
 LIGHT *light;
-
+MATRICES *matrices;
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
 void CleanD3D(ObjectClass *obj);        // closes Direct3D and releases memory
@@ -74,7 +75,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     geometry = new GeometryClass();
     VERTEX sphere_center;
 	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	sphere_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
+	sphere_center.color = D3DXVECTOR4(0.0f, 0.55f, 0.75f, 1.0f);
 	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
 	geometry->LoadObject(dev, devcon, "cow.obj");
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
@@ -82,14 +83,19 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	//Set lighting
 	light = new LIGHT();
 
-	light->ambientcolor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
-	light->diffusecolor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
-	light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
-	light->specularpower = 1.0f;
-	light->lightdirection = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	light->ambientcolor = D3DXVECTOR4(0.2f, 0.2f, 0.2f, 1.0f);
+	light->diffusecolor = D3DXVECTOR4(1.0f, 0.8f, 0.0f, 1.0f);
+	light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+	light->specularpower = 32.0f;
+	light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
 
 	geometry->SetLight(light, 0);
 	geometry->SetLight(light, 1);
+
+
+	//Setup for updating matrices
+	matrices = new MATRICES();
+
 
     // enter the main loop:
 
@@ -130,9 +136,19 @@ int WINAPI WinMain(HINSTANCE hInstance,
 								   100.0f);                                    // far view-plane
 
 		// create the final transform
-		matFinal =  matRotate * matTrans *  matView * matProjection;
+	    //matFinal =  matRotate * matTrans *  matView * matProjection;
 
-		geometry->SetMatrix(matFinal, 0);
+		matrices->matWorld = matRotate * matTrans;
+		matrices->matProjection = matProjection;
+		matrices->matView = matView;
+		matrices->cameraPosition = D3DXVECTOR3(0.0f, 1.5f, 5.5f);
+
+		//update light
+		
+		geometry->SetLight(light, 0);
+		geometry->SetLight(light, 1);
+
+		geometry->SetMatrices(matrices, 0);
 
 		// set matrix for second object
 
@@ -140,11 +156,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 		D3DXMatrixRotationZ(&matRotate, Time);
 
-		matFinal = matRotate * matTrans * matView * matProjection;
+		matrices->matWorld = matRotate * matTrans;
 
-		geometry->SetMatrix(matFinal, 1);
+		geometry->SetMatrices(matrices, 1);
 		
-        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer);
+        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer);
 						
 	}
 
@@ -176,7 +192,6 @@ void InitD3D(HWND hWnd)
 {
     // create a struct to hold information about the swap chain
     DXGI_SWAP_CHAIN_DESC scd;
-
     // clear out the struct for use
     ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
 
@@ -204,6 +219,30 @@ void InitD3D(HWND hWnd)
                                   &dev,
                                   NULL,
                                   &devcon);
+  // create the depth buffer texture
+    D3D11_TEXTURE2D_DESC texd;
+    ZeroMemory(&texd, sizeof(texd));
+
+    texd.Width = SCREEN_WIDTH;
+    texd.Height = SCREEN_HEIGHT;
+    texd.ArraySize = 1;
+    texd.MipLevels = 1;
+    texd.SampleDesc.Count = 4;
+    texd.Format = DXGI_FORMAT_D32_FLOAT;
+    texd.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+    ID3D11Texture2D *pDepthBuffer;
+    dev->CreateTexture2D(&texd, NULL, &pDepthBuffer);
+
+    // create the depth buffer
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
+    ZeroMemory(&dsvd, sizeof(dsvd));
+
+    dsvd.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+    dev->CreateDepthStencilView(pDepthBuffer, &dsvd, &zbuffer);
+    pDepthBuffer->Release();
 
 
     // get the address of the back buffer
@@ -215,7 +254,7 @@ void InitD3D(HWND hWnd)
     pBackBuffer->Release();
 
     // set the render target as the back buffer
-    devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+    devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
 
 
     // Set the viewport
@@ -227,7 +266,13 @@ void InitD3D(HWND hWnd)
     viewport.Width = SCREEN_WIDTH;
     viewport.Height = SCREEN_HEIGHT;
 
+	viewport.MinDepth = 0;    // the closest an object can be on the depth buffer is 0.0
+	viewport.MaxDepth = 1;    // the farthest an object can be on the depth buffer is 1.0
+
     devcon->RSSetViewports(1, &viewport);
+
+
+	
 
     InitPipeline();
 }
@@ -239,7 +284,8 @@ void InitD3D(HWND hWnd)
 void CleanD3D(ObjectClass *obj)
 {
     swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
-
+	
+    zbuffer->Release();
     // close and release all existing COM objects
     obj->vBuffer->Release();
     swapchain->Release();
@@ -257,7 +303,7 @@ void InitPipeline()
     ZeroMemory(&bd, sizeof(bd));
 
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = 64;
+    bd.ByteWidth = sizeof(MATRICES);
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
     dev->CreateBuffer(&bd, NULL, &vCBuffer);
@@ -266,7 +312,7 @@ void InitPipeline()
     ZeroMemory(&bd, sizeof(bd));
 
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = 64;
+    bd.ByteWidth = sizeof(LIGHT);
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
     dev->CreateBuffer(&bd, NULL, &pCBuffer);

@@ -15,6 +15,15 @@ struct LIGHT
 	float specularpower;
 	D3DXVECTOR3 lightdirection;
 };
+
+struct MATRICES
+{
+	D3DXMATRIX matWorld;
+	D3DXMATRIX matView;
+	D3DXMATRIX matProjection;
+	D3DXVECTOR3 cameraPosition;
+	float padding;
+};
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ObjectClass
 ////////////////////////////////////////////////////////////////////////////////
@@ -26,7 +35,7 @@ public:
 
 	void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain);
 
-	D3DXMATRIX transMat;
+	MATRICES *matrices;
 	unsigned int numIndices;
 	ID3D11Buffer *vBuffer;
 	ID3D11Buffer *iBuffer;	

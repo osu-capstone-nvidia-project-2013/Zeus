@@ -186,8 +186,9 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 {
     ObjectClass *obj = new ObjectClass();
     obj->numIndices = indices.size();
-    
-
+	obj->matrices = new MATRICES();
+	obj->light = new LIGHT();
+	
     // create the vertex buffer
     D3D11_BUFFER_DESC bd;
     ZeroMemory(&bd, sizeof(bd));
@@ -224,9 +225,12 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     return;
 }
 
-void GeometryClass::SetMatrix(D3DXMATRIX mat, int objNum)
+void GeometryClass::SetMatrices(MATRICES *mats, int objNum)
 {
-	objects[objNum]->transMat = mat;
+	D3DXMatrixTranspose(&objects[objNum]->matrices->matProjection, &mats->matProjection);
+	D3DXMatrixTranspose(&objects[objNum]->matrices->matView, &mats->matView);
+	D3DXMatrixTranspose(&objects[objNum]->matrices->matWorld, &mats->matWorld);
+	objects[objNum]->matrices->cameraPosition = mats->cameraPosition;
 }
 
 
@@ -236,18 +240,19 @@ void GeometryClass::SetLight(LIGHT *light, int objNum)
 }
 
 void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
-							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer)
+							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer, ID3D11DepthStencilView *zbuffer)
 {
 
     // clear the back buffer to a deep blue
     devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-
+	// clear the depth buffer
+	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
     // Draw it all
     for(int i = 0; i < objects.size(); i++ )
     {
 
 		// update constant buffer
-		devcon->UpdateSubresource(vCBuffer, 0, 0, objects[i]->transMat, 0, 0);	
+		devcon->UpdateSubresource(vCBuffer, 0, 0, objects[i]->matrices, 0, 0);	
 		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->light, 0, 0);
         objects[i]->Render(dev, devcon, backbuffer, swapchain);
     }
