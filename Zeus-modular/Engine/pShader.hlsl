@@ -27,7 +27,7 @@ float4 PShader(VOut input) : SV_TARGET
     float4 color;
     float3 reflection;
     float4 specular;
-
+	float resAlpha;
 
     // Sample the pixel color from the texture using the sampler at this texture coordinate location.
 	if(input.color.x < 0)

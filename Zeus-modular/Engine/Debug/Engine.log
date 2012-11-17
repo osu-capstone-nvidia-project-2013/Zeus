@@ -1,4 +1,4 @@
-﻿Build started 11/17/2012 4:38:15 AM.
+﻿Build started 11/17/2012 5:37:32 AM.
      1>Project "C:\Users\Chris\Documents\Zeus\Zeus-modular\Engine\Engine.vcxproj" on node 2 (clean target(s)).
      1>_PrepareForClean:
          Deleting file "Debug\Engine.lastbuildstate".
@@ -6,4 +6,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.03
+Time Elapsed 00:00:00.02

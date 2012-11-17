@@ -20,10 +20,18 @@ GeometryClass *geometry;
 ShaderClass *shaderclass;
 LIGHT *light;
 MATRICES *matrices;
+
+
+// state objects
+ID3D11RasterizerState *pRS;            // the default rasterizer state
+ID3D11SamplerState *pSS;               // the default sampler state
+ID3D11BlendState *pBS;                 // a typicl blend state
+
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
 void CleanD3D(ObjectClass *obj);        // closes Direct3D and releases memory
 void InitPipeline(void);    // loads and prepares the shaders
+void InitStates();
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -78,11 +86,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
     geometry = new GeometryClass();
     VERTEX sphere_center;
 	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	sphere_center.color = D3DXVECTOR4(-1.0f, 0.55f, 0.75f, 1.0f);
+	sphere_center.color = D3DXVECTOR4(0.75f, 0.25f, 1.0f, 1.0f);
 	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(0.45f, 0.65f, 0.20f, 1.0f));
+	geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(-0.45f, 0.65f, 0.20f, 1.0f));
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
-	geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.0f, 0.65f, 0.20f, 1.0f));
+	geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.35f));
 	
 	//Set lighting
 	light = new LIGHT();
@@ -95,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	geometry->SetLight(light, 0);
 	geometry->SetLight(light, 1);
-
+	geometry->SetLight(light, 2);
 
 	//Setup for updating matrices
 	matrices = new MATRICES();
@@ -180,7 +188,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		matrices->matWorld = matRotateY * matRotateZ * matTrans;
 		geometry->SetMatrices(matrices, 2);
 
-        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer, pTexture);
+        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer, pTexture,
+						pBS, pSS, pRS);
 						
 	}
 
@@ -293,7 +302,7 @@ void InitD3D(HWND hWnd)
 
 
 	
-
+	InitStates();
     InitPipeline();
 }
 
@@ -339,9 +348,57 @@ void InitPipeline()
     devcon->PSSetConstantBuffers(0, 1, &pCBuffer);
     
 	D3DX11CreateShaderResourceViewFromFile(dev,        // the Direct3D device
-										   L"Wood.png",    // load Wood.png in the local folder
+										   L"Bricks.png",    // load Wood.png in the local folder
 										   NULL,           // no additional information
 										   NULL,           // no multithreading
 										   &pTexture,      // address of the shader-resource-view
 										   NULL);          // no multithreading
 	}
+
+// initializes the states
+void InitStates()
+{
+    D3D11_RASTERIZER_DESC rd;
+    rd.FillMode = D3D11_FILL_SOLID;
+    rd.CullMode = D3D11_CULL_BACK;
+    rd.FrontCounterClockwise = FALSE;
+    rd.DepthClipEnable = TRUE;
+    rd.ScissorEnable = FALSE;
+    rd.AntialiasedLineEnable = FALSE;
+    rd.MultisampleEnable = FALSE;
+    rd.DepthBias = 0;
+    rd.DepthBiasClamp = 0.0f;
+    rd.SlopeScaledDepthBias = 0.0f;
+
+    dev->CreateRasterizerState(&rd, &pRS);
+
+    D3D11_SAMPLER_DESC sd;
+    sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sd.MaxAnisotropy = 16;
+    sd.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.BorderColor[0] = 0.0f;
+    sd.BorderColor[1] = 0.0f;
+    sd.BorderColor[2] = 0.0f;
+    sd.BorderColor[3] = 0.0f;
+    sd.MinLOD = 0.0f;
+    sd.MaxLOD = FLT_MAX;
+    sd.MipLODBias = 0.0f;
+
+    dev->CreateSamplerState(&sd, &pSS);
+
+    D3D11_BLEND_DESC bd;
+    bd.RenderTarget[0].BlendEnable = TRUE;
+    bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bd.IndependentBlendEnable = FALSE;
+    bd.AlphaToCoverageEnable = FALSE;
+
+    dev->CreateBlendState(&bd, &pBS);
+}

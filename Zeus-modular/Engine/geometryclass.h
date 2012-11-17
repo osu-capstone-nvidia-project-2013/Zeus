@@ -45,7 +45,8 @@ public:
 	void SetLight(LIGHT *light, int objNum);
     void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
 				IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
-				ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture);
+				ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
+				ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS);
 	
 private:
     vector<ObjectClass*> objects;

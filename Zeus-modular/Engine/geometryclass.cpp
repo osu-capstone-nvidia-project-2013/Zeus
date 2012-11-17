@@ -245,13 +245,19 @@ void GeometryClass::SetLight(LIGHT *light, int objNum)
 
 void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
 							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer, 
-							ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture)
+							ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
+							ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS)
 {
 
     // clear the back buffer to a deep blue
     devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 	// clear the depth buffer
 	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	
+    // set the various states
+    devcon->RSSetState(pRS);
+    devcon->PSSetSamplers(0, 1, &pSS);
+    devcon->OMSetBlendState(pBS, 0, 0xffffffff);
     // Draw it all
     for(int i = 0; i < objects.size(); i++ )
     {
