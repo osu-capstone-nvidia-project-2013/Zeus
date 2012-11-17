@@ -9,11 +9,12 @@ IDXGISwapChain *swapchain;             // the pointer to the swap chain interfac
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
-ID3D11Buffer *pCBuffer;                // the pointer to the constant buffer
-ID3D11Buffer *pCameraBuffer;		   // the pointer to the camera constant buffer
+ID3D11Buffer *vCBuffer;                // the pointer to the constant buffer
+ID3D11Buffer *pCBuffer;
 ObjectClass	*triangleObj;
 GeometryClass *geometry;
 ShaderClass *shaderclass;
+LIGHT *light;
 
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
@@ -78,6 +79,17 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	geometry->LoadObject(dev, devcon, "cow.obj");
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
 	
+	//Set lighting
+	light = new LIGHT();
+
+	light->ambientcolor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
+	light->diffusecolor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
+	light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 0.0f, 1.0f);
+	light->specularpower = 1.0f;
+	light->lightdirection = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+
+	geometry->SetLight(light, 0);
+	geometry->SetLight(light, 1);
 
     // enter the main loop:
 
@@ -132,7 +144,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 		geometry->SetMatrix(matFinal, 1);
 		
-        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer);
+        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer);
 						
 	}
 
@@ -248,7 +260,16 @@ void InitPipeline()
     bd.ByteWidth = 64;
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
+    dev->CreateBuffer(&bd, NULL, &vCBuffer);
+    devcon->VSSetConstantBuffers(0, 1, &vCBuffer);
+
+    ZeroMemory(&bd, sizeof(bd));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = 64;
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
     dev->CreateBuffer(&bd, NULL, &pCBuffer);
-    devcon->VSSetConstantBuffers(0, 1, &pCBuffer);
+    devcon->PSSetConstantBuffers(0, 1, &pCBuffer);
     
 }

@@ -23,6 +23,7 @@ struct VERTEX
 	D3DXVECTOR3 normal;
 };
 
+
 void SetTriangle(ObjectClass *, ID3D11Device *, ID3D11DeviceContext *);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +41,8 @@ public:
     void LoadObject(ID3D11Device *, ID3D11DeviceContext *, string);
     void CreateSphere(ID3D11Device *, ID3D11DeviceContext *, VERTEX, float, int, int);
 	void SetMatrix(D3DXMATRIX mat, int objNum);
-    void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer);
+	void SetLight(LIGHT *light, int objNum);
+    void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer);
 	
 private:
     vector<ObjectClass*> objects;

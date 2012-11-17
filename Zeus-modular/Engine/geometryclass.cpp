@@ -229,7 +229,14 @@ void GeometryClass::SetMatrix(D3DXMATRIX mat, int objNum)
 	objects[objNum]->transMat = mat;
 }
 
-void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer)
+
+void GeometryClass::SetLight(LIGHT *light, int objNum)
+{
+	objects[objNum]->light = light;
+}
+
+void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
+							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer)
 {
 
     // clear the back buffer to a deep blue
@@ -240,8 +247,8 @@ void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D1
     {
 
 		// update constant buffer
-		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->transMat, 0, 0);	
-
+		devcon->UpdateSubresource(vCBuffer, 0, 0, objects[i]->transMat, 0, 0);	
+		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->light, 0, 0);
         objects[i]->Render(dev, devcon, backbuffer, swapchain);
     }
 	

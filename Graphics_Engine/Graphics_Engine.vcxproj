@@ -77,7 +77,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="d3dxclass.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="modelclass.cpp" />
+    <ClCompile Include="objectclass.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="d3dxclass.h" />
+    <ClInclude Include="modelclass.h" />
+    <ClInclude Include="objectclass.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

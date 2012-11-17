@@ -22,8 +22,8 @@ void ShaderClass::InitShader(string vsname, string psname, struct SHADER shader,
 	// load and compile the two shaders
     ID3D10Blob *bVS, *bPS;
 	ID3D11InputLayout *pLayout;            // the pointer to the input layout
-    D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "VShader", "vs_5_0", 0, 0, 0, &bVS, 0, 0);
-    D3DX11CompileFromFile(L"shaders.hlsl", 0, 0, "PShader", "ps_5_0", 0, 0, 0, &bPS, 0, 0);
+    D3DX11CompileFromFile(L"vShader.hlsl", 0, 0, "VShader", "vs_5_0", 0, 0, 0, &bVS, 0, 0);
+    D3DX11CompileFromFile(L"pShader.hlsl", 0, 0, "PShader", "ps_5_0", 0, 0, 0, &bPS, 0, 0);
 
 	// encapsulate both shaders into shader objects
     dev->CreateVertexShader(bVS->GetBufferPointer(), bVS->GetBufferSize(), NULL, &shader.pVS);
