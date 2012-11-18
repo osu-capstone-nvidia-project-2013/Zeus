@@ -62,7 +62,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     hWnd = CreateWindowEx(NULL,
                           L"WindowClass",
-                          L"Our First Direct3D Program",
+                          L"Zeus Graphics Engine",
                           WS_OVERLAPPEDWINDOW,
                           300,
                           300,
@@ -77,36 +77,38 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     // set up and initialize Direct3D
     InitD3D(hWnd);
-	
-	shaderclass = new ShaderClass();
-	shaderclass->SetShaders(dev, devcon);
+    
+    shaderclass = new ShaderClass();
+    shaderclass->SetShaders(dev, devcon);
 
-	triangleObj = new ObjectClass();
+    triangleObj = new ObjectClass();
     SetTriangle(triangleObj, dev, devcon);
     geometry = new GeometryClass();
     VERTEX sphere_center;
-	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	sphere_center.color = D3DXVECTOR4(0.75f, 0.25f, 1.0f, 1.0f);
-	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(-0.45f, 0.65f, 0.20f, 1.0f));
+    sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    sphere_center.color = D3DXVECTOR4(0.75f, 0.25f, 0.0f, 1.0f);
+    sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(-0.45f, 0.65f, 0.20f, 1.0f));
+    geometry->SetTexture(dev, L"Bricks.png", 0);
+    geometry->SetAlpha(dev, L"Bricks_alpha.png", 0);
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
-	geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(1.0f, 0.0f, 0.0f, 0.35f));
-	
-	//Set lighting
-	light = new LIGHT();
+    geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.2f, 0.6f, 0.1f, 0.5f));
+    
+    //Set lighting
+    light = new LIGHT();
 
-	light->ambientcolor = D3DXVECTOR4(0.2f, 0.2f, 0.2f, 1.0f);
-	light->diffusecolor = D3DXVECTOR4(1.0f, 0.8f, 0.0f, 1.0f);
-	light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
-	light->specularpower = 32.0f;
-	light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+    light->ambientcolor = D3DXVECTOR4(0.2f, 0.2f, 0.2f, 1.0f);
+    light->diffusecolor = D3DXVECTOR4(1.0f, 0.8f, 0.0f, 1.0f);
+    light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+    light->specularpower = 32.0f;
+    light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
 
-	geometry->SetLight(light, 0);
-	geometry->SetLight(light, 1);
-	geometry->SetLight(light, 2);
+    geometry->SetLight(light, 0);
+    geometry->SetLight(light, 1);
+    geometry->SetLight(light, 2);
 
-	//Setup for updating matrices
-	matrices = new MATRICES();
+    //Setup for updating matrices
+    matrices = new MATRICES();
 
 
     // enter the main loop:
@@ -124,74 +126,75 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-		D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matView, matProjection, matScale, matFinal;
-		D3DXVECTOR4 tempVec4;
+        D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matView, matProjection, matScale, matFinal;
+        D3DXVECTOR4 tempVec4;
 
-		static float Time = 0.0f; Time += 0.001f;
-		static float LightTime = 0.0f; LightTime = +0.001f;
+        static float Time = 0.0f; Time += 0.000125f;
+        static float LightTime = 0.0f; LightTime = +0.0005f;
 
-		// create a rotation matrix
-		D3DXMatrixRotationY(&matRotateY, Time);
-		D3DXMatrixRotationZ(&matRotateZ, Time);
+        // create a rotation matrix
+        D3DXMatrixRotationY(&matRotateY, Time);
+        D3DXMatrixRotationZ(&matRotateZ, Time);
 
-		// create a translation matrix
-		D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
+        // create a translation matrix
+        D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
 
-		// create a view matrix
-		D3DXMatrixLookAtLH(&matView,
-						   &D3DXVECTOR3(0.0f, 1.5f, 5.5f),    // the camera position
-						   &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
-						   &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
+        // create a view matrix
+        D3DXMatrixLookAtLH(&matView,
+                           &D3DXVECTOR3(0.0f, 0.0f, 5.5f),    // the camera position
+                           &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
+                           &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
 
-		// create a projection matrix
-		D3DXMatrixPerspectiveFovLH(&matProjection,
-								   (FLOAT)D3DXToRadian(45),                    // field of view
-								   (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
-								   1.0f,                                       // near view-plane
-								   100.0f);                                    // far view-plane
+        // create a projection matrix
+        D3DXMatrixPerspectiveFovLH(&matProjection,
+                                   (FLOAT)D3DXToRadian(45),                    // field of view
+                                   (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
+                                   1.0f,                                       // near view-plane
+                                   100.0f);                                    // far view-plane
 
-		// create the final transform
-	    //matFinal =  matRotate * matTrans *  matView * matProjection;
+        // create the final transform
+        //matFinal =  matRotate * matTrans *  matView * matProjection;
 
-		matrices->matWorld = matRotateY * matRotateZ * matTrans;
-		matrices->matProjection = matProjection;
-		matrices->matView = matView;
-		matrices->cameraPosition = D3DXVECTOR3(0.0f, 1.5f, 5.5f);
+        matrices->matWorld = matRotateY * matRotateZ * matTrans;
+        matrices->matProjection = matProjection;
+        matrices->matView = matView;
+        matrices->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
 
-		//update light
-		D3DXMatrixRotationY(&matRotateY, LightTime);
-		D3DXVec3Transform(&tempVec4, &light->lightdirection, &matRotateY);
-		light->lightdirection.x = tempVec4.x;
-		light->lightdirection.y = tempVec4.y;
-		light->lightdirection.z = tempVec4.z;
+        //update light
+        D3DXMatrixRotationY(&matRotateY, LightTime);
+        D3DXVec3Transform(&tempVec4, &light->lightdirection, &matRotateY);
+        light->lightdirection.x = tempVec4.x;
+        light->lightdirection.y = tempVec4.y;
+        light->lightdirection.z = tempVec4.z;
 
-		geometry->SetLight(light, 0);
-		geometry->SetLight(light, 1);
-		geometry->SetLight(light, 2);
+        geometry->SetLight(light, 0);
+        geometry->SetLight(light, 1);
+        geometry->SetLight(light, 2);
 
-		geometry->SetMatrices(matrices, 0);
+        geometry->SetMatrices(matrices, 0);
+        
 
-		// set matrix for second object
-		D3DXMatrixRotationX(&matRotateX, Time);
-		D3DXMatrixTranslation(&matTrans, 0.0f, 1.5f, 0.0f);
-
-
-		matrices->matWorld = matRotateX * matTrans;
-
-		geometry->SetMatrices(matrices, 1);
+        // set matrix for second object
+        D3DXMatrixRotationX(&matRotateX, Time);
+        D3DXMatrixTranslation(&matTrans, -1.0f, 1.5f, -2.0f);
 
 
+        matrices->matWorld = matRotateX * matTrans;
 
-		//set matrix for third
-		D3DXMatrixTranslation(&matTrans, 0.0f, 1.5f, 2.0f);
+        geometry->SetMatrices(matrices, 1);
 
-		matrices->matWorld = matRotateY * matRotateZ * matTrans;
-		geometry->SetMatrices(matrices, 2);
+
+
+        //set matrix for third
+        D3DXMatrixTranslation(&matTrans, 0.5f, 0.0f, 2.0f);
+
+        matrices->matWorld = matRotateY * matRotateZ * matTrans;
+        geometry->SetMatrices(matrices, 2);
 
         geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer, pTexture,
-						pBS, pSS, pRS);
-						
-	}
+                        pBS, pSS, pRS);
+                        
+    }
 
     // clean up DirectX and COM
     CleanD3D(triangleObj);
@@ -295,14 +298,14 @@ void InitD3D(HWND hWnd)
     viewport.Width = SCREEN_WIDTH;
     viewport.Height = SCREEN_HEIGHT;
 
-	viewport.MinDepth = 0;    // the closest an object can be on the depth buffer is 0.0
-	viewport.MaxDepth = 1;    // the farthest an object can be on the depth buffer is 1.0
+    viewport.MinDepth = 0;    // the closest an object can be on the depth buffer is 0.0
+    viewport.MaxDepth = 1;    // the farthest an object can be on the depth buffer is 1.0
 
     devcon->RSSetViewports(1, &viewport);
 
 
-	
-	InitStates();
+    
+    InitStates();
     InitPipeline();
 }
 
@@ -313,7 +316,7 @@ void InitD3D(HWND hWnd)
 void CleanD3D(ObjectClass *obj)
 {
     swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
-	
+    
     zbuffer->Release();
     // close and release all existing COM objects
     obj->vBuffer->Release();
@@ -347,13 +350,13 @@ void InitPipeline()
     dev->CreateBuffer(&bd, NULL, &pCBuffer);
     devcon->PSSetConstantBuffers(0, 1, &pCBuffer);
     
-	D3DX11CreateShaderResourceViewFromFile(dev,        // the Direct3D device
-										   L"Bricks.png",    // load Wood.png in the local folder
-										   NULL,           // no additional information
-										   NULL,           // no multithreading
-										   &pTexture,      // address of the shader-resource-view
-										   NULL);          // no multithreading
-	}
+    D3DX11CreateShaderResourceViewFromFile(dev,        // the Direct3D device
+                                           L"Bricks.png",    // load Wood.png in the local folder
+                                           NULL,           // no additional information
+                                           NULL,           // no multithreading
+                                           &pTexture,      // address of the shader-resource-view
+                                           NULL);          // no multithreading
+    }
 
 // initializes the states
 void InitStates()

@@ -29,7 +29,7 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : N
 
     output.color = color;
     
-	output.texcord = texcord;
+	output.texcord = fmod(texcord, float2(1.0f, 1.0f));
 
     // Calculate the normal vector against the world matrix only.
     output.normal = mul(normal, (float3x3)matWorld);

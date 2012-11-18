@@ -17,11 +17,13 @@ struct VOut
 };
 
 Texture2D Texture;
+Texture2D Alpha;
 SamplerState ss;
 
 float4 PShader(VOut input) : SV_TARGET
 {
 	float4 textureColor;
+    float4 alphaColor;
     float3 lightDir;
     float lightIntensity;
     float4 color;
@@ -30,9 +32,15 @@ float4 PShader(VOut input) : SV_TARGET
 	float resAlpha;
 
     // Sample the pixel color from the texture using the sampler at this texture coordinate location.
-	if(input.color.x < 0)
+	if(input.color.x < 0.0)
 	{
 		textureColor = Texture.Sample(ss, input.texcord);
+        alphaColor = Alpha.Sample(ss, input.texcord);
+        textureColor.a = (alphaColor.r + alphaColor.g + alphaColor.b ) / 3.0;
+        if(textureColor.a < 0.1f)
+        {
+            textureColor.a = 0.0f;
+        }
 	}
 
     // Set the default output color to the ambient light value for all pixels.

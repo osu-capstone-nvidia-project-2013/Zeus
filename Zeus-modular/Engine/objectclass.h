@@ -40,6 +40,9 @@ public:
 	ID3D11Buffer *vBuffer;
 	ID3D11Buffer *iBuffer;	
 	LIGHT *light;
+
+	ID3D11ShaderResourceView *texturemap;
+	ID3D11ShaderResourceView *alphamap;
 };
 
 #endif

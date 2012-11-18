@@ -22,7 +22,9 @@ void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11R
         devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		
-        devcon->PSSetShaderResources(0, 1, &pTexture);
+        devcon->PSSetShaderResources(0, 1, &texturemap);
+        devcon->PSSetShaderResources(1, 1, &alphamap);
+
 
         // draw the vertex buffer to the back buffer
         devcon->DrawIndexed(numIndices, 0, 0);

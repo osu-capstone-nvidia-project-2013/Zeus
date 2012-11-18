@@ -43,6 +43,8 @@ public:
     void CreateSphere(ID3D11Device *, ID3D11DeviceContext *, VERTEX, float, int, int);
 	void SetMatrices(MATRICES *mats, int objNum);
 	void SetLight(LIGHT *light, int objNum);
+    void SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum);
+    void SetTexture(ID3D11Device *dev, LPCWSTR texturefile, int objNum);
     void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
 				IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
 				ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,

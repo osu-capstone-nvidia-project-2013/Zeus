@@ -135,7 +135,9 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 			point.position.z = (radius) * (-sinf(theta) * sinf(phi)) + center_point.position.z;
 			point.color = center_point.color;
 			point.normal = point.position;
-			point.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
+			float texcoordx = fmodf(float(i) / (slices - 1), 1.0f);
+			float texcoordy = fmodf(float(j) / (stacks - 1), 1.0f);
+			point.texcord = D3DXVECTOR2(texcoordx, texcoordy);
 			vertices.push_back(point);
 		}
 	}
@@ -192,6 +194,8 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     obj->numIndices = indices.size();
 	obj->matrices = new MATRICES();
 	obj->light = new LIGHT();
+	obj->texturemap = NULL;
+	obj->alphamap = NULL;
 	
     // create the vertex buffer
     D3D11_BUFFER_DESC bd;
@@ -241,6 +245,26 @@ void GeometryClass::SetMatrices(MATRICES *mats, int objNum)
 void GeometryClass::SetLight(LIGHT *light, int objNum)
 {
 	objects[objNum]->light = light;
+}
+
+void GeometryClass::SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum) 
+{
+    D3DX11CreateShaderResourceViewFromFile(dev,                             // the Direct3D device
+                                           alphafile,                       // load the alphamap in the local folder
+                                           NULL,                            // no additional information
+                                           NULL,                            // no multithreading
+                                           &objects[objNum]->alphamap,      // address of the shader-resource-view
+                                           NULL);                           // no multithreading
+}
+
+void GeometryClass::SetTexture(ID3D11Device *dev, LPCWSTR texturefile, int objNum) 
+{
+    D3DX11CreateShaderResourceViewFromFile(dev,                             // the Direct3D device
+                                           texturefile,                     // load the alphamap in the local folder
+                                           NULL,                            // no additional information
+                                           NULL,                            // no multithreading
+                                           &objects[objNum]->texturemap,    // address of the shader-resource-view
+                                           NULL);                           // no multithreading
 }
 
 void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
