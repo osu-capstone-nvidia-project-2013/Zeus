@@ -21,7 +21,9 @@ struct VERTEX
 	D3DXVECTOR3 position;
     D3DXVECTOR4 color;
 	D3DXVECTOR3 normal;
+	D3DXVECTOR2 texcord;
 };
+
 
 void SetTriangle(ObjectClass *, ID3D11Device *, ID3D11DeviceContext *);
 
@@ -37,10 +39,16 @@ public:
 	~GeometryClass();
 
 	void Initialize();
-    void LoadObject(ID3D11Device *, ID3D11DeviceContext *, string);
+	void LoadObject(ID3D11Device *, ID3D11DeviceContext *, string, D3DXVECTOR4);
     void CreateSphere(ID3D11Device *, ID3D11DeviceContext *, VERTEX, float, int, int);
-
-    void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain);
+	void SetMatrices(MATRICES *mats, int objNum);
+	void SetLight(LIGHT *light, int objNum);
+    void SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum);
+    void SetTexture(ID3D11Device *dev, LPCWSTR texturefile, int objNum);
+    void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
+				IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+				ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
+				ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS);
 	
 private:
     vector<ObjectClass*> objects;

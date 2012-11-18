@@ -6,11 +6,9 @@ ObjectClass::ObjectClass()
 {
 }
 
-void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain)
+void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11ShaderResourceView *pTexture)
 {
 
-    // clear the back buffer to a deep blue
-    devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
         // select which vertex buffer to display
         UINT stride = sizeof(VERTEX);
@@ -23,10 +21,13 @@ void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11R
 		// select which primtive type we are using
         devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		
+        devcon->PSSetShaderResources(0, 1, &texturemap);
+        devcon->PSSetShaderResources(1, 1, &alphamap);
+
+
         // draw the vertex buffer to the back buffer
         devcon->DrawIndexed(numIndices, 0, 0);
 
-    // switch the back buffer and the front buffer
-    swapchain->Present(0, 0);
 
 }

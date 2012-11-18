@@ -7,17 +7,31 @@
 // global declarations
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
 ID3D11Device *dev;                     // the pointer to our Direct3D device interface
+ID3D11DepthStencilView *zbuffer;    
 ID3D11DeviceContext *devcon;           // the pointer to our Direct3D device context
 ID3D11RenderTargetView *backbuffer;    // the pointer to our back buffer
-ID3D11Buffer *pCBuffer;                // the pointer to the constant buffer
+ID3D11Buffer *vCBuffer;                // the pointer to the constant buffer
+
+ID3D11ShaderResourceView *pTexture;    // the pointer to the texture
+
+ID3D11Buffer *pCBuffer;
 ObjectClass	*triangleObj;
 GeometryClass *geometry;
 ShaderClass *shaderclass;
+LIGHT *light;
+MATRICES *matrices;
+
+
+// state objects
+ID3D11RasterizerState *pRS;            // the default rasterizer state
+ID3D11SamplerState *pSS;               // the default sampler state
+ID3D11BlendState *pBS;                 // a typicl blend state
 
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
 void CleanD3D(ObjectClass *obj);        // closes Direct3D and releases memory
 void InitPipeline(void);    // loads and prepares the shaders
+void InitStates();
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -48,7 +62,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     hWnd = CreateWindowEx(NULL,
                           L"WindowClass",
-                          L"Our First Direct3D Program",
+                          L"Zeus Graphics Engine",
                           WS_OVERLAPPEDWINDOW,
                           300,
                           300,
@@ -63,20 +77,39 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     // set up and initialize Direct3D
     InitD3D(hWnd);
-	
-	shaderclass = new ShaderClass();
-	shaderclass->SetShaders(dev, devcon);
+    
+    shaderclass = new ShaderClass();
+    shaderclass->SetShaders(dev, devcon);
 
-	triangleObj = new ObjectClass();
+    triangleObj = new ObjectClass();
     SetTriangle(triangleObj, dev, devcon);
     geometry = new GeometryClass();
     VERTEX sphere_center;
-	sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	sphere_center.color = D3DXVECTOR4(1.0f, 0.0f, 0.0f, 1.0f);
-	sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	geometry->LoadObject(dev, devcon, "cow.obj");
+    sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+    sphere_center.color = D3DXVECTOR4(0.75f, 0.25f, 0.0f, 1.0f);
+    sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+    geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(-0.45f, 0.65f, 0.20f, 1.0f));
+    geometry->SetTexture(dev, L"Bricks.png", 0);
+    geometry->SetAlpha(dev, L"Bricks_alpha.png", 0);
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
-	
+    geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.2f, 0.6f, 0.1f, 0.5f));
+    
+    //Set lighting
+    light = new LIGHT();
+
+    light->ambientcolor = D3DXVECTOR4(0.2f, 0.2f, 0.2f, 1.0f);
+    light->diffusecolor = D3DXVECTOR4(1.0f, 0.8f, 0.0f, 1.0f);
+    light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+    light->specularpower = 32.0f;
+    light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+
+    geometry->SetLight(light, 0);
+    geometry->SetLight(light, 1);
+    geometry->SetLight(light, 2);
+
+    //Setup for updating matrices
+    matrices = new MATRICES();
+
 
     // enter the main loop:
 
@@ -93,40 +126,75 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-    D3DXMATRIX matRotate, matTrans, matView, matProjection, matFinal;
+        D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matView, matProjection, matScale, matFinal;
+        D3DXVECTOR4 tempVec4;
 
-    static float Time = 0.0f; Time += 0.0001f;
+        static float Time = 0.0f; Time += 0.000125f;
+        static float LightTime = 0.0f; LightTime = +0.0005f;
 
-    // create a rotation matrix
-    D3DXMatrixRotationY(&matRotate, Time);
+        // create a rotation matrix
+        D3DXMatrixRotationY(&matRotateY, Time);
+        D3DXMatrixRotationZ(&matRotateZ, Time);
 
-    // create a translation matrix
-    D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
+        // create a translation matrix
+        D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
 
-    // create a view matrix
-    D3DXMatrixLookAtLH(&matView,
-                       &D3DXVECTOR3(0.0f, 1.5f, 5.5f),    // the camera position
-                       &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
-                       &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
+        // create a view matrix
+        D3DXMatrixLookAtLH(&matView,
+                           &D3DXVECTOR3(0.0f, 0.0f, 5.5f),    // the camera position
+                           &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
+                           &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
 
-    // create a projection matrix
-    D3DXMatrixPerspectiveFovLH(&matProjection,
-                               (FLOAT)D3DXToRadian(45),                    // field of view
-                               (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
-                               1.0f,                                       // near view-plane
-                               100.0f);                                    // far view-plane
+        // create a projection matrix
+        D3DXMatrixPerspectiveFovLH(&matProjection,
+                                   (FLOAT)D3DXToRadian(45),                    // field of view
+                                   (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
+                                   1.0f,                                       // near view-plane
+                                   100.0f);                                    // far view-plane
 
-    // create the final transform
-    matFinal =  matTrans * matRotate *  matView * matProjection;
-        //D3DXMatrixIdentity(&matFinal);
-		// create a rotation matrix
-		//D3DXMatrixRotationY(&matFinal, Time);
-		// set the new values for the constant buffer
-		devcon->UpdateSubresource(pCBuffer, 0, 0, &matFinal, 0, 0);				
-        geometry->Render(dev, devcon, backbuffer, swapchain);
-        //triangleObj->Render(dev, devcon, backbuffer, swapchain);
-						
-	}
+        // create the final transform
+        //matFinal =  matRotate * matTrans *  matView * matProjection;
+
+        matrices->matWorld = matRotateY * matRotateZ * matTrans;
+        matrices->matProjection = matProjection;
+        matrices->matView = matView;
+        matrices->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
+
+        //update light
+        D3DXMatrixRotationY(&matRotateY, LightTime);
+        D3DXVec3Transform(&tempVec4, &light->lightdirection, &matRotateY);
+        light->lightdirection.x = tempVec4.x;
+        light->lightdirection.y = tempVec4.y;
+        light->lightdirection.z = tempVec4.z;
+
+        geometry->SetLight(light, 0);
+        geometry->SetLight(light, 1);
+        geometry->SetLight(light, 2);
+
+        geometry->SetMatrices(matrices, 0);
+        
+
+        // set matrix for second object
+        D3DXMatrixRotationX(&matRotateX, Time);
+        D3DXMatrixTranslation(&matTrans, -1.0f, 1.5f, -2.0f);
+
+
+        matrices->matWorld = matRotateX * matTrans;
+
+        geometry->SetMatrices(matrices, 1);
+
+
+
+        //set matrix for third
+        D3DXMatrixTranslation(&matTrans, 0.5f, 0.0f, 2.0f);
+
+        matrices->matWorld = matRotateY * matRotateZ * matTrans;
+        geometry->SetMatrices(matrices, 2);
+
+        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer, pTexture,
+                        pBS, pSS, pRS);
+                        
+    }
 
     // clean up DirectX and COM
     CleanD3D(triangleObj);
@@ -156,7 +224,6 @@ void InitD3D(HWND hWnd)
 {
     // create a struct to hold information about the swap chain
     DXGI_SWAP_CHAIN_DESC scd;
-
     // clear out the struct for use
     ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
 
@@ -184,6 +251,30 @@ void InitD3D(HWND hWnd)
                                   &dev,
                                   NULL,
                                   &devcon);
+  // create the depth buffer texture
+    D3D11_TEXTURE2D_DESC texd;
+    ZeroMemory(&texd, sizeof(texd));
+
+    texd.Width = SCREEN_WIDTH;
+    texd.Height = SCREEN_HEIGHT;
+    texd.ArraySize = 1;
+    texd.MipLevels = 1;
+    texd.SampleDesc.Count = 4;
+    texd.Format = DXGI_FORMAT_D32_FLOAT;
+    texd.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+    ID3D11Texture2D *pDepthBuffer;
+    dev->CreateTexture2D(&texd, NULL, &pDepthBuffer);
+
+    // create the depth buffer
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
+    ZeroMemory(&dsvd, sizeof(dsvd));
+
+    dsvd.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+
+    dev->CreateDepthStencilView(pDepthBuffer, &dsvd, &zbuffer);
+    pDepthBuffer->Release();
 
 
     // get the address of the back buffer
@@ -195,7 +286,7 @@ void InitD3D(HWND hWnd)
     pBackBuffer->Release();
 
     // set the render target as the back buffer
-    devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+    devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
 
 
     // Set the viewport
@@ -207,8 +298,14 @@ void InitD3D(HWND hWnd)
     viewport.Width = SCREEN_WIDTH;
     viewport.Height = SCREEN_HEIGHT;
 
+    viewport.MinDepth = 0;    // the closest an object can be on the depth buffer is 0.0
+    viewport.MaxDepth = 1;    // the farthest an object can be on the depth buffer is 1.0
+
     devcon->RSSetViewports(1, &viewport);
 
+
+    
+    InitStates();
     InitPipeline();
 }
 
@@ -219,7 +316,8 @@ void InitD3D(HWND hWnd)
 void CleanD3D(ObjectClass *obj)
 {
     swapchain->SetFullscreenState(FALSE, NULL);    // switch to windowed mode
-
+    
+    zbuffer->Release();
     // close and release all existing COM objects
     obj->vBuffer->Release();
     swapchain->Release();
@@ -237,10 +335,73 @@ void InitPipeline()
     ZeroMemory(&bd, sizeof(bd));
 
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = 64;
+    bd.ByteWidth = sizeof(MATRICES);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+    dev->CreateBuffer(&bd, NULL, &vCBuffer);
+    devcon->VSSetConstantBuffers(0, 1, &vCBuffer);
+
+    ZeroMemory(&bd, sizeof(bd));
+
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(LIGHT);
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
     dev->CreateBuffer(&bd, NULL, &pCBuffer);
-    devcon->VSSetConstantBuffers(0, 1, &pCBuffer);
+    devcon->PSSetConstantBuffers(0, 1, &pCBuffer);
     
+    D3DX11CreateShaderResourceViewFromFile(dev,        // the Direct3D device
+                                           L"Bricks.png",    // load Wood.png in the local folder
+                                           NULL,           // no additional information
+                                           NULL,           // no multithreading
+                                           &pTexture,      // address of the shader-resource-view
+                                           NULL);          // no multithreading
+    }
+
+// initializes the states
+void InitStates()
+{
+    D3D11_RASTERIZER_DESC rd;
+    rd.FillMode = D3D11_FILL_SOLID;
+    rd.CullMode = D3D11_CULL_BACK;
+    rd.FrontCounterClockwise = FALSE;
+    rd.DepthClipEnable = TRUE;
+    rd.ScissorEnable = FALSE;
+    rd.AntialiasedLineEnable = FALSE;
+    rd.MultisampleEnable = FALSE;
+    rd.DepthBias = 0;
+    rd.DepthBiasClamp = 0.0f;
+    rd.SlopeScaledDepthBias = 0.0f;
+
+    dev->CreateRasterizerState(&rd, &pRS);
+
+    D3D11_SAMPLER_DESC sd;
+    sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sd.MaxAnisotropy = 16;
+    sd.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.BorderColor[0] = 0.0f;
+    sd.BorderColor[1] = 0.0f;
+    sd.BorderColor[2] = 0.0f;
+    sd.BorderColor[3] = 0.0f;
+    sd.MinLOD = 0.0f;
+    sd.MaxLOD = FLT_MAX;
+    sd.MipLODBias = 0.0f;
+
+    dev->CreateSamplerState(&sd, &pSS);
+
+    D3D11_BLEND_DESC bd;
+    bd.RenderTarget[0].BlendEnable = TRUE;
+    bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    bd.IndependentBlendEnable = FALSE;
+    bd.AlphaToCoverageEnable = FALSE;
+
+    dev->CreateBlendState(&bd, &pBS);
 }
