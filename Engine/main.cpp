@@ -14,6 +14,7 @@ ID3D11Buffer *vCBuffer;                // the pointer to the constant buffer
 
 ID3D11ShaderResourceView *pTexture;    // the pointer to the texture
 
+ID3D11Buffer *mCBuffer; 
 ID3D11Buffer *pCBuffer;
 ObjectClass	*triangleObj;
 GeometryClass *geometry;
@@ -88,12 +89,18 @@ int WINAPI WinMain(HINSTANCE hInstance,
     sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
     sphere_center.color = D3DXVECTOR4(0.75f, 0.25f, 0.0f, 1.0f);
     sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-    geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(-0.45f, 0.65f, 0.20f, 1.0f));
+    geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(0.45f, 0.65f, 0.20f, 1.0f));
     geometry->SetTexture(dev, L"Bricks.png", 0);
     geometry->SetAlpha(dev, L"Bricks_alpha.png", 0);
+	geometry->SetMapping(1.,1.,0.,0);
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
+	geometry->SetTexture(dev, L"Bricks.png", 1);
+	geometry->SetNormal(dev, L"bumpnormal.png", 1);
+	geometry->SetMapping(1.,0.,1.,1);
     geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.2f, 0.6f, 0.1f, 0.5f));
-    
+    geometry->SetTexture(dev, L"Bricks.png", 2);
+	geometry->SetMapping(0.,0.,0.,2);
+
     //Set lighting
     light = new LIGHT();
 
@@ -191,7 +198,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
         matrices->matWorld = matRotateY * matRotateZ * matTrans;
         geometry->SetMatrices(matrices, 2);
 
-        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, zbuffer, pTexture,
+        geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, mCBuffer, zbuffer, pTexture,
                         pBS, pSS, pRS);
                         
     }
@@ -350,13 +357,9 @@ void InitPipeline()
     dev->CreateBuffer(&bd, NULL, &pCBuffer);
     devcon->PSSetConstantBuffers(0, 1, &pCBuffer);
     
-    D3DX11CreateShaderResourceViewFromFile(dev,        // the Direct3D device
-                                           L"Bricks.png",    // load Wood.png in the local folder
-                                           NULL,           // no additional information
-                                           NULL,           // no multithreading
-                                           &pTexture,      // address of the shader-resource-view
-                                           NULL);          // no multithreading
-    }
+	dev->CreateBuffer(&bd, NULL, &mCBuffer);
+    devcon->PSSetConstantBuffers(1, 1, &mCBuffer);
+   }
 
 // initializes the states
 void InitStates()

@@ -24,6 +24,14 @@ struct MATRICES
 	D3DXVECTOR3 cameraPosition;
 	float padding;
 };
+
+struct MAPPING
+{
+	float textureflag;
+	float alphaflag;
+	float normalflag;
+	float padding;
+};
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ObjectClass
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,9 +48,11 @@ public:
 	ID3D11Buffer *vBuffer;
 	ID3D11Buffer *iBuffer;	
 	LIGHT *light;
+	MAPPING *mapping;
 
 	ID3D11ShaderResourceView *texturemap;
 	ID3D11ShaderResourceView *alphamap;
+	ID3D11ShaderResourceView *normalmap;
 };
 
 #endif

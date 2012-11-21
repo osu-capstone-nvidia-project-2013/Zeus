@@ -7,6 +7,14 @@ cbuffer Lighting : register(cb0)
 	float3 lightDirection;
 }
 
+cbuffer Mapping : register(cb1)
+{
+	float textureflag;
+	float alphaflag;
+	float normalflag;
+	float padding;
+}
+
 struct VOut
 {
     float4 position : SV_POSITION;
@@ -18,12 +26,14 @@ struct VOut
 
 Texture2D Texture;
 Texture2D Alpha;
+Texture2D NormalMap;
 SamplerState ss;
 
 float4 PShader(VOut input) : SV_TARGET
 {
 	float4 textureColor;
     float4 alphaColor;
+	float4 normalColor;
     float3 lightDir;
     float lightIntensity;
     float4 color;
@@ -32,15 +42,26 @@ float4 PShader(VOut input) : SV_TARGET
 	float resAlpha;
 
     // Sample the pixel color from the texture using the sampler at this texture coordinate location.
-	if(input.color.x < 0.0)
+	if(alphaflag == 1.)
+	{
+		alphaColor = Alpha.Sample(ss, input.texcord);
+	}
+	if(textureflag == 1.)
 	{
 		textureColor = Texture.Sample(ss, input.texcord);
-        alphaColor = Alpha.Sample(ss, input.texcord);
-        textureColor.a = (alphaColor.r + alphaColor.g + alphaColor.b ) / 3.0;
-        if(textureColor.a < 0.1f)
-        {
-            textureColor.a = 0.0f;
-        }
+		if(alphaflag == 1.)
+		{
+			textureColor.a = (alphaColor.r + alphaColor.g + alphaColor.b ) / 3.0;
+			if(textureColor.a < 0.1f)
+			{
+				textureColor.a = 0.0f;
+			}	
+		}
+	}
+	if(normalflag == 1.)
+	{
+		normalColor = NormalMap.Sample(ss, input.texcord);
+		input.normal = normalize( float3(normalColor.x,normalColor.y,normalColor.z) );
 	}
 
     // Set the default output color to the ambient light value for all pixels.
@@ -73,7 +94,7 @@ float4 PShader(VOut input) : SV_TARGET
 
     // Multiply the texture pixel and the input color to get the textured result.
 
-	if(input.color.x >= 0)
+	if(textureflag != 1.)
 	{
 		color = color * input.color;
 	}
@@ -84,6 +105,14 @@ float4 PShader(VOut input) : SV_TARGET
     // Add the specular component last to the output color.
     color = saturate(color + specular);
 
+	if(alphaflag == 1.)
+	{
+		color.a = (alphaColor.r + alphaColor.g + alphaColor.b ) / 3.0;
+		if(color.a < 0.1f)
+		{
+			color.a = 0.0f;
+		}	
+	}
 
     return color;
 }

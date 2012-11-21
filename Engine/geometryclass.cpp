@@ -194,8 +194,13 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     obj->numIndices = indices.size();
 	obj->matrices = new MATRICES();
 	obj->light = new LIGHT();
+	obj->mapping = new MAPPING();
+	obj->mapping->textureflag = 0.;
+	obj->mapping->alphaflag = 0.;
+	obj->mapping->normalflag = 0.;
 	obj->texturemap = NULL;
 	obj->alphamap = NULL;
+	obj->normalmap = NULL;
 	
     // create the vertex buffer
     D3D11_BUFFER_DESC bd;
@@ -247,6 +252,13 @@ void GeometryClass::SetLight(LIGHT *light, int objNum)
 	objects[objNum]->light = light;
 }
 
+void GeometryClass::SetMapping(float texture, float alpha, float normal, int objNum) 
+{
+	objects[objNum]->mapping->textureflag = texture;
+	objects[objNum]->mapping->alphaflag = alpha;
+	objects[objNum]->mapping->normalflag = normal;
+}
+
 void GeometryClass::SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum) 
 {
     D3DX11CreateShaderResourceViewFromFile(dev,                             // the Direct3D device
@@ -267,8 +279,21 @@ void GeometryClass::SetTexture(ID3D11Device *dev, LPCWSTR texturefile, int objNu
                                            NULL);                           // no multithreading
 }
 
+void GeometryClass::SetNormal(ID3D11Device *dev, LPCWSTR normalfile, int objNum) 
+{
+    D3DX11CreateShaderResourceViewFromFile(dev,                             // the Direct3D device
+                                           normalfile,                     // load the alphamap in the local folder
+                                           NULL,                            // no additional information
+                                           NULL,                            // no multithreading
+                                           &objects[objNum]->normalmap,    // address of the shader-resource-view
+                                           NULL);                           // no multithreading
+}
+
+
+
 void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
-							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer, 
+							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+							ID3D11Buffer *mCBuffer,
 							ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
 							ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS)
 {
@@ -289,6 +314,7 @@ void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D1
 		// update constant buffer
 		devcon->UpdateSubresource(vCBuffer, 0, 0, objects[i]->matrices, 0, 0);	
 		devcon->UpdateSubresource(pCBuffer, 0, 0, objects[i]->light, 0, 0);
+		devcon->UpdateSubresource(mCBuffer, 0, 0, objects[i]->mapping, 0, 0);
 		objects[i]->Render(dev, devcon, backbuffer, swapchain, pTexture);
     }
 	

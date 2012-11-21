@@ -24,7 +24,7 @@ void ObjectClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11R
 		
         devcon->PSSetShaderResources(0, 1, &texturemap);
         devcon->PSSetShaderResources(1, 1, &alphamap);
-
+		devcon->PSSetShaderResources(2, 1, &normalmap);
 
         // draw the vertex buffer to the back buffer
         devcon->DrawIndexed(numIndices, 0, 0);
