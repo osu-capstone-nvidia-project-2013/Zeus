@@ -1,3 +1,10 @@
+11-29
+Progress: Normal mapping
+
+Todo: shadow, environment, game timing, camera controls
+
+Blocks: finals, rocket launcher, modifying code base
+
 11-15
 Progress: Blending
 
