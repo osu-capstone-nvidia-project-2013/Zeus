@@ -22,6 +22,7 @@ struct VERTEX
     D3DXVECTOR4 color;
 	D3DXVECTOR3 normal;
 	D3DXVECTOR2 texcord;
+	D3DXVECTOR3 tangent;
 };
 
 
@@ -39,6 +40,8 @@ public:
 	~GeometryClass();
 
 	void Initialize();
+	void CreatePlane(ID3D11Device *, ID3D11DeviceContext *, float y);
+	void CreateQuad(ID3D11Device *, ID3D11DeviceContext *, float r, float g, float b, float size);
 	void LoadObject(ID3D11Device *, ID3D11DeviceContext *, string, D3DXVECTOR4);
     void CreateSphere(ID3D11Device *, ID3D11DeviceContext *, VERTEX, float, int, int);
 	void SetMatrices(MATRICES *mats, int objNum);

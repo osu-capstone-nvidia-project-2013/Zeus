@@ -1,8 +1,8 @@
 // include the basic windows header files and the Direct3D header files
 #include "main.h"
 // define the screen resolution
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH  1000
+#define SCREEN_HEIGHT 1000
 
 // global declarations
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
@@ -22,11 +22,16 @@ ShaderClass *shaderclass;
 LIGHT *light;
 MATRICES *matrices;
 
-
+int textoggle = true;
+int normtoggle = true;
 // state objects
 ID3D11RasterizerState *pRS;            // the default rasterizer state
 ID3D11SamplerState *pSS;               // the default sampler state
 ID3D11BlendState *pBS;                 // a typicl blend state
+
+
+// Global Camera
+D3DXMATRIX matView, matWorldX;
 
 // function prototypes
 void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
@@ -66,7 +71,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
                           L"Zeus Graphics Engine",
                           WS_OVERLAPPEDWINDOW,
                           300,
-                          300,
+                          100,
                           wr.right - wr.left,
                           wr.bottom - wr.top,
                           NULL,
@@ -96,27 +101,81 @@ int WINAPI WinMain(HINSTANCE hInstance,
     geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
 	geometry->SetTexture(dev, L"Bricks.png", 1);
 	geometry->SetNormal(dev, L"bumpnormal.png", 1);
-	geometry->SetMapping(1.,0.,1.,1);
+	geometry->SetMapping(0.,0.,1.,1);
     geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.2f, 0.6f, 0.1f, 0.5f));
     geometry->SetTexture(dev, L"Bricks.png", 2);
 	geometry->SetMapping(0.,0.,0.,2);
+
+	geometry->CreatePlane(dev, devcon, -1.0f); //obj 3
+    geometry->SetTexture(dev, L"Bricks.png", 3);
+
+	geometry->CreateQuad(dev, devcon, 0.5f,0.0f,0.5f, 1.0f);
+	geometry->SetTexture(dev, L"Bricks.png", 4);
+	geometry->SetNormal(dev, L"metal.png", 4);
+	geometry->SetMapping(0.,0.,1.,4);
 
     //Set lighting
     light = new LIGHT();
 
     light->ambientcolor = D3DXVECTOR4(0.2f, 0.2f, 0.2f, 1.0f);
-    light->diffusecolor = D3DXVECTOR4(1.0f, 0.8f, 0.0f, 1.0f);
+    light->diffusecolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
     light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
     light->specularpower = 32.0f;
-    light->lightdirection = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+    light->lightdirection = D3DXVECTOR3(0.0f, 5.0f, -3.0f);
 
     geometry->SetLight(light, 0);
     geometry->SetLight(light, 1);
+	
     geometry->SetLight(light, 2);
+    geometry->SetLight(light, 3);
+	
+    geometry->SetLight(light, 4);
 
     //Setup for updating matrices
     matrices = new MATRICES();
 
+	D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matProjection, matScale, matFinal;
+        D3DXVECTOR4 tempVec4;
+		
+        D3DXMatrixIdentity(&matWorldX);
+	// create a view matrix
+        D3DXMatrixLookAtLH(&matView,
+                           &D3DXVECTOR3(0.0f, 1.0f, 5.5f),    // the camera position
+                           &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
+                           &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
+
+        // create a projection matrix
+        D3DXMatrixPerspectiveFovLH(&matProjection,
+                                   (FLOAT)D3DXToRadian(45),                    // field of view
+                                   (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
+                                   1.0f,                                       // near view-plane
+                                   100.0f);                                    // far view-plane
+
+        D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
+		
+
+       MATRICES *matrices2 = new MATRICES();
+	   matrices2->matWorld = matTrans;
+        matrices2->matProjection = matProjection;
+        matrices2->matView = matView;
+        matrices2->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
+		//geometry->SetMatrices(matrices2, 3);
+
+		D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, -2.0f);
+		D3DXMatrixRotationY(&matRotateY, 0.0f);
+		 matrices2->matWorld = matRotateY * matTrans;
+		 //geometry->SetMatrices(matrices2, 4);
+
+		/*for(int i = 0; i < 200; i++)
+		{
+			geometry->CreateQuad(dev,devcon, 1.0f,1.0f,1.0f, 0.05f);
+			geometry->SetNormal(dev, L"snowalpha.jpg", i+5);
+			geometry->SetMapping(0.,1.,0.,i+5);
+			geometry->SetLight(light, i+5);
+			D3DXMatrixTranslation(&matTrans, (rand()%5)-2.0f, 1.0f, (rand()%5)-2.0f);
+			matrices2->matWorld = matTrans;
+			geometry->SetMatrices(matrices2, i+5);
+		}*/
 
     // enter the main loop:
 
@@ -133,11 +192,10 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-        D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matView, matProjection, matScale, matFinal;
-        D3DXVECTOR4 tempVec4;
-
         static float Time = 0.0f; Time += 0.000125f;
         static float LightTime = 0.0f; LightTime = +0.0005f;
+
+        
 
         // create a rotation matrix
         D3DXMatrixRotationY(&matRotateY, Time);
@@ -145,30 +203,25 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         // create a translation matrix
         D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
-
-        // create a view matrix
-        D3DXMatrixLookAtLH(&matView,
-                           &D3DXVECTOR3(0.0f, 0.0f, 5.5f),    // the camera position
-                           &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
-                           &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
-
-        // create a projection matrix
-        D3DXMatrixPerspectiveFovLH(&matProjection,
-                                   (FLOAT)D3DXToRadian(45),                    // field of view
-                                   (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
-                                   1.0f,                                       // near view-plane
-                                   100.0f);                                    // far view-plane
-
-        // create the final transform
-        //matFinal =  matRotate * matTrans *  matView * matProjection;
-
-        matrices->matWorld = matRotateY * matRotateZ * matTrans;
+        matrices->matWorld = matRotateY * matRotateZ * matTrans * matWorldX;
         matrices->matProjection = matProjection;
         matrices->matView = matView;
         matrices->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
+		//geometry->SetMatrices(matrices, 3);
+        matrices2->matView = matView;
+		 
+        D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
+        matrices->matWorld = matTrans * matWorldX;
+        geometry->SetMatrices(matrices, 3);
+
+		D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, -2.0f);
+		D3DXMatrixRotationY(&matRotateY, 0.0f);
+		 matrices->matWorld = matRotateY * matTrans * matWorldX;
+		 geometry->SetMatrices(matrices, 4);
 
         //update light
-        D3DXMatrixRotationY(&matRotateY, LightTime);
+        D3DXMatrixRotationY(&matRotateY, sinf(LightTime*2));
+		//D3DXMatrixTranslation(&matTrans, sinf(Time)*20+20, 0.0f, 0.0f);
         D3DXVec3Transform(&tempVec4, &light->lightdirection, &matRotateY);
         light->lightdirection.x = tempVec4.x;
         light->lightdirection.y = tempVec4.y;
@@ -178,29 +231,43 @@ int WINAPI WinMain(HINSTANCE hInstance,
         geometry->SetLight(light, 1);
         geometry->SetLight(light, 2);
 
+        D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
+        matrices->matWorld = matRotateY * matRotateZ * matTrans * matWorldX;
         geometry->SetMatrices(matrices, 0);
         
 
         // set matrix for second object
         D3DXMatrixRotationX(&matRotateX, Time);
+		D3DXMatrixRotationY(&matRotateY, Time*2);
         D3DXMatrixTranslation(&matTrans, -1.0f, 1.5f, -2.0f);
 
 
-        matrices->matWorld = matRotateX * matTrans;
+        matrices->matWorld = matRotateY * matTrans * matWorldX;
 
         geometry->SetMatrices(matrices, 1);
-
-
 
         //set matrix for third
         D3DXMatrixTranslation(&matTrans, 0.5f, 0.0f, 2.0f);
 
-        matrices->matWorld = matRotateY * matRotateZ * matTrans;
+        matrices->matWorld = matRotateY * matRotateZ * matTrans * matWorldX;
         geometry->SetMatrices(matrices, 2);
+
+		/*for(int i = 0; i < 200; i++)
+		{
+			D3DXMatrixTranslation(&matTrans, 0.0f, -0.01f, 0.0f);
+			matrices->matWorld = matTrans;
+			geometry->SetMatrices(matrices,i+4);
+		}*/
+
+		D3DXMatrixTranslation(&matTrans, 0.0f, -1.0f, -1.0f);
+		D3DXMatrixRotationX(&matRotateX, Time/2);
+		D3DXMatrixRotationY(&matRotateY, Time/2);
+		matrices2->matWorld = matTrans * matWorldX;
+		 geometry->SetMatrices(matrices2, 4);
 
         geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, mCBuffer, zbuffer, pTexture,
                         pBS, pSS, pRS);
-                        
+
     }
 
     // clean up DirectX and COM
@@ -220,6 +287,114 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                 PostQuitMessage(0);
                 return 0;
             } break;
+        // Check if the window is being closed.
+		case WM_CLOSE:
+		{
+			PostQuitMessage(0);		
+			return 0;
+		}break;
+        case WM_KEYUP:
+            {
+                switch(wParam)
+                {
+                    // Effects toggling
+                    case 0x54: // T key has been pressed
+                    {
+                        if(textoggle)
+                        {
+                            geometry->SetMapping(0.,1.,0.,0);
+                            textoggle = false;
+                        }
+                        else
+                        {
+                            geometry->SetMapping(1.,1.,0.,0);
+                            textoggle = true;
+                        }
+                    }
+                    break;
+                    case 0x4E: // N key has been pressed
+                    {
+                        if(normtoggle)
+                        {
+                            geometry->SetMapping(0.,0.,0.,1);
+                            geometry->SetMapping(0.,0.,0.,4);
+                            normtoggle = false;
+                        }
+                        else
+                        {
+                            geometry->SetMapping(0.,0.,1.,1);
+                            geometry->SetMapping(0.,0.,1.,4);
+                            normtoggle = true;
+                        }
+                    }break;
+                }
+            }
+            break;
+        case WM_KEYDOWN:
+        {
+            switch(wParam)
+             {
+                // Movement
+                case 0x57: // W key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixTranslation(&transform, 0.0f, 0.0f, 0.1f);
+                    matWorldX = transform * matWorldX;
+                }
+                break;
+                case 0x53: // S key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixTranslation(&transform, 0.0f, 0.0f, -0.1f);
+                    matWorldX = transform * matWorldX;
+                }
+                break;
+                case 0x41: // A key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixTranslation(&transform, -0.1f, 0.0f, 0.0f);
+                    matWorldX = transform * matWorldX;
+                }
+                break;
+                case 0x44: // D key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixTranslation(&transform, 0.1f, 0.0f, 0.0f);
+                    matWorldX = transform * matWorldX;
+                }
+                break;
+
+                // Look
+                case 0x25: // Left arrow key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixRotationY(&transform, 0.01);
+                    matWorldX = matWorldX * transform;
+                }
+                break;
+                case 0x26: // Up arrow key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixRotationX(&transform, 0.01);
+                    matWorldX = matWorldX * transform;
+                }
+                break;
+                case 0x27: // Right arrow key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixRotationY(&transform, -0.01);
+                    matWorldX = matWorldX * transform;
+                }
+                break;
+                case 0x28: // Down arrow key has been pressed
+                {
+                    D3DXMATRIX transform;
+                    D3DXMatrixRotationX(&transform, -0.01);
+                    matWorldX = matWorldX * transform;
+                }
+                break;
+            }
+        }
     }
 
     return DefWindowProc (hWnd, message, wParam, lParam);
@@ -359,6 +534,8 @@ void InitPipeline()
     
 	dev->CreateBuffer(&bd, NULL, &mCBuffer);
     devcon->PSSetConstantBuffers(1, 1, &mCBuffer);
+	
+    //devcon->VSSetConstantBuffers(1, 1, &mCBuffer);
    }
 
 // initializes the states

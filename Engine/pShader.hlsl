@@ -22,6 +22,7 @@ struct VOut
 	float3 normal : NORMAL;
 	float3 viewDirection : VIEWDIRECTION;
 	float2 texcord : TEXCORD;
+	float3x3 tbnmatrix : TBNMATRIX;
 };
 
 Texture2D Texture;
@@ -58,14 +59,18 @@ float4 PShader(VOut input) : SV_TARGET
 			}	
 		}
 	}
+	color = ambientColor;
 	if(normalflag == 1.)
 	{
 		normalColor = NormalMap.Sample(ss, input.texcord);
-		input.normal = normalize( float3(normalColor.x,normalColor.y,normalColor.z) );
+		normalColor = 2.0f*normalColor-1.0f;
+		input.normal = normalize( float3(normalColor.x,normalColor.y,normalColor.z));
+		input.normal = mul(input.normal, transpose(input.tbnmatrix));
+		//lightDir = mul(lightDirection,input.tbnmatrix);
 	}
 
     // Set the default output color to the ambient light value for all pixels.
-    color = ambientColor;
+    
 
     // Initialize the specular color.
     specular = float4(0.0f, 0.0f, 0.0f, 0.0f);

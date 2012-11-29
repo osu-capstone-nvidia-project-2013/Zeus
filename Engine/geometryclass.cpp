@@ -69,6 +69,60 @@ void GeometryClass::Initialize()
 
 }
 
+void GeometryClass::CreatePlane(ID3D11Device *dev, ID3D11DeviceContext *devcon, float y)
+{
+	vector<VERTEX> vertices;
+    vector<int> indices;
+
+	D3DXCOLOR ground = D3DXCOLOR(0.8f,0.8f,0.8f,1.0f);
+    
+	VERTEX vert1 = {D3DXVECTOR3(-30.0f, y, -30.0f),ground, D3DXVECTOR3(0.0f, 1.0f, 0.0f)};
+    VERTEX vert2 = {D3DXVECTOR3(-30.0f, y, 30.0f),ground, D3DXVECTOR3(0.0f, 1.0f, 0.0f)};
+    VERTEX vert3 = {D3DXVECTOR3(30.0f, y, 30.0f),ground, D3DXVECTOR3(0.0f, 1.0f, 0.0f)};
+	VERTEX vert4 = {D3DXVECTOR3(30.0f, y, -30.0f),ground, D3DXVECTOR3(0.0f, 1.0f, 0.0f)};
+    vertices.push_back( vert1);
+    vertices.push_back( vert2);
+    vertices.push_back( vert3);
+    vertices.push_back( vert4);
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+	indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(3);
+
+	CreateObject(dev, devcon, vertices, indices);
+}
+
+void GeometryClass::CreateQuad(ID3D11Device *dev, ID3D11DeviceContext *devcon, float r, float g, float b, float size)
+{
+	vector<VERTEX> vertices;
+    vector<int> indices;
+
+	D3DXCOLOR color = D3DXCOLOR(r,g,b,1.0f);
+    
+	VERTEX vert1 = {D3DXVECTOR3(-1.0f, -1.0f, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.99f,0.99f)};
+    VERTEX vert2 = {D3DXVECTOR3(-1.0f, 1.0f, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.99f,0.01f)};
+    VERTEX vert3 = {D3DXVECTOR3(1.0f, 1.0f, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.01f,0.01f)};
+	VERTEX vert4 = {D3DXVECTOR3(1.0f, -1.0f, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.01f,0.99f)};
+	vert1.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+	vert2.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+	vert3.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+	vert4.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+    vertices.push_back( vert1);
+    vertices.push_back( vert2);
+    vertices.push_back( vert3);
+    vertices.push_back( vert4);
+	indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(1);
+	indices.push_back(0);
+	indices.push_back(3);
+	indices.push_back(2);
+
+	CreateObject(dev, devcon, vertices, indices);
+}
+
 void GeometryClass::LoadObject(ID3D11Device *dev, ID3D11DeviceContext *devcon, string obj_name,D3DXVECTOR4 color)
 {
     ifstream stream (obj_name);
@@ -121,10 +175,9 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 {
     float theta, phi;
 	int i, j, u;
-
     vector<VERTEX> vertices;
     vector<int> indices;
-
+	
     for(j=1; j < stacks - 1; j++ ) {
 		for( i = 0; i < slices; i++) {
 			theta = float(j) / (stacks - 1) * D3DX_PI;
@@ -135,8 +188,9 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 			point.position.z = (radius) * (-sinf(theta) * sinf(phi)) + center_point.position.z;
 			point.color = center_point.color;
 			point.normal = point.position;
-			float texcoordx = fmodf(float(i) / (slices - 1), 1.0f);
-			float texcoordy = fmodf(float(j) / (stacks - 1), 1.0f);
+			point.tangent = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+			float texcoordx = fmodf(float(i) / ((float)slices), 1.0f);
+			float texcoordy = fmodf(float(j) / ((float)stacks), 1.0f);
 			point.texcord = D3DXVECTOR2(texcoordx, texcoordy);
 			vertices.push_back(point);
 		}
@@ -147,16 +201,18 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
     top.position.y += radius;
 	top.color = D3DXVECTOR4(0.0f, 0.0f, 1.0f, 1.0f);
     top.normal = top.position;
-	top.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
+	top.tangent = D3DXVECTOR3(-top.normal.y, top.normal.x ,top.normal.z );
+	top.texcord = D3DXVECTOR2(fmodf(theta/(2.0f * D3DX_PI), 1.0f), fmodf(phi/D3DX_PI, 1.0f));
     vertices.push_back(top);
-
+	
     int bot_ind = vertices.size();
     VERTEX bottom;
     bottom.position = center_point.position;
     bottom.position.y -= radius;
     bottom.color = D3DXVECTOR4(0.0f, 1.0f, 0.0f, 1.0f);
     bottom.normal = bottom.position;
-	bottom.texcord = D3DXVECTOR2(theta/(2.0f * D3DX_PI), phi/D3DX_PI);
+	bottom.tangent = D3DXVECTOR3(-bottom.normal.y, bottom.normal.x ,bottom.normal.z );
+	bottom.texcord = D3DXVECTOR2(fmodf(theta/(2.0f * D3DX_PI), 1.0f), fmodf(phi/D3DX_PI, 1.0f));
     vertices.push_back(bottom);
 
 	for(i = 0; i < slices - 1; i++) {
@@ -172,9 +228,74 @@ void GeometryClass::CreateSphere(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 	// Make inbetween
 	for(u = 0, j = 0; j < (stacks - 3); j++) {
 		for( i = 0; i < (slices - 1); i++) {
+
+			// Determine surface orientation by calculating triangles edges
+			D3DXVECTOR3 edge1 = vertices[(j + 1) * slices + i + 1].position - vertices[(j) * slices + i].position;
+			D3DXVECTOR3 edge2 = vertices[ (j) * slices + i + 1 ].position - vertices[(j) * slices + i].position;
+			D3DXVec3Normalize(&edge1, &edge1);
+			D3DXVec3Normalize(&edge2, &edge2);
+
+			// Do the same in texture space
+			D3DXVECTOR2 texEdge1 = vertices[(j + 1) * slices + i + 1].texcord - vertices[(j) * slices + i].texcord;
+			D3DXVECTOR2 texEdge2 = vertices[ (j) * slices + i + 1 ].texcord - vertices[(j) * slices + i].texcord;
+			D3DXVec2Normalize(&texEdge1, &texEdge1);
+			D3DXVec2Normalize(&texEdge2, &texEdge2);
+
+			// A determinant returns the orientation of the surface
+			float det = (texEdge1.x * texEdge2.y) - (texEdge1.y * texEdge2.x);
+			det = 1.0f / det;
+
+			// Averages out tangents for each face
+			vertices[(j) * slices + i].tangent.x += (texEdge2.y * edge1.x - texEdge1.y * edge2.x) * det;
+			vertices[(j) * slices + i].tangent.y += (texEdge2.y * edge1.y - texEdge1.y * edge2.y) * det;
+			vertices[(j) * slices + i].tangent.z += (texEdge2.y * edge1.z - texEdge1.y * edge2.z) * det;
+			D3DXVec3Normalize(&vertices[(j) * slices + i].tangent, &vertices[(j) * slices + i].tangent);
+
+			vertices[(j + 1) * slices + i + 1].tangent.x += (texEdge2.y * edge1.x - texEdge1.y * edge2.x) * det;
+			vertices[(j + 1) * slices + i + 1].tangent.y += (texEdge2.y * edge1.y - texEdge1.y * edge2.y) * det;
+			vertices[(j + 1) * slices + i + 1].tangent.z += (texEdge2.y * edge1.z - texEdge1.y * edge2.z) * det;
+			D3DXVec3Normalize(&vertices[(j + 1) * slices + i + 1].tangent, &vertices[(j + 1) * slices + i + 1].tangent);
+
+			vertices[(j) * slices + i + 1].tangent.x += (texEdge2.y * edge1.x - texEdge1.y * edge2.x) * det;
+			vertices[(j) * slices + i + 1].tangent.y += (texEdge2.y * edge1.y - texEdge1.y * edge2.y) * det;
+			vertices[(j) * slices + i + 1].tangent.z += (texEdge2.y * edge1.z - texEdge1.y * edge2.z) * det;
+			D3DXVec3Normalize(&vertices[(j) * slices + i + 1].tangent, &vertices[(j) * slices + i + 1].tangent);
+
 			indices.push_back( (j) * slices + i);
 			indices.push_back( (j + 1) * slices + i + 1);
 			indices.push_back( (j) * slices + i + 1 );
+
+			// Determine surface orientation by calculating triangles edges
+			D3DXVECTOR3 edge3 = vertices[(j + 1) * slices + i].position - vertices[(j) * slices + i].position;
+			D3DXVECTOR3 edge4 = vertices[ (j + 1) * slices + i + 1 ].position - vertices[(j) * slices + i].position;
+			D3DXVec3Normalize(&edge3, &edge3);
+			D3DXVec3Normalize(&edge4, &edge4);
+
+			// Do the same in texture space
+			D3DXVECTOR2 texEdge3 = vertices[(j + 1) * slices + i].texcord - vertices[(j) * slices + i].texcord;
+			D3DXVECTOR2 texEdge4 = vertices[(j + 1) * slices + i + 1 ].texcord - vertices[(j) * slices + i].texcord;
+			D3DXVec2Normalize(&texEdge3, &texEdge3);
+			D3DXVec2Normalize(&texEdge4, &texEdge4);
+
+			// A determinant returns the orientation of the surface
+			det = (texEdge3.x * texEdge4.y) - (texEdge3.y * texEdge4.x);
+			det = 1.0f / det;
+
+			vertices[(j) * slices + i].tangent.x += (texEdge4.y * edge3.x - texEdge3.y * edge4.x) * det;
+			vertices[(j) * slices + i].tangent.y += (texEdge4.y * edge3.y - texEdge3.y * edge4.y) * det;
+			vertices[(j) * slices + i].tangent.z += (texEdge4.y * edge3.z - texEdge3.y * edge4.z) * det;
+			D3DXVec3Normalize(&vertices[(j) * slices + i].tangent, &vertices[(j) * slices + i].tangent);
+
+			vertices[(j + 1) * slices + i].tangent.x += (texEdge4.y * edge3.x - texEdge3.y * edge4.x) * det;
+			vertices[(j + 1) * slices + i].tangent.y += (texEdge4.y * edge3.y - texEdge3.y * edge4.y) * det;
+			vertices[(j + 1) * slices + i].tangent.z += (texEdge4.y * edge3.z - texEdge3.y * edge4.z) * det;
+			D3DXVec3Normalize(&vertices[(j + 1) * slices + i].tangent, &vertices[(j + 1) * slices + i].tangent);
+
+			vertices[(j + 1) * slices + i + 1].tangent.x += (texEdge4.y * edge3.x - texEdge3.y * edge4.x) * det;
+			vertices[(j + 1) * slices + i + 1].tangent.y += (texEdge4.y * edge3.y - texEdge3.y * edge4.y) * det;
+			vertices[(j + 1) * slices + i + 1].tangent.z += (texEdge4.y * edge3.z - texEdge3.y * edge4.z) * det;
+			D3DXVec3Normalize(&vertices[(j) * slices + i + 1].tangent, &vertices[(j + 1) * slices + i + 1].tangent);
+
 			indices.push_back( (j) * slices + i );
 			indices.push_back( (j + 1) * slices + i);
 			indices.push_back( (j + 1) * slices + i + 1);
