@@ -1,4 +1,14 @@
 =============
+11/29/2012
+
+Progress: We have normal mapping. 
+
+Todo: Do environment and shadow mapping. Also, apply some sort of sorting to our objects for rendering. And game timing
+
+Blockers: None
+
+
+=============
 11/15/2012
 
 Progress: We have blending, but are having issues with alpha killing. Texturing has also been worked on and near complete
