@@ -1,3 +1,11 @@
+Date: 11/28/2012
+Progress: Finished normal mapping. Have some effects toggling and some movement. Blending,Texturing, alpha killing are done.
+Todo: Still need a shitty sorting so we can render back to front. Started on shadow mapping and environment mapping.
+Game timing is still an important todo as well.
+Blockers: We have been emailing Patrick with any blocks we run into. He helped us solve our normal problem on tuesday. 
+We will continue to inquire about problems we have rammed our heads against for a long time.
+
+//////////////////////
 Date: 11/15/2012
 Progress: Phong shading done, blending mostly works, alpha kill needs some work. Close to finish on texturing.
 Todo: Finish alpha kill and texturing. Include toggling features on/off. Refactor code to support multiple objects.
