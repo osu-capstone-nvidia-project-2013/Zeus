@@ -1,3 +1,17 @@
+--- 11/29/12 ---
+Progress: 
+  Finished normal mapping. 
+
+Todo: 
+  Finish environment mapping.
+  Continue work on shadow mapping and game timing.
+  Finish milestone 2.
+
+Blockers: 
+  Normal mapping was difficult, but Patrick helped us through it.
+
+
+
 --- 11/15/12 ---
 Progress: 
   Still working on shadow mapping and game timing.
