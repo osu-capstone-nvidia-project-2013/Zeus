@@ -13,6 +13,10 @@ ID3D11Buffer *vCBuffer;                // the pointer to the constant buffer
 
 ID3D11ShaderResourceView *pTexture;    // the pointer to the texture
 
+ID3D11Texture2D* renderTargetTextureMap;
+ID3D11RenderTargetView* renderTargetViewMap;
+ID3D11ShaderResourceView* shaderResourceViewMap;
+
 ID3D11Buffer *mCBuffer; 
 ID3D11Buffer *pCBuffer;
 GeometryClass *geometry;
@@ -22,7 +26,7 @@ MATRICES *matrices;
 
 int textoggle = true;
 int normtoggle = true;
-
+int refltoggle = true;
 
 
 float timeAtGameStart;
@@ -135,42 +139,40 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		
     D3DXMatrixIdentity(&matWorldX);
 
-
-
 	D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
 
 	// Set the particles
     geometry = new GeometryClass();
 	
+	geometry->InitRenderTarget(dev, devcon, camera, zbuffer);
 
 	D3DXMatrixTranslation(&matTrans, 0.0f, 0.5f, 0.0f);
 	MATRICES *mats = new MATRICES();
 	
 	mats->matProjection = camera->matProjection;
 	mats->matView = camera->matView;
-	mats->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
-
-
-	D3DXMatrixTranslation(&matTrans, 0.0f, 0.4f, 0.0f);
+	mats->cameraPosition = D3DXVECTOR3(0.0f, 1.0f, 5.5f);
+    
+	D3DXMatrixTranslation(&matTrans, -10.5f, 0.4, -10.5f);
 	mats->matWorld = matTrans;
-	geometry->CreateQuad(dev, devcon, 1.0f,1.0f,1.0f,1.5f);
+	geometry->CreateQuad(dev, devcon, 1.0f,1.0f,1.0f,1.5f, "bilboTree");
 	geometry->SetTexture(dev, L"firtexture.jpg", 0);
 	geometry->SetAlpha(dev, L"firalpha.jpg", 0);
-	geometry->SetMapping(1.,1.,0.,0.,0.,0);
+	geometry->SetMapping(1.,1.,0.,0.,0);
 	geometry->SetLight(light, 0);
 	geometry->SetMatrices(mats,0);
 	
-    geometry->objects[0]->x = 0.0f;
-    geometry->objects[0]->y = 0.4f;
-    geometry->objects[0]->z = 0.0f;
+    geometry->objects[0]->x = -15.1f;
+    geometry->objects[0]->y = 0.4;
+    geometry->objects[0]->z = -15.1f;
 	
 
 	//A cow
 	geometry->LoadObject( dev, devcon, "cow.obj", D3DXVECTOR4(0.1f,0.8f,0.3f,1.0f) );
-	geometry->SetTexture(dev,L"cowtex.png",1);
+    geometry->SetTexture(dev,L"cowtex.png",1);
 	D3DXMatrixTranslation(&matTrans, 2.0f, 0.0f, 0.0f);
 	D3DXMatrixRotationY(&matRotateY, D3DX_PI/2);
-	geometry->SetMapping(1.0f, 0.0f, 0.0f,0.0f,0., 1);
+	geometry->SetMapping(1.0f, 0.0f, 0.0f,0.0f, 1);
 	geometry->objects[1]->x = 2.0f;
     geometry->objects[1]->y = 0.0f;
     geometry->objects[1]->z = 0.0f;
@@ -178,15 +180,17 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	geometry->SetLight(light, 1);
 	geometry->SetMatrices(mats,1);
 
-//Create the master particle
+    //Create the master particle
 	geometry->CreateQuad(dev,devcon, 1.0f,1.0f,1.0f, 0.01f, "snowParticle");
 	geometry->SetAlpha(dev, L"snowalphasmallest.png", 2);
-	geometry->SetMapping(0.,1.,0.,1.,0.,2);
+	geometry->SetMapping(0.,1.,0.,1.,2);
 	geometry->SetLight(light, 2);
+
+    
 
 	// Physics Init
 	geometry->objects[2]->x0 = Ranf(-4.0f, 4.0f);
-    geometry->objects[2]->y0 = 10.0f;
+    geometry->objects[2]->y0 = -3.0f;
     geometry->objects[2]->z0 = Ranf(-4.0f, 4.0f);
     geometry->objects[2]->x = geometry->objects[2]->x0;
     geometry->objects[2]->y = geometry->objects[2]->y0;
@@ -195,7 +199,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     geometry->objects[2]->vx0 = Ranf(-0.0015f, 0.0015f);
     geometry->objects[2]->vy0 = Ranf(-0.35f, -0.085f);
     geometry->objects[2]->vz0 = Ranf(-0.0015f, 0.0015f);
-    geometry->objects[2]->vx = geometry->objects[2]->vx0; 
+    geometry->objects[2]->vx = geometry->objects[2]->vx0;
     geometry->objects[2]->vy = geometry->objects[2]->vy0;
     geometry->objects[2]->vz = geometry->objects[2]->vz0;
 		
@@ -204,7 +208,66 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		
 	geometry->SetMatrices(mats, 2);
 
-	for(int i = 3; i < MAXPARTICLES; i++)
+
+	geometry->CreateQuad(dev, devcon, 0.5f,0.5f,0.5f,1.5f);
+	geometry->SetReflective(1.0, 3);
+    refltoggle = 1;
+    D3DXMatrixTranslation(&matTrans, 2.0f, 0.75, -2.0f);
+    D3DXMatrixRotationY(&matRotateY, -D3DX_PI/4);
+	mats->matWorld = matRotateY * matTrans;
+	geometry->SetLight(light, 3);
+	geometry->SetMatrices(mats,3);
+    geometry->objects[3]->x = 2.0f;
+    geometry->objects[3]->y = 0.75;
+    geometry->objects[3]->z = -2.0f;
+
+    // Create wall of trees
+    for(int i = 0; i < 25; i++)
+    {
+        int offset = 4;
+        int objectnum = offset + (i * 4);
+
+        // Back wall
+        geometry->LoadObject(dev, devcon, "bilboTree", D3DXVECTOR4(0.0f,0.0f,0.0f,0.0f));
+        geometry->objects[objectnum]->x = 15.0f - ((float)i / (25.0f/30.0f) );
+        geometry->objects[objectnum]->y = 0.4f;
+        geometry->objects[objectnum]->z = -15.0f;
+		D3DXMatrixTranslation(&matTrans, geometry->objects[objectnum]->x, geometry->objects[objectnum]->y, geometry->objects[objectnum]->z );
+		mats->matWorld = matTrans * matWorldX;
+		geometry->SetMatrices(mats, objectnum);
+        objectnum++;
+
+        // Left wall
+        geometry->LoadObject(dev, devcon, "bilboTree", D3DXVECTOR4(0.0f,0.0f,0.0f,0.0f));
+        geometry->objects[objectnum]->x = 15.0f;
+        geometry->objects[objectnum]->y = 0.4f;
+        geometry->objects[objectnum]->z = 15.0f  - ((float)i / (25.0f/30.0f) );
+		D3DXMatrixTranslation(&matTrans, geometry->objects[objectnum]->x, geometry->objects[objectnum]->y, geometry->objects[objectnum]->z );
+        mats->matWorld = matTrans * matWorldX;
+		geometry->SetMatrices(mats, objectnum);
+        objectnum++;
+
+        // Front wall
+        geometry->LoadObject(dev, devcon, "bilboTree", D3DXVECTOR4(0.0f,0.0f,0.0f,0.0f));
+        geometry->objects[objectnum]->x = 15.0f - ((float)i / (25.0f/30.0f) );
+        geometry->objects[objectnum]->y = 0.4f;
+        geometry->objects[objectnum]->z = 15.0f;
+		D3DXMatrixTranslation(&matTrans, geometry->objects[objectnum]->x, geometry->objects[objectnum]->y, geometry->objects[objectnum]->z );
+		mats->matWorld = matTrans * matWorldX;
+		geometry->SetMatrices(mats, objectnum);
+        objectnum++;
+
+        // Right wall
+        geometry->LoadObject(dev, devcon, "bilboTree", D3DXVECTOR4(0.0f,0.0f,0.0f,0.0f));
+        geometry->objects[objectnum]->x = -15.0f;
+        geometry->objects[objectnum]->y = 0.4f;
+        geometry->objects[objectnum]->z = 15.0f  - ((float)i / (25.0f/30.0f) );
+		D3DXMatrixTranslation(&matTrans, geometry->objects[objectnum]->x, geometry->objects[objectnum]->y, geometry->objects[objectnum]->z );
+        mats->matWorld = matTrans * matWorldX;
+		geometry->SetMatrices(mats, objectnum);
+    }
+
+	for(int i = 104; i < MAXPARTICLES; i++)
 	{
 		geometry->LoadObject(dev, devcon, "snowParticle", D3DXVECTOR4(0.0f,0.0f,0.0f,0.0f));
 
@@ -240,7 +303,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	geometry->SetTexture(dev,L"TER_ForestGroundPlayable_B.png",MAXPARTICLES);
 	geometry->SetNormal(dev,L"TER_ForestGroundPlayable_B_NM.png",MAXPARTICLES);
 	geometry->SetAlpha(dev, L"snowalphasmallest.png", MAXPARTICLES);
-	geometry->SetMapping(1.,0.,1.,0.,0.,MAXPARTICLES);
+	geometry->SetMapping(1.,0.,1.,0.,MAXPARTICLES);
 	geometry->SetLight(light, MAXPARTICLES);
 	geometry->objects[MAXPARTICLES]->x = 0.0f;
     geometry->objects[MAXPARTICLES]->y = -1.0f;
@@ -263,19 +326,22 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-        //static float Time = 0.0f; Time += 0.000125f;
-        //static float LightTime = 0.0f; LightTime = +0.0005f;
-
 		float Time = GetGameTime();
 
 		UpdateFPS();
 
 		int feeps = fps;
 		
-		D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, 0.0f);
-		mats->matWorld = matTrans * matWorldX;
+		D3DXMatrixTranslation(&matTrans, 2.0f, 0.75, -2.0f);
+        D3DXMatrixRotationY(&matRotateY, -D3DX_PI/4);
+	    mats->matWorld = matRotateY * matTrans * matWorldX;
+        geometry->SetMatrices(mats,3);
 
-		geometry->SetMatrices(mats,2);
+        D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, 0.0f);
+		mats->matWorld = matTrans * matWorldX;
+        geometry->SetMatrices(mats,2);
+
+		
 		D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
 		mats->matWorld = matTrans * matWorldX;
 		geometry->SetMatrices(mats,MAXPARTICLES);
@@ -297,18 +363,41 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 		// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
 		D3DXMatrixMultiply(&matFinal, &matFinal, &matTrans); 
-
+		
 		mats->matWorld = matFinal;
 		geometry->SetMatrices(mats,0);
 
 		// Setup the rotation the billboard at the origin using the world matrix.
 		D3DXMatrixRotationY(&matRotateY, Time * D3DX_PI/2);
 		D3DXMatrixRotationY(&matRotateX, D3DX_PI/2);
-		D3DXMatrixTranslation(&matTrans, 2.0f, (sinf(Time * 10.0f)/4.0f) - 0.2f, 0.0f);
+		D3DXMatrixTranslation(&matTrans, 2.0f, (sinf(Time * 10.0f)/4.0f) - 0.18f, 0.0f);
 		mats->matWorld = matRotateX * matTrans * matRotateY * matWorldX;
 		geometry->SetMatrices(mats,1);
 
-		for(int i = 3; i < MAXPARTICLES; i++)
+
+        for(int i = 4; i < 104; i++) {
+            D3DXVECTOR3 modelPosition = D3DXVECTOR3(geometry->objects[i]->x, geometry->objects[i]->y, geometry->objects[i]->z);
+		    D3DXVec3TransformCoord(&modelPosition, &modelPosition, &matWorldX);
+		    // Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+		    angle = atan2(modelPosition.x - 0.0f, modelPosition.z - 5.5f) * (180.0 / D3DX_PI);
+
+		    // Convert rotation into radians.
+		    rotation = 2 * (float)angle * 0.0174532925f;
+
+		    // Setup the rotation the billboard at the origin using the world matrix.
+		    D3DXMatrixRotationY(&matFinal, rotation);
+
+		    // Setup the translation matrix from the billboard model.
+		    D3DXMatrixTranslation(&matTrans, modelPosition.x, modelPosition.y, modelPosition.z);
+
+		    // Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+		    D3DXMatrixMultiply(&matFinal, &matFinal, &matTrans); 
+		
+		    mats->matWorld = matFinal;
+            geometry->SetMatrices(mats,i);
+        }
+
+		for(int i = 104; i < MAXPARTICLES; i++)
 		{
 			// Physics Init
 			
@@ -321,9 +410,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				geometry->objects[i]->z = geometry->objects[i]->z0;
 
 			} else {
-				geometry->objects[i]->x += fmodf(geometry->objects[i]->vx * Time, 0.002f) - 0.001;
+                geometry->objects[i]->x += fmodf(geometry->objects[i]->vx * Time, 0.006f) - 0.003;
 				geometry->objects[i]->y = (fmodf(geometry->objects[i]->y0 + geometry->objects[i]->vy * Time - 11.0, 11.0)) + 10.0f;
-				geometry->objects[i]->z += fmodf(geometry->objects[i]->vz * Time, 0.002f) - 0.001;
+				geometry->objects[i]->z += fmodf(geometry->objects[i]->vz * Time, 0.006f) - 0.003;
 			}
 			
 			
@@ -355,7 +444,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		}
 
         geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, mCBuffer, zbuffer, pTexture,
-                        pBS, pSS, pRS);
+                        pBS, pSS, pRS, camera);
     }
 
 
@@ -388,12 +477,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     {
                         if(textoggle)
                         {
-                            geometry->SetMapping(0.,1.,0.,0.,0.,0);
+                            geometry->SetMapping(0.,1.,0.,0.,0);
                             textoggle = false;
                         }
                         else
                         {
-                            geometry->SetMapping(1.,1.,0.,0.,0.,0);
+                            geometry->SetMapping(1.,1.,0.,0.,0);
                             textoggle = true;
                         }
                     }
@@ -402,15 +491,28 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     {
                         if(normtoggle)
                         {
-                            geometry->SetMapping(0.,0.,0.,0.,0.,1);
-                            geometry->SetMapping(0.,0.,0.,0.,0.,4);
+                            geometry->SetMapping(0.,0.,0.,0.,1);
+                            geometry->SetMapping(0.,0.,0.,0.,4);
                             normtoggle = false;
                         }
                         else
                         {
-                            geometry->SetMapping(0.,0.,1.,0.,0.,1);
-                            geometry->SetMapping(0.,0.,1.,0.,0.,4);
+                            geometry->SetMapping(0.,0.,1.,0.,1);
+                            geometry->SetMapping(0.,0.,1.,0.,4);
                             normtoggle = true;
+                        }
+                    }break;
+                    case 0x4C: // L key has been pressed
+                    {
+                        if(refltoggle)
+                        {
+                            geometry->SetReflective(0., 3);
+                            refltoggle = false;
+                        }
+                        else
+                        {
+                            geometry->SetReflective(1., 3);
+                            refltoggle = true;
                         }
                     }break;
                 }
@@ -552,8 +654,9 @@ void InitD3D(HWND hWnd)
     texd.Height = SCREEN_HEIGHT;
     texd.ArraySize = 1;
     texd.MipLevels = 1;
-    texd.SampleDesc.Count = 4;
-    texd.Format = DXGI_FORMAT_D32_FLOAT;
+    texd.SampleDesc.Count = 1;
+    texd.SampleDesc.Quality = 0;;
+    texd.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
     texd.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
     ID3D11Texture2D *pDepthBuffer;
@@ -564,7 +667,7 @@ void InitD3D(HWND hWnd)
     ZeroMemory(&dsvd, sizeof(dsvd));
 
     dsvd.Format = DXGI_FORMAT_D32_FLOAT;
-    dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+    dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 
     dev->CreateDepthStencilView(pDepthBuffer, &dsvd, &zbuffer);
     pDepthBuffer->Release();
@@ -579,10 +682,8 @@ void InitD3D(HWND hWnd)
     pBackBuffer->Release();
 
     // set the render target as the back buffer
-    devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
+    //devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
 
-	/*ID3D11Texture2D *pReflectMap;
-	dev->CreateRenderTargetView(*/
 
     // Set the viewport
     D3D11_VIEWPORT viewport;
@@ -635,6 +736,7 @@ void InitPipeline()
 
     dev->CreateBuffer(&bd, NULL, &vCBuffer);
     devcon->VSSetConstantBuffers(0, 1, &vCBuffer);
+    // devcon->VSSetConstantBuffers(1, 1, &mCBuffer);  // Send mapping into VS.... to use the reflect verctor an change where we are in the vs.
 
     ZeroMemory(&bd, sizeof(bd));
 
@@ -648,6 +750,7 @@ void InitPipeline()
 	dev->CreateBuffer(&bd, NULL, &mCBuffer);
     devcon->PSSetConstantBuffers(1, 1, &mCBuffer);
 	
+    
    }
 
 // initializes the states

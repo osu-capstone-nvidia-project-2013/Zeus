@@ -86,10 +86,13 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 		obj->numIndices = indices.size();
 		obj->matrices = new MATRICES();
 		obj->light = new LIGHT();
+
 		obj->mapping = new MAPPING();
 		obj->mapping->textureflag = 0.;
 		obj->mapping->alphaflag = 0.;
 		obj->mapping->normalflag = 0.;
+		obj->mapping->reflective = 0.;
+
 		obj->texturemap = NULL;
 		obj->alphamap = NULL;
 		obj->normalmap = NULL;
@@ -148,13 +151,16 @@ void GeometryClass::SetLight(LIGHT *light, int objNum)
 	objects[objNum]->light = light;
 }
 
-void GeometryClass::SetMapping(float texture, float alpha, float normal, float particle, float reflect, int objNum) 
+void GeometryClass::SetMapping(float texture, float alpha, float normal, float particle, int objNum) 
 {
 	objects[objNum]->mapping->textureflag = texture;
 	objects[objNum]->mapping->alphaflag = alpha;
 	objects[objNum]->mapping->normalflag = normal;
 	objects[objNum]->mapping->particle = particle;
-	objects[objNum]->mapping->reflective = reflect;
+}
+void GeometryClass::SetReflective(float reflective, int objNum)
+{
+	objects[objNum]->mapping->reflective = reflective;
 }
 
 void GeometryClass::SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum) 
@@ -234,20 +240,55 @@ void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D1
 							IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
 							ID3D11Buffer *mCBuffer,
 							ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
-							ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS)
+							ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS, CameraClass *camera)
 {
-
-    // clear the back buffer to a deep blue
-    devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-	// clear the depth buffer
-	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
-	
+  
     // set the various states
     devcon->RSSetState(pRS);
     devcon->PSSetSamplers(0, 1, &pSS);
     devcon->OMSetBlendState(pBS, 0, 0xffffffff);
 
 	quicksort(0,sorted_objects.size()-2);
+
+	RenderToTarget(dev, devcon, camera, zbuffer, pCBuffer, vCBuffer, mCBuffer, backbuffer, swapchain);
+	 // clear the back buffer to a deep blue
+    devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	// clear the depth buffer
+	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
+
+    // Draw it all
+    for(int i = sorted_objects.size() - 1; i >= 0; i-- )
+    {
+		
+			// update constant buffer
+			devcon->UpdateSubresource(vCBuffer, 0, 0, sorted_objects[i]->matrices, 0, 0);	
+			devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
+			devcon->UpdateSubresource(mCBuffer, 0, 0, sorted_objects[i]->mapping, 0, 0);
+			sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, shaderResourceViewMap);
+		
+    }
+	
+    // switch the back buffer and the front buffer
+	swapchain->Present(0, 0);
+}
+
+
+void GeometryClass::RenderToTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera,ID3D11DepthStencilView *zbuffer,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+									ID3D11Buffer *mCBuffer,ID3D11RenderTargetView *backbuffer, 
+									IDXGISwapChain *swapchain)
+{
+	////////////////////////// Draw Terrain Onto Map
+	// Here we will draw our map, which is just the terrain from the mapCam's view
+
+	// Set our maps Render Target
+	devcon->OMSetRenderTargets( 1, &renderTargetViewMap, zbuffer);
+
+	// Now clear the render target
+	devcon->ClearRenderTargetView(renderTargetViewMap, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	// clear the depth buffer
+	//devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
     // Draw it all
     for(int i = sorted_objects.size() - 1; i >= 0; i-- )
@@ -256,15 +297,13 @@ void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D1
 		devcon->UpdateSubresource(vCBuffer, 0, 0, sorted_objects[i]->matrices, 0, 0);	
 		devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
 		devcon->UpdateSubresource(mCBuffer, 0, 0, sorted_objects[i]->mapping, 0, 0);
-		sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, pTexture);
-    }
-	
-    // switch the back buffer and the front buffer
-    swapchain->Present(0, 0);
+		sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, shaderResourceViewMap);
+	}
+
 }
 
 
-void GeometryClass::SetRenderTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera, ID3D11DepthStencilView *zbuffer)
+void GeometryClass::InitRenderTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera, ID3D11DepthStencilView *zbuffer)
 {
 	D3D11_TEXTURE2D_DESC textureDesc;
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
@@ -312,14 +351,5 @@ void GeometryClass::SetRenderTarget(ID3D11Device *dev, ID3D11DeviceContext *devc
 
 	// Create the shader resource view.
 	dev->CreateShaderResourceView(renderTargetTextureMap, &shaderResourceViewDesc, &shaderResourceViewMap);
-
-	////////////////////////// Draw Terrain Onto Map
-	// Here we will draw our map, which is just the terrain from the mapCam's view
-
-	// Set our maps Render Target
-	devcon->OMSetRenderTargets( 1, &renderTargetViewMap, zbuffer);
-
-	// Now clear the render target
-	devcon->ClearRenderTargetView(renderTargetViewMap, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f) );
-
+	
 }

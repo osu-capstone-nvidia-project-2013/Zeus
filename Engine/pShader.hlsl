@@ -13,7 +13,8 @@ cbuffer Mapping : register(cb1)
 	float alphaflag;
 	float normalflag;
 	float particleflag;
-	float reflectflag;
+	float reflective;
+	float padding;
 }
 
 struct VOut
@@ -24,13 +25,13 @@ struct VOut
 	float3 viewDirection : VIEWDIRECTION;
 	float2 texcord : TEXCORD;
 	float3x3 tbnmatrix : TBNMATRIX;
-	float3 reflect : REFLECT;
+    float3 reflect : REFLECT;
 };
 
 Texture2D Texture;
 Texture2D Alpha;
 Texture2D NormalMap;
-texture2D ReflectMap;
+Texture2D ReflectMap;
 SamplerState ss;
 
 float4 PShader(VOut input) : SV_TARGET
@@ -38,6 +39,7 @@ float4 PShader(VOut input) : SV_TARGET
 	float4 textureColor;
     float4 alphaColor;
 	float4 normalColor;
+	float4 reflectColor;
     float3 lightDir;
     float lightIntensity;
     float4 color;
@@ -45,11 +47,10 @@ float4 PShader(VOut input) : SV_TARGET
     float4 specular;
 	float resAlpha;
 
-	if(reflectflag == 1.)
-	{
-		
-	}
-	
+    if(reflective == 1.)
+    {
+        input.viewDirection = input.reflect;
+    }
 
 	//////////////////////////check if pixel kill needed///////////////////////////////////
 	if(alphaflag == 1.)
@@ -65,7 +66,12 @@ float4 PShader(VOut input) : SV_TARGET
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
 
-
+	//////////////////////////////////check if reflective///////////////////////////////////
+	if(reflective == 1.)
+	{
+		reflectColor = ReflectMap.Sample(ss, input.texcord);
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
 	
 	//////////////////////////////////grab texture color////////////////////////////////////
 	if(textureflag == 1.)
@@ -142,6 +148,11 @@ float4 PShader(VOut input) : SV_TARGET
 	{
 		color = color * textureColor;
 	}
+
+	if(reflective == 1)
+	{
+		color = color * reflectColor;
+	}
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	/////////////////////apply specular lighting////////////////////////////////////////////
@@ -159,7 +170,7 @@ float4 PShader(VOut input) : SV_TARGET
 		color.a = (alphaColor.r + alphaColor.g + alphaColor.b ) / 3.0;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
-	
+
 
     return color;
 }

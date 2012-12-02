@@ -50,13 +50,18 @@ public:
     void SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum);
     void SetTexture(ID3D11Device *dev, LPCWSTR texturefile, int objNum);
 	void SetNormal(ID3D11Device *dev, LPCWSTR normalfile, int objNum);
-    void SetMapping(float texture, float alpha, float normal, float particle, float reflect, int objNum);
+    void SetMapping(float texture, float alpha, float normal, float particle, int objNum);
+	void SetReflective(float reflective, int objNum);
     void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
 				IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
 				ID3D11Buffer *mCBuffer,
 				ID3D11DepthStencilView *zbuffer, ID3D11ShaderResourceView *pTexture,
-				ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS);
-	void SetRenderTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera,ID3D11DepthStencilView *zbuffer);
+				ID3D11BlendState *pBS,ID3D11SamplerState *pSS, ID3D11RasterizerState *pRS, CameraClass *camera);
+	void InitRenderTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera,ID3D11DepthStencilView *zbuffer);
+	void RenderToTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera,ID3D11DepthStencilView *zbuffer,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+									ID3D11Buffer *mCBuffer,ID3D11RenderTargetView *backbuffer, 
+									IDXGISwapChain *swapchain);
+
 	vector<ObjectClass*> objects;
 	vector<ObjectClass*> sorted_objects;
 

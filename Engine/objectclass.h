@@ -35,7 +35,7 @@ struct MAPPING
 	float normalflag;
 	float particle;
 	float reflective;
-	float paddin;
+	float padding;
 };
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ObjectClass

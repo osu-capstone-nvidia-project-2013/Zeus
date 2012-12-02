@@ -7,6 +7,16 @@ cbuffer ConstantBuffer : register(cb0)
 	float padding;
 }
 
+//cbuffer Mapping : register(cb1)
+//{
+//	float textureflag;
+//	float alphaflag;
+//	float normalflag;
+//	float particleflag;
+//	float reflective;
+//	float padding;
+//}
+
 struct VOut
 {
     float4 position : SV_POSITION;
@@ -15,15 +25,8 @@ struct VOut
 	float3 viewDirection : VIEWDIRECTION;
 	float2 texcord : TEXCORD;
 	float3x3 tbnmatrix : TBNMATRIX;
-	float3 reflect : REFLECT;
+    float3 reflect : REFLECT;
 };
-
-Texture2D Texture;
-Texture2D Alpha;
-Texture2D NormalMap;
-texture ReflectMap;
-
-SamplerState ss;
 
 VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : NORMAL, float2 texcord : TEXCORD, float3 tangent : TANGENT)
 {
@@ -58,7 +61,7 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : N
     // Normalize the viewing direction vector.
     output.viewDirection = normalize(output.viewDirection);
 	
-	// Create reflection angle.
+    // Create reflection angle.
 	float3 Incident = -output.viewDirection;
 	output.reflect = normalize(reflect(Incident, output.normal));
 

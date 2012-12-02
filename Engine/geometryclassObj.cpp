@@ -116,10 +116,10 @@ void GeometryClass::CreateQuad(ID3D11Device *dev, ID3D11DeviceContext *devcon, f
 
 	D3DXCOLOR color = D3DXCOLOR(r,g,b,1.0f);
     
-	VERTEX vert1 = {D3DXVECTOR3(-size, -size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.999f,0.999f)};
-    VERTEX vert2 = {D3DXVECTOR3(-size, size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.999f,0.0f)};
+	VERTEX vert1 = {D3DXVECTOR3(-size, -size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(1.0f,1.0f)};
+    VERTEX vert2 = {D3DXVECTOR3(-size, size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(1.0f,0.0f)};
     VERTEX vert3 = {D3DXVECTOR3(size, size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.0f,0.0f)};
-	VERTEX vert4 = {D3DXVECTOR3(size, -size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.0f,0.999f)};
+	VERTEX vert4 = {D3DXVECTOR3(size, -size, 0.0f),color, D3DXVECTOR3(0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.0f,1.0f)};
 	vert1.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
 	vert2.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
 	vert3.tangent = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
