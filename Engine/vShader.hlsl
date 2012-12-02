@@ -15,7 +15,15 @@ struct VOut
 	float3 viewDirection : VIEWDIRECTION;
 	float2 texcord : TEXCORD;
 	float3x3 tbnmatrix : TBNMATRIX;
+	float3 reflect : REFLECT;
 };
+
+Texture2D Texture;
+Texture2D Alpha;
+Texture2D NormalMap;
+texture ReflectMap;
+
+SamplerState ss;
 
 VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : NORMAL, float2 texcord : TEXCORD, float3 tangent : TANGENT)
 {
@@ -29,7 +37,7 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : N
 
     output.color = color;
     
-	output.texcord = fmod(texcord, float2(1.0f, 1.0f));
+	output.texcord = texcord;
 
     // Calculate the normal vector against the world matrix only.
     output.normal = mul(normal, (float3x3)matWorld);
@@ -50,6 +58,9 @@ VOut VShader(float4 position : POSITION, float4 color : COLOR, float3 normal : N
     // Normalize the viewing direction vector.
     output.viewDirection = normalize(output.viewDirection);
 	
+	// Create reflection angle.
+	float3 Incident = -output.viewDirection;
+	output.reflect = normalize(reflect(Incident, output.normal));
 
     return output;
 }

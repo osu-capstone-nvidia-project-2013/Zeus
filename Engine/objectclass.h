@@ -6,6 +6,9 @@
 #include <d3d11.h>
 #include <d3dx11.h>
 #include <d3dx10.h>
+#include <string>
+
+using std::string;
 
 struct LIGHT
 {
@@ -30,7 +33,9 @@ struct MAPPING
 	float textureflag;
 	float alphaflag;
 	float normalflag;
-	float padding;
+	float particle;
+	float reflective;
+	float paddin;
 };
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ObjectClass
@@ -43,6 +48,7 @@ public:
 
 	void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, IDXGISwapChain *swapchain, ID3D11ShaderResourceView *pTexture);
 
+	string name;
 	MATRICES *matrices;
 	unsigned int numIndices;
 	ID3D11Buffer *vBuffer;
@@ -53,6 +59,13 @@ public:
 	ID3D11ShaderResourceView *texturemap;
 	ID3D11ShaderResourceView *alphamap;
 	ID3D11ShaderResourceView *normalmap;
+
+	float x0, y0, z0;	// starting location	
+	float vx0, vy0, vz0;	// starting velocity		
+	float r0, g0, b0;	// starting color		
+	float x, y, z;		// current location	
+	float vx, vy, vz;	// current velocity		
+	float r, g, b;		// current color
 };
 
 #endif

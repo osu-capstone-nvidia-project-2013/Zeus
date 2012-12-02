@@ -1,6 +1,4 @@
-#include "objectclass.h"
-#include "geometryclass.h"
-
+#include "main.h"
 
 ObjectClass::ObjectClass()
 {

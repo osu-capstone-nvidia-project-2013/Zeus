@@ -1,8 +1,7 @@
 // include the basic windows header files and the Direct3D header files
 #include "main.h"
 // define the screen resolution
-#define SCREEN_WIDTH  1000
-#define SCREEN_HEIGHT 1000
+
 
 // global declarations
 IDXGISwapChain *swapchain;             // the pointer to the swap chain interface
@@ -16,7 +15,6 @@ ID3D11ShaderResourceView *pTexture;    // the pointer to the texture
 
 ID3D11Buffer *mCBuffer; 
 ID3D11Buffer *pCBuffer;
-ObjectClass	*triangleObj;
 GeometryClass *geometry;
 ShaderClass *shaderclass;
 LIGHT *light;
@@ -24,6 +22,12 @@ MATRICES *matrices;
 
 int textoggle = true;
 int normtoggle = true;
+
+
+
+float timeAtGameStart;
+UINT64 ticksPerSecond;
+
 // state objects
 ID3D11RasterizerState *pRS;            // the default rasterizer state
 ID3D11SamplerState *pSS;               // the default sampler state
@@ -38,10 +42,32 @@ void InitD3D(HWND hWnd);    // sets up and initializes Direct3D
 void CleanD3D(ObjectClass *obj);        // closes Direct3D and releases memory
 void InitPipeline(void);    // loads and prepares the shaders
 void InitStates();
+void InitGameTime();
+float GetGameTime();
+float Ranf( float low, float high );
+
+
+// Global variables for measuring fps
+float lastUpdate        = 0;
+float fpsUpdateInterval = 0.5f;
+UINT  numFrames         = 0;
+float fps               = 0;
+// Called once for every frame
+void UpdateFPS()
+{
+  numFrames++;
+  float currentUpdate = GetGameTime();
+  if( currentUpdate - lastUpdate > fpsUpdateInterval )
+  {
+    fps = numFrames / (currentUpdate - lastUpdate);
+    lastUpdate = currentUpdate;
+    numFrames = 0;
+  }
+}
+
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
 
 // the entry point for any Windows program
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -70,8 +96,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
                           L"WindowClass",
                           L"Zeus Graphics Engine",
                           WS_OVERLAPPEDWINDOW,
-                          300,
-                          100,
+                          0,
+                          0,
                           wr.right - wr.left,
                           wr.bottom - wr.top,
                           NULL,
@@ -81,106 +107,151 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     ShowWindow(hWnd, nCmdShow);
 
+	//create new camera with default values
+	CameraClass *camera = new CameraClass();
+
     // set up and initialize Direct3D
     InitD3D(hWnd);
+
+	InitGameTime();
     
     shaderclass = new ShaderClass();
     shaderclass->SetShaders(dev, devcon);
 
-    triangleObj = new ObjectClass();
-    SetTriangle(triangleObj, dev, devcon);
-    geometry = new GeometryClass();
-    VERTEX sphere_center;
-    sphere_center.position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-    sphere_center.color = D3DXVECTOR4(0.75f, 0.25f, 0.0f, 1.0f);
-    sphere_center.normal = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-    geometry->LoadObject(dev, devcon, "cow.obj", D3DXVECTOR4(0.45f, 0.65f, 0.20f, 1.0f));
-    geometry->SetTexture(dev, L"Bricks.png", 0);
-    geometry->SetAlpha(dev, L"Bricks_alpha.png", 0);
-	geometry->SetMapping(1.,1.,0.,0);
-    geometry->CreateSphere(dev, devcon, sphere_center, 1.0f, 30, 30);
-	geometry->SetTexture(dev, L"Bricks.png", 1);
-	geometry->SetNormal(dev, L"bumpnormal.png", 1);
-	geometry->SetMapping(0.,0.,1.,1);
-    geometry->LoadObject(dev, devcon, "frog.obj",  D3DXVECTOR4(0.2f, 0.6f, 0.1f, 0.5f));
-    geometry->SetTexture(dev, L"Bricks.png", 2);
-	geometry->SetMapping(0.,0.,0.,2);
-
-	geometry->CreatePlane(dev, devcon, -1.0f); //obj 3
-    geometry->SetTexture(dev, L"Bricks.png", 3);
-
-	geometry->CreateQuad(dev, devcon, 0.5f,0.0f,0.5f, 1.0f);
-	geometry->SetTexture(dev, L"Bricks.png", 4);
-	geometry->SetNormal(dev, L"metal.png", 4);
-	geometry->SetMapping(0.,0.,1.,4);
-
-    //Set lighting
+	//Set lighting
     light = new LIGHT();
 
     light->ambientcolor = D3DXVECTOR4(0.2f, 0.2f, 0.2f, 1.0f);
-    light->diffusecolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
+    light->diffusecolor = D3DXVECTOR4(0.6f, 0.6f, 0.6f, 1.0f);
     light->specularcolor = D3DXVECTOR4(1.0f, 1.0f, 1.0f, 1.0f);
     light->specularpower = 32.0f;
-    light->lightdirection = D3DXVECTOR3(0.0f, 5.0f, -3.0f);
+    light->lightdirection = D3DXVECTOR3(0.0f, -2.0f, -2.0f);
 
-    geometry->SetLight(light, 0);
-    geometry->SetLight(light, 1);
-	
-    geometry->SetLight(light, 2);
-    geometry->SetLight(light, 3);
-	
-    geometry->SetLight(light, 4);
-
-    //Setup for updating matrices
+	//Setup for updating matrices
     matrices = new MATRICES();
 
-	D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matProjection, matScale, matFinal;
-        D3DXVECTOR4 tempVec4;
+	D3DXMATRIX matRotate, matRotateY, matRotateZ, matRotateX, matTrans, matProjection, matScale, matFinal, matTransposed;
+    D3DXVECTOR4 tempVec4;
 		
-        D3DXMatrixIdentity(&matWorldX);
-	// create a view matrix
-        D3DXMatrixLookAtLH(&matView,
-                           &D3DXVECTOR3(0.0f, 1.0f, 5.5f),    // the camera position
-                           &D3DXVECTOR3(0.0f, 0.0f, 0.0f),    // the look-at position
-                           &D3DXVECTOR3(0.0f, 1.0f, 0.0f));   // the up direction
+    D3DXMatrixIdentity(&matWorldX);
 
-        // create a projection matrix
-        D3DXMatrixPerspectiveFovLH(&matProjection,
-                                   (FLOAT)D3DXToRadian(45),                    // field of view
-                                   (FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
-                                   1.0f,                                       // near view-plane
-                                   100.0f);                                    // far view-plane
 
-        D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
+
+	D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
+
+	// Set the particles
+    geometry = new GeometryClass();
+	
+
+	D3DXMatrixTranslation(&matTrans, 0.0f, 0.5f, 0.0f);
+	MATRICES *mats = new MATRICES();
+	
+	mats->matProjection = camera->matProjection;
+	mats->matView = camera->matView;
+	mats->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
+
+
+	D3DXMatrixTranslation(&matTrans, 0.0f, 0.4f, 0.0f);
+	mats->matWorld = matTrans;
+	geometry->CreateQuad(dev, devcon, 1.0f,1.0f,1.0f,1.5f);
+	geometry->SetTexture(dev, L"firtexture.jpg", 0);
+	geometry->SetAlpha(dev, L"firalpha.jpg", 0);
+	geometry->SetMapping(1.,1.,0.,0.,0.,0);
+	geometry->SetLight(light, 0);
+	geometry->SetMatrices(mats,0);
+	
+    geometry->objects[0]->x = 0.0f;
+    geometry->objects[0]->y = 0.4f;
+    geometry->objects[0]->z = 0.0f;
+	
+
+	//A cow
+	geometry->LoadObject( dev, devcon, "cow.obj", D3DXVECTOR4(0.1f,0.8f,0.3f,1.0f) );
+	geometry->SetTexture(dev,L"cowtex.png",1);
+	D3DXMatrixTranslation(&matTrans, 2.0f, 0.0f, 0.0f);
+	D3DXMatrixRotationY(&matRotateY, D3DX_PI/2);
+	geometry->SetMapping(1.0f, 0.0f, 0.0f,0.0f,0., 1);
+	geometry->objects[1]->x = 2.0f;
+    geometry->objects[1]->y = 0.0f;
+    geometry->objects[1]->z = 0.0f;
+	mats->matWorld = matRotateY * matTrans;
+	geometry->SetLight(light, 1);
+	geometry->SetMatrices(mats,1);
+
+//Create the master particle
+	geometry->CreateQuad(dev,devcon, 1.0f,1.0f,1.0f, 0.01f, "snowParticle");
+	geometry->SetAlpha(dev, L"snowalphasmallest.png", 2);
+	geometry->SetMapping(0.,1.,0.,1.,0.,2);
+	geometry->SetLight(light, 2);
+
+	// Physics Init
+	geometry->objects[2]->x0 = Ranf(-4.0f, 4.0f);
+    geometry->objects[2]->y0 = 10.0f;
+    geometry->objects[2]->z0 = Ranf(-4.0f, 4.0f);
+    geometry->objects[2]->x = geometry->objects[2]->x0;
+    geometry->objects[2]->y = geometry->objects[2]->y0;
+    geometry->objects[2]->z = geometry->objects[2]->z0;
+
+    geometry->objects[2]->vx0 = Ranf(-0.0015f, 0.0015f);
+    geometry->objects[2]->vy0 = Ranf(-0.35f, -0.085f);
+    geometry->objects[2]->vz0 = Ranf(-0.0015f, 0.0015f);
+    geometry->objects[2]->vx = geometry->objects[2]->vx0; 
+    geometry->objects[2]->vy = geometry->objects[2]->vy0;
+    geometry->objects[2]->vz = geometry->objects[2]->vz0;
 		
+	D3DXMatrixTranslation(&matTrans, geometry->objects[2]->x, geometry->objects[2]->y, geometry->objects[2]->z );
+	mats->matWorld = matTrans * matWorldX;
+		
+	geometry->SetMatrices(mats, 2);
 
-       MATRICES *matrices2 = new MATRICES();
-	   matrices2->matWorld = matTrans;
-        matrices2->matProjection = matProjection;
-        matrices2->matView = matView;
-        matrices2->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
-		//geometry->SetMatrices(matrices2, 3);
+	for(int i = 3; i < MAXPARTICLES; i++)
+	{
+		geometry->LoadObject(dev, devcon, "snowParticle", D3DXVECTOR4(0.0f,0.0f,0.0f,0.0f));
 
-		D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, -2.0f);
-		D3DXMatrixRotationY(&matRotateY, 0.0f);
-		 matrices2->matWorld = matRotateY * matTrans;
-		 //geometry->SetMatrices(matrices2, 4);
+		// Physics Init
+		geometry->objects[i]->x0 = Ranf(-10.0f, 10.0f);
+        geometry->objects[i]->y0 = Ranf(-1.0f, 10.0f);
+        geometry->objects[i]->z0 = Ranf(-10.0f, 10.0f);
+        geometry->objects[i]->x = geometry->objects[i]->x0;
+        geometry->objects[i]->y = geometry->objects[i]->y0;
+        geometry->objects[i]->z = geometry->objects[i]->z0;
 
-		/*for(int i = 0; i < 200; i++)
-		{
-			geometry->CreateQuad(dev,devcon, 1.0f,1.0f,1.0f, 0.05f);
-			geometry->SetNormal(dev, L"snowalpha.jpg", i+5);
-			geometry->SetMapping(0.,1.,0.,i+5);
-			geometry->SetLight(light, i+5);
-			D3DXMatrixTranslation(&matTrans, (rand()%5)-2.0f, 1.0f, (rand()%5)-2.0f);
-			matrices2->matWorld = matTrans;
-			geometry->SetMatrices(matrices2, i+5);
-		}*/
+        geometry->objects[i]->vx0 = Ranf(-0.001f, 0.001f);
+        geometry->objects[i]->vy0 = Ranf(-0.55f, -0.025f);
+        geometry->objects[i]->vz0 = Ranf(-0.001f, 0.001f);
+        geometry->objects[i]->vx = geometry->objects[i]->vx0;
+        geometry->objects[i]->vy = geometry->objects[i]->vy0;
+        geometry->objects[i]->vz = geometry->objects[i]->vz0;
+		
+		D3DXMatrixTranslation(&matTrans, geometry->objects[i]->x, geometry->objects[i]->y, geometry->objects[i]->z );
+		mats->matWorld = matTrans * matWorldX;
+		
+		geometry->SetMatrices(mats, i);
+	}
+
+	//Create the plane last to make sorting easier
+	geometry->CreatePlane(dev, devcon, -1.0f);
+	D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
+	matrices->matWorld = matTrans;
+	matrices->matProjection = camera->matProjection;
+    matrices->matView = camera->matView;;
+    matrices->cameraPosition = D3DXVECTOR3(0.0f, 1.0f, 5.5f);
+	geometry->SetMatrices(matrices,MAXPARTICLES);
+	geometry->SetTexture(dev,L"TER_ForestGroundPlayable_B.png",MAXPARTICLES);
+	geometry->SetNormal(dev,L"TER_ForestGroundPlayable_B_NM.png",MAXPARTICLES);
+	geometry->SetAlpha(dev, L"snowalphasmallest.png", MAXPARTICLES);
+	geometry->SetMapping(1.,0.,1.,0.,0.,MAXPARTICLES);
+	geometry->SetLight(light, MAXPARTICLES);
+	geometry->objects[MAXPARTICLES]->x = 0.0f;
+    geometry->objects[MAXPARTICLES]->y = -1.0f;
+    geometry->objects[MAXPARTICLES]->z = 0.0f;
 
     // enter the main loop:
+	//MATRICES *mats = new MATRICES();
 
     MSG msg;
-
+	double angle;
+	float rotation;
     while(TRUE)
     {
         if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -192,86 +263,101 @@ int WINAPI WinMain(HINSTANCE hInstance,
                 break;
         }
 
-        static float Time = 0.0f; Time += 0.000125f;
-        static float LightTime = 0.0f; LightTime = +0.0005f;
+        //static float Time = 0.0f; Time += 0.000125f;
+        //static float LightTime = 0.0f; LightTime = +0.0005f;
 
-        
+		float Time = GetGameTime();
 
-        // create a rotation matrix
-        D3DXMatrixRotationY(&matRotateY, Time);
-        D3DXMatrixRotationZ(&matRotateZ, Time);
+		UpdateFPS();
 
-        // create a translation matrix
-        D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
-        matrices->matWorld = matRotateY * matRotateZ * matTrans * matWorldX;
-        matrices->matProjection = matProjection;
-        matrices->matView = matView;
-        matrices->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
-		//geometry->SetMatrices(matrices, 3);
-        matrices2->matView = matView;
-		 
-        D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
-        matrices->matWorld = matTrans * matWorldX;
-        geometry->SetMatrices(matrices, 3);
+		int feeps = fps;
+		
+		D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, 0.0f);
+		mats->matWorld = matTrans * matWorldX;
 
-		D3DXMatrixTranslation(&matTrans, 0.0f, -2.0f, -2.0f);
-		D3DXMatrixRotationY(&matRotateY, 0.0f);
-		 matrices->matWorld = matRotateY * matTrans * matWorldX;
-		 geometry->SetMatrices(matrices, 4);
-
-        //update light
-        D3DXMatrixRotationY(&matRotateY, sinf(LightTime*2));
-		//D3DXMatrixTranslation(&matTrans, sinf(Time)*20+20, 0.0f, 0.0f);
-        D3DXVec3Transform(&tempVec4, &light->lightdirection, &matRotateY);
-        light->lightdirection.x = tempVec4.x;
-        light->lightdirection.y = tempVec4.y;
-        light->lightdirection.z = tempVec4.z;
-
-        geometry->SetLight(light, 0);
-        geometry->SetLight(light, 1);
-        geometry->SetLight(light, 2);
-
-        D3DXMatrixTranslation(&matTrans, 1.5, 0.0f, 0.0f);
-        matrices->matWorld = matRotateY * matRotateZ * matTrans * matWorldX;
-        geometry->SetMatrices(matrices, 0);
-        
-
-        // set matrix for second object
-        D3DXMatrixRotationX(&matRotateX, Time);
-		D3DXMatrixRotationY(&matRotateY, Time*2);
-        D3DXMatrixTranslation(&matTrans, -1.0f, 1.5f, -2.0f);
+		geometry->SetMatrices(mats,2);
+		D3DXMatrixTranslation(&matTrans, 0.0f, 0.0f, 0.0f);
+		mats->matWorld = matTrans * matWorldX;
+		geometry->SetMatrices(mats,MAXPARTICLES);
 
 
-        matrices->matWorld = matRotateY * matTrans * matWorldX;
+		D3DXVECTOR3 modelPosition = D3DXVECTOR3(geometry->objects[0]->x, geometry->objects[0]->y, geometry->objects[0]->z);
+		D3DXVec3TransformCoord(&modelPosition, &modelPosition, &matWorldX);
+		// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+		angle = atan2(modelPosition.x - 0.0f, modelPosition.z - 5.5f) * (180.0 / D3DX_PI);
 
-        geometry->SetMatrices(matrices, 1);
+		// Convert rotation into radians.
+		rotation = 2 * (float)angle * 0.0174532925f;
 
-        //set matrix for third
-        D3DXMatrixTranslation(&matTrans, 0.5f, 0.0f, 2.0f);
+		// Setup the rotation the billboard at the origin using the world matrix.
+		D3DXMatrixRotationY(&matFinal, rotation);
 
-        matrices->matWorld = matRotateY * matRotateZ * matTrans * matWorldX;
-        geometry->SetMatrices(matrices, 2);
+		// Setup the translation matrix from the billboard model.
+		D3DXMatrixTranslation(&matTrans, modelPosition.x, modelPosition.y, modelPosition.z);
 
-		/*for(int i = 0; i < 200; i++)
+		// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+		D3DXMatrixMultiply(&matFinal, &matFinal, &matTrans); 
+
+		mats->matWorld = matFinal;
+		geometry->SetMatrices(mats,0);
+
+		// Setup the rotation the billboard at the origin using the world matrix.
+		D3DXMatrixRotationY(&matRotateY, Time * D3DX_PI/2);
+		D3DXMatrixRotationY(&matRotateX, D3DX_PI/2);
+		D3DXMatrixTranslation(&matTrans, 2.0f, (sinf(Time * 10.0f)/4.0f) - 0.2f, 0.0f);
+		mats->matWorld = matRotateX * matTrans * matRotateY * matWorldX;
+		geometry->SetMatrices(mats,1);
+
+		for(int i = 3; i < MAXPARTICLES; i++)
 		{
-			D3DXMatrixTranslation(&matTrans, 0.0f, -0.01f, 0.0f);
-			matrices->matWorld = matTrans;
-			geometry->SetMatrices(matrices,i+4);
-		}*/
+			// Physics Init
+			
+			if(geometry->objects[i]->y < -1.0f || geometry->objects[i]->x < -15.0f || geometry->objects[i]->x > 15.0f || geometry->objects[i]->z < -15.0f || geometry->objects[i]->z > 15.0f)
+			{
+				geometry->objects[i]->y = 10.0f;
+				geometry->objects[i]->x0 = Ranf(-10.0f, 10.0f);
+				geometry->objects[i]->z0 = Ranf(-10.0f, 10.0f);
+				geometry->objects[i]->x = geometry->objects[i]->x0;
+				geometry->objects[i]->z = geometry->objects[i]->z0;
 
-		D3DXMatrixTranslation(&matTrans, 0.0f, -1.0f, -1.0f);
-		D3DXMatrixRotationX(&matRotateX, Time/2);
-		D3DXMatrixRotationY(&matRotateY, Time/2);
-		matrices2->matWorld = matTrans * matWorldX;
-		 geometry->SetMatrices(matrices2, 4);
+			} else {
+				geometry->objects[i]->x += fmodf(geometry->objects[i]->vx * Time, 0.002f) - 0.001;
+				geometry->objects[i]->y = (fmodf(geometry->objects[i]->y0 + geometry->objects[i]->vy * Time - 11.0, 11.0)) + 10.0f;
+				geometry->objects[i]->z += fmodf(geometry->objects[i]->vz * Time, 0.002f) - 0.001;
+			}
+			
+			
+			D3DXMatrixTranslation(&matTrans, geometry->objects[i]->x, geometry->objects[i]->y, geometry->objects[i]->z );
+
+			//D3DXMatrixRotationY(&matRotateY,
+			modelPosition = D3DXVECTOR3(geometry->objects[i]->x, geometry->objects[i]->y, geometry->objects[i]->z);
+			D3DXVec3TransformCoord(&modelPosition, &modelPosition, &matWorldX);
+			// Calculate the rotation that needs to be applied to the billboard model to face the current camera position using the arc tangent function.
+			angle = atan2(modelPosition.x - 0.0f, modelPosition.z - 5.5f) * (180.0 / D3DX_PI);
+
+			// Convert rotation into radians.
+			rotation = 2 * (float)angle * 0.0174532925f;
+
+			// Setup the rotation the billboard at the origin using the world matrix.
+			D3DXMatrixRotationY(&matFinal, rotation);
+
+			// Setup the translation matrix from the billboard model.
+			D3DXMatrixTranslation(&matTrans, modelPosition.x, modelPosition.y, modelPosition.z);
+
+			// Finally combine the rotation and translation matrices to create the final world matrix for the billboard model.
+			D3DXMatrixMultiply(&matFinal, &matFinal, &matTrans); 
+
+			mats->matWorld = matFinal;
+			mats->matProjection = camera->matProjection;
+			mats->matView = camera->matView;;
+			mats->cameraPosition = D3DXVECTOR3(0.0f, 0.0f, 5.5f);
+			geometry->SetMatrices(mats, i);
+		}
 
         geometry->Render(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, mCBuffer, zbuffer, pTexture,
                         pBS, pSS, pRS);
-
     }
 
-    // clean up DirectX and COM
-    CleanD3D(triangleObj);
 
     return msg.wParam;
 }
@@ -302,12 +388,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     {
                         if(textoggle)
                         {
-                            geometry->SetMapping(0.,1.,0.,0);
+                            geometry->SetMapping(0.,1.,0.,0.,0.,0);
                             textoggle = false;
                         }
                         else
                         {
-                            geometry->SetMapping(1.,1.,0.,0);
+                            geometry->SetMapping(1.,1.,0.,0.,0.,0);
                             textoggle = true;
                         }
                     }
@@ -316,14 +402,14 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
                     {
                         if(normtoggle)
                         {
-                            geometry->SetMapping(0.,0.,0.,1);
-                            geometry->SetMapping(0.,0.,0.,4);
+                            geometry->SetMapping(0.,0.,0.,0.,0.,1);
+                            geometry->SetMapping(0.,0.,0.,0.,0.,4);
                             normtoggle = false;
                         }
                         else
                         {
-                            geometry->SetMapping(0.,0.,1.,1);
-                            geometry->SetMapping(0.,0.,1.,4);
+                            geometry->SetMapping(0.,0.,1.,0.,0.,1);
+                            geometry->SetMapping(0.,0.,1.,0.,0.,4);
                             normtoggle = true;
                         }
                     }break;
@@ -400,6 +486,31 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return DefWindowProc (hWnd, message, wParam, lParam);
 }
 
+void InitGameTime()
+{
+	// We need to know how often the clock is updated
+	if( !QueryPerformanceFrequency((LARGE_INTEGER *)&ticksPerSecond) )
+    ticksPerSecond = 1000;
+	// If timeAtGameStart is 0 then we get the time since
+	// the start of the computer when we call GetGameTime()
+	timeAtGameStart = 0;
+	timeAtGameStart = GetGameTime();
+}
+
+float GetGameTime()
+{
+  UINT64 ticks;
+  float time;
+  // This is the number of clock ticks since start
+  if( !QueryPerformanceCounter((LARGE_INTEGER *)&ticks) )
+    ticks = (UINT64)timeGetTime();
+  // Divide by frequency to get the time in seconds
+  time = (float)(__int64)ticks/(float)(__int64)ticksPerSecond;
+  // Subtract the time at game start to get
+  // the time since the game started
+  time -= timeAtGameStart;
+  return time;
+}
 
 // this function initializes and prepares Direct3D for use
 void InitD3D(HWND hWnd)
@@ -470,6 +581,8 @@ void InitD3D(HWND hWnd)
     // set the render target as the back buffer
     devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
 
+	/*ID3D11Texture2D *pReflectMap;
+	dev->CreateRenderTargetView(*/
 
     // Set the viewport
     D3D11_VIEWPORT viewport;
@@ -535,7 +648,6 @@ void InitPipeline()
 	dev->CreateBuffer(&bd, NULL, &mCBuffer);
     devcon->PSSetConstantBuffers(1, 1, &mCBuffer);
 	
-    //devcon->VSSetConstantBuffers(1, 1, &mCBuffer);
    }
 
 // initializes the states
@@ -558,9 +670,9 @@ void InitStates()
     D3D11_SAMPLER_DESC sd;
     sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
     sd.MaxAnisotropy = 16;
-    sd.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sd.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sd.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    sd.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     sd.BorderColor[0] = 0.0f;
     sd.BorderColor[1] = 0.0f;
     sd.BorderColor[2] = 0.0f;
@@ -584,4 +696,17 @@ void InitStates()
     bd.AlphaToCoverageEnable = FALSE;
 
     dev->CreateBlendState(&bd, &pBS);
+}
+
+#define TOP	2147483647.		// 2^31 - 1	
+
+float
+Ranf( float low, float high )
+{
+	long random();		// returns integer 0 - TOP
+	float r;		// random number	
+
+	r = (float)rand();
+
+	return(   low  +  r * ( high - low ) / (float)RAND_MAX   );
 }
