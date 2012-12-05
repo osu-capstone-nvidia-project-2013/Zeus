@@ -3,6 +3,7 @@
 #include "main.h"
 GeometryClass::GeometryClass()
 {
+	tempMat = new MATRICES();
 }
 
 void GeometryClass::Initialize() 
@@ -23,15 +24,18 @@ void GeometryClass::CopyObject( ObjectClass *objTo, ObjectClass *objFrom )
 	objTo->mapping->textureflag = 0.;
 	objTo->mapping->alphaflag = 0.;
 	objTo->mapping->normalflag = 0.;
+	objTo->mapping->reflectflag = 0.;
 
 	objTo->alphamap		= objFrom->alphamap;
 	objTo->texturemap	= objFrom->texturemap;
 	objTo->normalmap	= objFrom->normalmap;
+	objTo->reflectmap	= objFrom->reflectmap;
 
 	objTo->mapping->alphaflag	= objFrom->mapping->alphaflag;
 	objTo->mapping->normalflag	= objFrom->mapping->normalflag;
 	objTo->mapping->particle	= objFrom->mapping->particle;
 	objTo->mapping->textureflag = objFrom->mapping->textureflag;
+	objTo->mapping->reflectflag	= objFrom->mapping->reflectflag;
 
 	objTo->matrices->cameraPosition		= objFrom->matrices->cameraPosition;
 	objTo->matrices->matProjection		= objFrom->matrices->matProjection;
@@ -91,11 +95,14 @@ void GeometryClass::CreateObject(ID3D11Device *dev, ID3D11DeviceContext *devcon,
 		obj->mapping->textureflag = 0.;
 		obj->mapping->alphaflag = 0.;
 		obj->mapping->normalflag = 0.;
-		obj->mapping->reflective = 0.;
+		obj->mapping->reflectflag = 0.;
 
 		obj->texturemap = NULL;
 		obj->alphamap = NULL;
 		obj->normalmap = NULL;
+		obj->reflectmap = NULL;
+
+		obj->normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
 	
 		// create the vertex buffer
 		D3D11_BUFFER_DESC bd;
@@ -151,16 +158,13 @@ void GeometryClass::SetLight(LIGHT *light, int objNum)
 	objects[objNum]->light = light;
 }
 
-void GeometryClass::SetMapping(float texture, float alpha, float normal, float particle, int objNum) 
+void GeometryClass::SetMapping(float texture, float alpha, float normal, float reflect, float particle, int objNum) 
 {
 	objects[objNum]->mapping->textureflag = texture;
 	objects[objNum]->mapping->alphaflag = alpha;
 	objects[objNum]->mapping->normalflag = normal;
+	objects[objNum]->mapping->reflectflag = reflect;
 	objects[objNum]->mapping->particle = particle;
-}
-void GeometryClass::SetReflective(float reflective, int objNum)
-{
-	objects[objNum]->mapping->reflective = reflective;
 }
 
 void GeometryClass::SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum) 
@@ -190,6 +194,16 @@ void GeometryClass::SetNormal(ID3D11Device *dev, LPCWSTR normalfile, int objNum)
                                            NULL,                            // no additional information
                                            NULL,                            // no multithreading
                                            &objects[objNum]->normalmap,    // address of the shader-resource-view
+                                           NULL);                           // no multithreading
+}
+
+void GeometryClass::SetReflect(ID3D11Device *dev, LPCWSTR reflectfile, int objNum) 
+{
+    D3DX11CreateShaderResourceViewFromFile(dev,                             // the Direct3D device
+                                           reflectfile,                     // load the alphamap in the local folder
+                                           NULL,                            // no additional information
+                                           NULL,                            // no multithreading
+                                           &objects[objNum]->reflectmap,    // address of the shader-resource-view
                                            NULL);                           // no multithreading
 }
 
@@ -250,30 +264,95 @@ void GeometryClass::Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D1
 
 	quicksort(0,sorted_objects.size()-2);
 
-	RenderToTarget(dev, devcon, camera, zbuffer, pCBuffer, vCBuffer, mCBuffer, backbuffer, swapchain);
-	 // clear the back buffer to a deep blue
-    devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
-	// clear the depth buffer
-	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	//Initblah(dev, devcon, zbuffer, backbuffer, swapchain);
 
-	devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
+	// Environment Map Pass 1:
+	//CreateEnvironmentMapRenderTarget(dev);
+	setEnviroRenderTarget(devcon, zbuffer);
+	ClearBackbuffRenderTargetDepthbuffer(devcon,zbuffer,backbuffer);
+	ClearEnvRenderTargetDepthBuffer(devcon, zbuffer);
+	setViewToReflection(camera, 3);
+	DrawEnvironment(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, mCBuffer);
 
-    // Draw it all
-    for(int i = sorted_objects.size() - 1; i >= 0; i-- )
-    {
-		
-			// update constant buffer
-			devcon->UpdateSubresource(vCBuffer, 0, 0, sorted_objects[i]->matrices, 0, 0);	
-			devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
-			devcon->UpdateSubresource(mCBuffer, 0, 0, sorted_objects[i]->mapping, 0, 0);
-			sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, shaderResourceViewMap);
-		
-    }
+	
+
+	// Default Pass 2:
+	SetBackBufferasTarget(devcon, zbuffer, backbuffer);
+	ClearBackbuffRenderTargetDepthbuffer(devcon,zbuffer,backbuffer);
+	SetViewToCamera(camera);
+
+	//ID3D11Resource *bbr;
+	//backbuffer->GetResource(&bbr);
+	//devcon->CopyResource(renderTargetTextureMap,bbr);
+	SetTextureToObject(devcon);
+
+	DrawScene(dev, devcon, backbuffer, swapchain, pCBuffer, vCBuffer, mCBuffer);
+
+
+	//RenderToTarget(dev, devcon, camera, zbuffer, pCBuffer, vCBuffer, mCBuffer, backbuffer, swapchain);
+	// // clear the back buffer to a deep blue
+ //   devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	//// clear the depth buffer
+	//devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	//devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
+
+ //   // Draw it all
+ //   for(int i = sorted_objects.size() - 1; i >= 0; i--)
+ //   {
+	//	
+	//		// update constant buffer
+	//		devcon->UpdateSubresource(vCBuffer, 0, 0, sorted_objects[i]->matrices, 0, 0);	
+	//		devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
+	//		devcon->UpdateSubresource(mCBuffer, 0, 0, sorted_objects[i]->mapping, 0, 0);
+	//		sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, shaderResourceViewMap);
+	//	
+ //   }
 	
     // switch the back buffer and the front buffer
 	swapchain->Present(0, 0);
 }
 
+void GeometryClass::Initblah(ID3D11Device *dev, ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer,ID3D11RenderTargetView *backbuffer,IDXGISwapChain *swapchain)
+{
+	// create the depth buffer texture
+    D3D11_TEXTURE2D_DESC texd;
+    ZeroMemory(&texd, sizeof(texd));
+
+    texd.Width = SCREEN_WIDTH;
+    texd.Height = SCREEN_HEIGHT;
+    texd.ArraySize = 1;
+    texd.MipLevels = 1;
+    texd.SampleDesc.Count = 1;
+    texd.SampleDesc.Quality = 0;;
+    texd.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    texd.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+    ID3D11Texture2D *pDepthBuffer;
+    dev->CreateTexture2D(&texd, NULL, &pDepthBuffer);
+
+    // create the depth buffer
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
+    ZeroMemory(&dsvd, sizeof(dsvd));
+
+    dsvd.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+    dev->CreateDepthStencilView(pDepthBuffer, &dsvd, &zbuffer);
+    pDepthBuffer->Release();
+
+
+    // get the address of the back buffer
+    ID3D11Texture2D *pBackBuffer;
+    swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
+
+    // use the back buffer address to create the render target
+    dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
+    pBackBuffer->Release();
+
+    // set the render target as the back buffer
+    //devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
+}
 
 void GeometryClass::RenderToTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera,ID3D11DepthStencilView *zbuffer,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
 									ID3D11Buffer *mCBuffer,ID3D11RenderTargetView *backbuffer, 
@@ -288,11 +367,12 @@ void GeometryClass::RenderToTarget(ID3D11Device *dev, ID3D11DeviceContext *devco
 	// Now clear the render target
 	devcon->ClearRenderTargetView(renderTargetViewMap, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 	// clear the depth buffer
-	//devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0); 
 
     // Draw it all
     for(int i = sorted_objects.size() - 1; i >= 0; i-- )
     {
+
 		// update constant buffer
 		devcon->UpdateSubresource(vCBuffer, 0, 0, sorted_objects[i]->matrices, 0, 0);	
 		devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
@@ -352,4 +432,188 @@ void GeometryClass::InitRenderTarget(ID3D11Device *dev, ID3D11DeviceContext *dev
 	// Create the shader resource view.
 	dev->CreateShaderResourceView(renderTargetTextureMap, &shaderResourceViewDesc, &shaderResourceViewMap);
 	
+
+	//zbuffer
+	// create the depth buffer texture
+    D3D11_TEXTURE2D_DESC texd;
+    ZeroMemory(&texd, sizeof(texd));
+
+    texd.Width = SCREEN_WIDTH;
+    texd.Height = SCREEN_HEIGHT;
+    texd.ArraySize = 1;
+    texd.MipLevels = 1;
+    texd.SampleDesc.Count = 1;
+    texd.Format = DXGI_FORMAT_D32_FLOAT ;
+    texd.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+
+    ID3D11Texture2D *pDepthBuffer;
+    HRESULT res = dev->CreateTexture2D(&texd, NULL, &pDepthBuffer);
+
+    // create the depth buffer
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvd;
+    ZeroMemory(&dsvd, sizeof(dsvd));
+
+    dsvd.Format = DXGI_FORMAT_D32_FLOAT  ;
+    dsvd.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+    dev->CreateDepthStencilView(pDepthBuffer, &dsvd, &envzbuffer);
+    pDepthBuffer->Release();
+
+}
+
+
+void GeometryClass::CreateEnvironmentMapRenderTarget(ID3D11Device *dev) 
+{  
+	D3D11_TEXTURE2D_DESC textureDesc;
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
+
+	///////////////////////// Map's Texture
+	// Initialize the  texture description.
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+	// Setup the texture description.
+	// We will have our map be a square
+	// We will need to have this texture bound as a render target AND a shader resource
+	textureDesc.Width = SCREEN_WIDTH;
+	textureDesc.Height = SCREEN_HEIGHT;
+	textureDesc.MipLevels = 1;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = 0;
+
+	// Create the texture
+	dev->CreateTexture2D(&textureDesc, NULL, &renderTargetTextureMap);
+
+
+	/////////////////////// Map's Render Target
+	// Setup the description of the render target view.
+	renderTargetViewDesc.Format = textureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	// Create the render target view.
+	dev->CreateRenderTargetView(renderTargetTextureMap, &renderTargetViewDesc, &renderTargetViewMap);
+
+	/////////////////////// Map's Shader Resource View
+	// Setup the description of the shader resource view.
+	shaderResourceViewDesc.Format = textureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	// Create the shader resource view.
+	dev->CreateShaderResourceView(renderTargetTextureMap, &shaderResourceViewDesc, &shaderResourceViewMap);
+	
+}
+
+void GeometryClass::setEnviroRenderTarget(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer) 
+{
+	// Set our maps Render Target
+	devcon->OMSetRenderTargets( 1, &renderTargetViewMap, envzbuffer);
+}
+
+void GeometryClass::ClearEnvRenderTargetDepthBuffer(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer) 
+{
+	// Now clear the render target
+	devcon->ClearRenderTargetView(renderTargetViewMap, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+	// clear the depth buffer
+	devcon->ClearDepthStencilView(envzbuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0); 
+	//devcon->CopyResource();
+
+}
+
+void GeometryClass::setViewToReflection(CameraClass *camera, int objnum) 
+{
+	//set camera to reflection....
+	
+	//tempMat->
+	D3DXVECTOR3 eyepos = D3DXVECTOR3(objects[objnum]->x,objects[objnum]->y,objects[objnum]->z);
+
+	D3DXVECTOR3 normal;
+	D3DXVec3TransformCoord(&normal, &objects[objnum]->normal, &objects[objnum]->matrices->matWorld);
+	D3DXVec3Normalize(&normal,&normal);
+	D3DXVECTOR3 cameralookat = camera->m_epeen - camera->m_at;
+
+	D3DXVECTOR3 at = cameralookat - 2 * normal * D3DXVec3Dot(&cameralookat,&normal);
+	D3DXVECTOR3 up = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+
+	D3DXMatrixLookAtLH(&tempMat->matView,
+                        &eyepos,     // the camera position
+                        &at,		 // the look-at position
+                        &up);		 // the up direction
+
+	D3DXMatrixTranspose(&tempMat->matView,&tempMat->matView);
+
+	tempMat->matProjection = objects[objnum]->matrices->matProjection;
+	
+	tempMat->cameraPosition = eyepos;
+}
+
+void GeometryClass::DrawEnvironment(ID3D11Device *dev, ID3D11DeviceContext *devcon,ID3D11RenderTargetView *backbuffer, 
+									IDXGISwapChain *swapchain,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+									ID3D11Buffer *mCBuffer) 
+{
+	
+	
+	// Draw it all
+    for(int i = sorted_objects.size() - 1; i >= 0; i-- )
+    {
+		tempMat->matWorld = sorted_objects[i]->matrices->matWorld;
+		// update constant buffer
+		devcon->UpdateSubresource(vCBuffer, 0, 0, tempMat, 0, 0);	
+		devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
+		devcon->UpdateSubresource(mCBuffer, 0, 0, sorted_objects[i]->mapping, 0, 0);
+		sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, shaderResourceViewMap);
+	}
+}
+
+
+
+// Default Pass 2:
+void GeometryClass::SetBackBufferasTarget(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer, ID3D11RenderTargetView *backbuffer) 
+{
+	devcon->OMSetRenderTargets(1, &backbuffer, zbuffer);
+}
+
+void GeometryClass::ClearBackbuffRenderTargetDepthbuffer(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer, ID3D11RenderTargetView *backbuffer)
+{
+	// clear the depth buffer
+	devcon->ClearDepthStencilView(zbuffer, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+}
+
+void GeometryClass::SetViewToCamera(CameraClass *camera) 
+{
+	// Set camera back to normal
+}
+
+void GeometryClass::SetTextureToObject(ID3D11DeviceContext *devcon) 
+{
+	// Right now done per object..
+	// D3DX11SaveTextureToFile(devcon, renderTargetTextureMap, D3DX11_IFF_JPG, L"envirobuffer.jpg");
+}
+
+void GeometryClass::DrawScene(ID3D11Device *dev, ID3D11DeviceContext *devcon,ID3D11RenderTargetView *backbuffer, 
+									IDXGISwapChain *swapchain,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+									ID3D11Buffer *mCBuffer) 
+{
+	// Draw it all
+    for(int i = sorted_objects.size() - 1; i >= 0; i--)
+    {
+		
+			// update constant buffer
+			devcon->UpdateSubresource(vCBuffer, 0, 0, sorted_objects[i]->matrices, 0, 0);	
+			devcon->UpdateSubresource(pCBuffer, 0, 0, sorted_objects[i]->light, 0, 0);
+			devcon->UpdateSubresource(mCBuffer, 0, 0, sorted_objects[i]->mapping, 0, 0);
+			sorted_objects[i]->Render(dev, devcon, backbuffer, swapchain, shaderResourceViewMap);
+		
+    }
+	
+    // switch the back buffer and the front buffer
+	swapchain->Present(0, 0);
 }

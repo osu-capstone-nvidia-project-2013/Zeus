@@ -34,9 +34,11 @@ struct MAPPING
 	float alphaflag;
 	float normalflag;
 	float particle;
-	float reflective;
+	float reflectflag;
 	float padding;
 };
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: ObjectClass
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +57,14 @@ public:
 	ID3D11Buffer *iBuffer;	
 	LIGHT *light;
 	MAPPING *mapping;
+	
+	D3DXVECTOR3 normal;
 
 	ID3D11ShaderResourceView *texturemap;
 	ID3D11ShaderResourceView *alphamap;
 	ID3D11ShaderResourceView *normalmap;
+	ID3D11ShaderResourceView *reflectmap;
+
 
 	float x0, y0, z0;	// starting location	
 	float vx0, vy0, vz0;	// starting velocity		

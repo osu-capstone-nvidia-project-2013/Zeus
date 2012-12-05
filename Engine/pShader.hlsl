@@ -13,7 +13,7 @@ cbuffer Mapping : register(cb1)
 	float alphaflag;
 	float normalflag;
 	float particleflag;
-	float reflective;
+	float reflectflag;
 	float padding;
 }
 
@@ -32,6 +32,8 @@ Texture2D Texture;
 Texture2D Alpha;
 Texture2D NormalMap;
 Texture2D ReflectMap;
+
+Texture2D RelectMap;
 SamplerState ss;
 
 float4 PShader(VOut input) : SV_TARGET
@@ -47,11 +49,6 @@ float4 PShader(VOut input) : SV_TARGET
     float4 specular;
 	float resAlpha;
 
-    if(reflective == 1.)
-    {
-        input.viewDirection = input.reflect;
-    }
-
 	//////////////////////////check if pixel kill needed///////////////////////////////////
 	if(alphaflag == 1.)
 	{
@@ -66,12 +63,7 @@ float4 PShader(VOut input) : SV_TARGET
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	//////////////////////////////////check if reflective///////////////////////////////////
-	if(reflective == 1.)
-	{
-		reflectColor = ReflectMap.Sample(ss, input.texcord);
-	}
-	////////////////////////////////////////////////////////////////////////////////////////
+	
 	
 	//////////////////////////////////grab texture color////////////////////////////////////
 	if(textureflag == 1.)
@@ -95,9 +87,18 @@ float4 PShader(VOut input) : SV_TARGET
 		input.normal = normalize( float3(normalColor.x,normalColor.y,normalColor.z));
 		input.normal = mul(input.normal, transpose(input.tbnmatrix));
 	}
-
 	//////////////////////////////////////////////////////////////////////////////////////
     
+
+
+	////////////////////////////////////environment mapping//////////////////////////////
+	if(reflectflag == 1.)
+	{
+		reflectColor = ReflectMap.Sample(ss, input.texcord);
+	}
+	//////////////////////////////////////////////////////////////////////////////////////
+
+
 
 	//////////////////////////lighting prep///////////////////////////////////////////////
 	
@@ -114,6 +115,7 @@ float4 PShader(VOut input) : SV_TARGET
     specular = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
 	///////////////////////////////////////////////////////////////////////////////////////
+
 
 
 	/////////////////////apply diffuse and calculate specular lighting///////////////////////////////
@@ -149,11 +151,13 @@ float4 PShader(VOut input) : SV_TARGET
 		color = color * textureColor;
 	}
 
-	if(reflective == 1)
+	if(reflectflag == 1)
 	{
 		color = color * reflectColor;
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 	/////////////////////apply specular lighting////////////////////////////////////////////
 		//particles don't get specular lighting
@@ -163,6 +167,8 @@ float4 PShader(VOut input) : SV_TARGET
 		color = saturate(color + specular);
 	}
 	////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 	/////////////////////alpha mapping//////////////////////////////////////////////////////
 	if(alphaflag == 1.)

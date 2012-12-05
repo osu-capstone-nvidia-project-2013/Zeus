@@ -7,15 +7,6 @@ cbuffer ConstantBuffer : register(cb0)
 	float padding;
 }
 
-//cbuffer Mapping : register(cb1)
-//{
-//	float textureflag;
-//	float alphaflag;
-//	float normalflag;
-//	float particleflag;
-//	float reflective;
-//	float padding;
-//}
 
 struct VOut
 {

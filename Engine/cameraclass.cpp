@@ -15,7 +15,7 @@ CameraClass::CameraClass()
 	D3DXMatrixPerspectiveFovLH(&matProjection,
 								(FLOAT)D3DXToRadian(45),                    // field of view
 								(FLOAT)SCREEN_WIDTH / (FLOAT)SCREEN_HEIGHT, // aspect ratio
-								1.0f,                                       // near view-plane
+								0.01f,                                       // near view-plane
 								100.0f);                                    // far view-plane
 }
 

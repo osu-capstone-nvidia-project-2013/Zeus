@@ -50,8 +50,8 @@ public:
     void SetAlpha(ID3D11Device *dev, LPCWSTR alphafile, int objNum);
     void SetTexture(ID3D11Device *dev, LPCWSTR texturefile, int objNum);
 	void SetNormal(ID3D11Device *dev, LPCWSTR normalfile, int objNum);
-    void SetMapping(float texture, float alpha, float normal, float particle, int objNum);
-	void SetReflective(float reflective, int objNum);
+	void SetReflect(ID3D11Device *dev, LPCWSTR reflectfile, int objNum);
+    void SetMapping(float texture, float alpha, float normal, float reflect, float particle, int objNum);
     void Render(ID3D11Device *dev, ID3D11DeviceContext *devcon, ID3D11RenderTargetView *backbuffer, 
 				IDXGISwapChain *swapchain, ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
 				ID3D11Buffer *mCBuffer,
@@ -61,6 +61,25 @@ public:
 	void RenderToTarget(ID3D11Device *dev, ID3D11DeviceContext *devcon, CameraClass *camera,ID3D11DepthStencilView *zbuffer,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
 									ID3D11Buffer *mCBuffer,ID3D11RenderTargetView *backbuffer, 
 									IDXGISwapChain *swapchain);
+	void Initblah(ID3D11Device *dev, ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer,ID3D11RenderTargetView *backbuffer,IDXGISwapChain *swapchain);
+	
+	// Environment Map Pass 1:
+	void CreateEnvironmentMapRenderTarget(ID3D11Device *dev);
+	void setEnviroRenderTarget(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer);
+	void ClearEnvRenderTargetDepthBuffer(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer);
+	void setViewToReflection(CameraClass *camera, int objnum);
+	void DrawEnvironment(ID3D11Device *dev, ID3D11DeviceContext *devcon,ID3D11RenderTargetView *backbuffer, 
+									IDXGISwapChain *swapchain,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+									ID3D11Buffer *mCBuffer);
+
+	// Default Pass 2:
+	void SetBackBufferasTarget(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer, ID3D11RenderTargetView *backbuffer);
+	void ClearBackbuffRenderTargetDepthbuffer(ID3D11DeviceContext *devcon,ID3D11DepthStencilView *zbuffer, ID3D11RenderTargetView *backbuffer);
+	void SetViewToCamera(CameraClass *camera);
+	void SetTextureToObject(ID3D11DeviceContext *devcon);
+	void DrawScene(ID3D11Device *dev, ID3D11DeviceContext *devcon,ID3D11RenderTargetView *backbuffer, 
+									IDXGISwapChain *swapchain,ID3D11Buffer *pCBuffer, ID3D11Buffer *vCBuffer,
+									ID3D11Buffer *mCBuffer);
 
 	vector<ObjectClass*> objects;
 	vector<ObjectClass*> sorted_objects;
@@ -78,6 +97,9 @@ private:
 	void CopyObject( ObjectClass *, ObjectClass* );
     void CreateObject(ID3D11Device *, ID3D11DeviceContext *, vector<VERTEX>, vector<int>);
     void CreateObject(ID3D11Device *, ID3D11DeviceContext *, vector<VERTEX>, vector<int>, int, string);
+
+	MATRICES *tempMat;
+	ID3D11DepthStencilView *envzbuffer;
 };
 
 #endif
