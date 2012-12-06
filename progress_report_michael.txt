@@ -1,3 +1,10 @@
+12-6
+Progress: object loading optimization
+
+Todo: shadowing
+
+Blocks: finals, depth testing
+
 11-29
 Progress: Normal mapping
 
