@@ -1,3 +1,17 @@
+--- 12/6/12 ---
+Progress: 
+  Fixed z-buffer
+
+Todo: 
+  Finish environment mapping.
+  Continue work on shadow mapping and game timing.
+  Finish milestone 2.
+
+Blockers: 
+  Finals, and not understanding certain directx protocols. 
+
+
+
 --- 11/29/12 ---
 Progress: 
   Finished normal mapping. 
