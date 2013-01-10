@@ -1,5 +1,18 @@
 --- 12/6/12 ---
 Progress: 
+  Shadow mapping, environment mapping, tons o' stuff.
+
+Todo: 
+  Multiple dynamic cube mapping targets, multiple light source shadow mapping,
+  omni-directional light shadow mapping, font engine, particles (pretty much done).
+
+Issues: 
+  Alt-Enter causes a screen refresh error, probably an easy fix. 
+
+
+
+--- 12/6/12 ---
+Progress: 
   Fixed z-buffer
 
 Todo: 
