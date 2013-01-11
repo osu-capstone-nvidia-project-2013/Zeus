@@ -2,7 +2,7 @@ Date: 1/10/2012
 Progress: Used a book to rewrite code over break. Made it much much faster and smoother. Have shadow mapping and dynamic mapping.
 Tons of other cool stuff like xbox controller input, terrain mapping, sky box and more.
 Todo: Redo particles, multiple shadow maps, multiple dynamic cube mapping, font on screen.
-
+Blockers: Not much. Will continue to email with specific questions.
 
 //////////////////////
 Date: 11/28/2012
