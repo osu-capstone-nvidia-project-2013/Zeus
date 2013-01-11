@@ -1,3 +1,10 @@
+1-10
+Progress: Christmas Break
+
+Todo: Text on screen
+
+Blocks: object loading and exporting taking longer than expected
+
 12-6
 Progress: object loading optimization
 
