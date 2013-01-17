@@ -1,3 +1,10 @@
+1-17
+Progress: On Screen Text
+
+Todo: Refactor code so it doesn't suck as much to add objects
+
+Blocks: Sick
+
 1-10
 Progress: Christmas Break
 
