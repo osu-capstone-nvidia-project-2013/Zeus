@@ -1,4 +1,11 @@
-Date: 1/10/2012
+Date: 1/17/2013
+Progress: Multiple light source shadow mapping, shadow mapping on terrain, text on screen, particle system (Based on shader),
+multiple dynamic environment maps, instanced trees
+Todo: Point light with omni-direction shadow maps. Starting PhysX initialization for next milestone.
+Blockers: PhysX sdk documentation is minimal. Still looking for more detailed explanations of how to use physX.
+
+//////////////////////
+Date: 1/10/2013
 Progress: Used a book to rewrite code over break. Made it much much faster and smoother. Have shadow mapping and dynamic mapping.
 Tons of other cool stuff like xbox controller input, terrain mapping, sky box and more.
 Todo: Redo particles, multiple shadow maps, multiple dynamic cube mapping, font on screen.
