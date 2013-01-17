@@ -1,4 +1,19 @@
---- 12/6/12 ---
+--- 1/17/12 ---
+Progress: 
+  Dynamic environment mapping, particle systems, instancing, frustum culling,
+  multiple light source shadow mapping, font engine, a distance to object check 
+  that enables/disables dynamic environment mapping, fixed alt-enter issue. 
+
+Todo: 
+  Omni-directional light shadow mapping.
+
+Issues: 
+  Still having the flipped mapping in the reflection of the sphere. PIX isn't 
+  allowing debugging on a D3D11 TexCube. It may be best to move on. 
+
+
+
+--- 1/10/12 ---
 Progress: 
   Shadow mapping, environment mapping, tons o' stuff.
 
