@@ -11,11 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-<<<<<<< HEAD:Graphics_Engine/Graphics_Engine.vcxproj
-    <ProjectGuid>{B9FD4421-C36F-47F0-BDF4-8E0BF2BC09B7}</ProjectGuid>
-=======
     <ProjectGuid>{53457DE2-3C5E-43AC-B520-0F15F67861C3}</ProjectGuid>
->>>>>>> 8f557df4445852201cf1b4d057bc92952e07a765:Zeus/Zeus.vcxproj
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Zeus</RootNamespace>
   </PropertyGroup>
@@ -60,20 +56,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-<<<<<<< HEAD:Graphics_Engine/Graphics_Engine.vcxproj
-      <AdditionalIncludeDirectories>..\Graphics_Engine\Include</AdditionalIncludeDirectories>
-=======
->>>>>>> 8f557df4445852201cf1b4d057bc92952e07a765:Zeus/Zeus.vcxproj
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-<<<<<<< HEAD:Graphics_Engine/Graphics_Engine.vcxproj
-      <AdditionalLibraryDirectories>..\Graphics_Engine\Lib\x86</AdditionalLibraryDirectories>
-      <AdditionalDependencies>d3d11.lib;d3dx11.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-=======
       <AdditionalDependencies>d3d11.lib;d3dx11.lib;D3DCompiler.lib;Effects11.lib;dxerr.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
->>>>>>> 8f557df4445852201cf1b4d057bc92952e07a765:Zeus/Zeus.vcxproj
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -95,31 +82,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-<<<<<<< HEAD:Graphics_Engine/Graphics_Engine.vcxproj
-    <ClCompile Include="cameraclass.cpp" />
-    <ClCompile Include="d3dclass.cpp" />
-    <ClCompile Include="graphicsclass.cpp" />
-    <ClCompile Include="inputclass.cpp" />
-    <ClCompile Include="lightclass.cpp" />
-    <ClCompile Include="lightshaderclass.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="modelclass.cpp" />
-    <ClCompile Include="systemclass.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="cameraclass.h" />
-    <ClInclude Include="d3dclass.h" />
-    <ClInclude Include="graphicsclass.h" />
-    <ClInclude Include="inputclass.h" />
-    <ClInclude Include="lightclass.h" />
-    <ClInclude Include="lightshaderclass.h" />
-    <ClInclude Include="modelclass.h" />
-    <ClInclude Include="systemclass.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="light.ps" />
-    <None Include="light.vs" />
-=======
     <None Include="FX\Basic.fx" />
     <None Include="FX\BuildShadowMap.fx" />
     <None Include="FX\DebugTexture.fx" />
@@ -150,6 +112,7 @@
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TextureHelper.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="xnacollision.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -166,11 +129,11 @@
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="SpriteBatch.cpp" />
     <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="xnacollision.cpp" />
     <ClCompile Include="Zeus.cpp" />
     <ClCompile Include="Sky.cpp" />
     <ClCompile Include="TextureHelper.cpp" />
     <ClCompile Include="Vertex.cpp" />
->>>>>>> 8f557df4445852201cf1b4d057bc92952e07a765:Zeus/Zeus.vcxproj
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
