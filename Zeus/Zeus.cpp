@@ -758,7 +758,7 @@ void ZeusApp::DrawScene()
     // Sphere with dynamic cube mapping
     for(int i = 0; i < 6; ++i) // for mirror, just do (int i = 0; i < 1; ++i) for 1 camera mapped to mirror surface
     {
-        BuildCubeFaceCamera(-5.0f, 5.5f, 5.0f); // Sphere position
+        BuildCubeFaceCamera(-5.0f, 4.0f, 5.0f); // Sphere position
 
         // Clear cube map face and depth buffer.
         md3dImmediateContext->ClearRenderTargetView(mDynamicCubeMapRTVSphere[i], reinterpret_cast<const float*>(&Colors::Silver));
@@ -783,7 +783,7 @@ void ZeusApp::DrawScene()
          (camPosition.z > 25.0f || camPosition.z < -25.0)) ){
         for(int i = 0; i < 6; ++i) // for mirror, just do (int i = 0; i < 1; ++i) for 1 camera mapped to mirror surface
         {
-            BuildCubeFaceCamera(0.0f, 2.0f, 0.0f); // Skull position
+            BuildCubeFaceCamera(0.0f, 4.0f, 0.0f); // Skull position
 
             // Clear cube map face and depth buffer.
             md3dImmediateContext->ClearRenderTargetView(mDynamicCubeMapRTVSkull[i], reinterpret_cast<const float*>(&Colors::Silver));
