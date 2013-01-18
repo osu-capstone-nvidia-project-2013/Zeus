@@ -170,7 +170,7 @@ void Terrain::Draw(ID3D11DeviceContext* dc, const Camera& cam, DirectionalLight 
 
 	Effects::TerrainFX->SetMaterial(mMat);
 
-	ID3DX11EffectTechnique* tech = Effects::TerrainFX->Light1Tech;
+	ID3DX11EffectTechnique* tech = Effects::TerrainFX->Light3Tech;
     D3DX11_TECHNIQUE_DESC techDesc;
     tech->GetDesc( &techDesc );
 	UINT i = 0;

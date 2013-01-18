@@ -100,6 +100,7 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
 	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
 	ShadowTransform   = mFX->GetVariableByName("gShadowTransform")->AsMatrix();
+	ShadowTransform2   = mFX->GetVariableByName("gShadowTransform2")->AsMatrix();
 	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
 	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
 	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
@@ -109,6 +110,7 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	CubeMap           = mFX->GetVariableByName("gCubeMap")->AsShaderResource();
 	ShadowMap         = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
+	ShadowMap2        = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
 }
 
 BasicEffect::~BasicEffect()
@@ -180,6 +182,7 @@ NormalMapEffect::NormalMapEffect(ID3D11Device* device, const std::wstring& filen
 	World             = mFX->GetVariableByName("gWorld")->AsMatrix();
 	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
 	ShadowTransform   = mFX->GetVariableByName("gShadowTransform")->AsMatrix();
+	ShadowTransform2  = mFX->GetVariableByName("gShadowTransform2")->AsMatrix();
 	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
 	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
 	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
@@ -191,6 +194,7 @@ NormalMapEffect::NormalMapEffect(ID3D11Device* device, const std::wstring& filen
 	CubeMap           = mFX->GetVariableByName("gCubeMap")->AsShaderResource();
 	NormalMap         = mFX->GetVariableByName("gNormalMap")->AsShaderResource();
 	ShadowMap         = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
+	ShadowMap2        = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
 }
 
 NormalMapEffect::~NormalMapEffect()
@@ -263,6 +267,7 @@ DisplacementMapEffect::DisplacementMapEffect(ID3D11Device* device, const std::ws
 	World             = mFX->GetVariableByName("gWorld")->AsMatrix();
 	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
 	ShadowTransform   = mFX->GetVariableByName("gShadowTransform")->AsMatrix();
+	ShadowTransform2  = mFX->GetVariableByName("gShadowTransform2")->AsMatrix();
 	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
 	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
 	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
@@ -279,6 +284,7 @@ DisplacementMapEffect::DisplacementMapEffect(ID3D11Device* device, const std::ws
 	CubeMap           = mFX->GetVariableByName("gCubeMap")->AsShaderResource();
 	NormalMap         = mFX->GetVariableByName("gNormalMap")->AsShaderResource();
 	ShadowMap         = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
+	ShadowMap2        = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
 }
 
 DisplacementMapEffect::~DisplacementMapEffect()
@@ -358,12 +364,39 @@ TerrainEffect::TerrainEffect(ID3D11Device* device, const std::wstring& filename)
 	WorldCellSpace     = mFX->GetVariableByName("gWorldCellSpace")->AsScalar();
 	WorldFrustumPlanes = mFX->GetVariableByName("gWorldFrustumPlanes")->AsVector();
 
+	ShadowTransform    = mFX->GetVariableByName("gShadowTransform")->AsMatrix();
+	ShadowTransform2   = mFX->GetVariableByName("gShadowTransform2")->AsMatrix();
+
 	LayerMapArray      = mFX->GetVariableByName("gLayerMapArray")->AsShaderResource();
 	BlendMap           = mFX->GetVariableByName("gBlendMap")->AsShaderResource();
 	HeightMap          = mFX->GetVariableByName("gHeightMap")->AsShaderResource();
+	ShadowMap          = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
+	ShadowMap2         = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
 }
 
 TerrainEffect::~TerrainEffect()
+{
+}
+#pragma endregion
+
+#pragma region ParticleEffect
+ParticleEffect::ParticleEffect(ID3D11Device* device, const std::wstring& filename)
+	: Effect(device, filename)
+{
+	StreamOutTech    = mFX->GetTechniqueByName("StreamOutTech");
+	DrawTech         = mFX->GetTechniqueByName("DrawTech");
+
+	ViewProj    = mFX->GetVariableByName("gViewProj")->AsMatrix();
+	GameTime    = mFX->GetVariableByName("gGameTime")->AsScalar();
+	TimeStep    = mFX->GetVariableByName("gTimeStep")->AsScalar();
+	EyePosW     = mFX->GetVariableByName("gEyePosW")->AsVector();
+	EmitPosW    = mFX->GetVariableByName("gEmitPosW")->AsVector();
+	EmitDirW    = mFX->GetVariableByName("gEmitDirW")->AsVector();
+	TexArray    = mFX->GetVariableByName("gTexArray")->AsShaderResource();
+	RandomTex   = mFX->GetVariableByName("gRandomTex")->AsShaderResource();
+}
+
+ParticleEffect::~ParticleEffect()
 {
 }
 #pragma endregion
@@ -412,6 +445,8 @@ SkyEffect*             Effects::SkyFX             = 0;
 TerrainEffect*         Effects::TerrainFX         = 0;
 DebugTexEffect*        Effects::DebugTexFX        = 0;
 SpriteEffect*		   Effects::SpriteFX		  = 0;
+ParticleEffect*		   Effects::FireFX			  = 0;
+ParticleEffect*		   Effects::RainFX			  = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
@@ -425,6 +460,8 @@ void Effects::InitAll(ID3D11Device* device)
 	TerrainFX         = new TerrainEffect(device, L"FX/Terrain.fxo");
 	DebugTexFX        = new DebugTexEffect(device, L"FX/DebugTexture.fxo");
 	SpriteFX          = new SpriteEffect(device, L"FX/Sprite.fxo"); 
+	FireFX			  = new ParticleEffect(device, L"FX/Fire.fxo");
+	RainFX			  = new ParticleEffect(device, L"FX/Rain.fxo");
 }
 
 void Effects::DestroyAll()
@@ -437,6 +474,8 @@ void Effects::DestroyAll()
 	SafeDelete(TerrainFX);
 	SafeDelete(DebugTexFX);
 	SafeDelete(SpriteFX);
+	SafeDelete(FireFX);
+	SafeDelete(RainFX);
 }
 
 #pragma endregion

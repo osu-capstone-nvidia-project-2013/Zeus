@@ -27,13 +27,15 @@ cbuffer cbPerObject
 	float4x4 gWorldInvTranspose;
 	float4x4 gWorldViewProj;
 	float4x4 gTexTransform;
-	float4x4 gShadowTransform; 
+	float4x4 gShadowTransform;
+	float4x4 gShadowTransform2;  
 	Material gMaterial;
 }; 
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D gDiffuseMap;
 Texture2D gShadowMap;
+Texture2D gShadowMap2;
 
 TextureCube gCubeMap;
 
@@ -60,6 +62,9 @@ struct VertexIn
 	float3 PosL    : POSITION;
 	float3 NormalL : NORMAL;
 	float2 Tex     : TEXCOORD;
+	row_major float4x4 World : WORLD;
+	float4 Color   : COLOR;
+	uint InstanceId: SV_InstanceId;
 };
 
 struct VertexOut
@@ -68,7 +73,9 @@ struct VertexOut
     float3 PosW       : POSITION;
     float3 NormalW    : NORMAL;
 	float2 Tex        : TEXCOORD0;
+	float4 Color	  : COLOR;
 	float4 ShadowPosH : TEXCOORD1;
+	float4 ShadowPosH2 : TEXCOORD2;
 };
 
 VertexOut VS(VertexIn vin)
@@ -76,17 +83,19 @@ VertexOut VS(VertexIn vin)
 	VertexOut vout;
 	
 	// Transform to world space space.
-	vout.PosW    = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
-	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
+	vout.PosW    = mul(float4(vin.PosL, 1.0f), vin.World).xyz;
+	vout.NormalW = mul(vin.NormalL, (float3x3)vin.World);
 		
 	// Transform to homogeneous clip space.
-	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
+	vout.PosH = mul(float4(vout.PosL, 1.0f), gWorldViewProj);
 	
 	// Output vertex attributes for interpolation across triangle.
 	vout.Tex = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform).xy;
+	vout.Color = vin.Color;
 
 	// Generate projective tex-coords to project shadow map onto scene.
 	vout.ShadowPosH = mul(float4(vin.PosL, 1.0f), gShadowTransform);
+	vout.ShadowPosH2 = mul(float4(vin.PosL, 1.0f), gShadowTransform2);
 
 	return vout;
 }
@@ -141,6 +150,7 @@ float4 PS(VertexOut pin,
 		// Only the first light casts a shadow.
 		float3 shadow = float3(1.0f, 1.0f, 1.0f);
 		shadow[0] = CalcShadowFactor(samShadow, gShadowMap, pin.ShadowPosH);
+		shadow[1] = CalcShadowFactor(samShadow, gShadowMap2, pin.ShadowPosH2);
 
 		// Sum the light contribution from each light source.  
 		[unroll]
@@ -150,8 +160,8 @@ float4 PS(VertexOut pin,
 			ComputeDirectionalLight(gMaterial, gDirLights[i], pin.NormalW, toEye, 
 				A, D, S);
 
-			ambient += A;    
-			diffuse += shadow[i]*D;
+			ambient += A*pin.Color;    
+			diffuse += shadow[i]*D*pin.Color;
 			spec    += shadow[i]*S;
 		}
 
