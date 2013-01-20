@@ -1,3 +1,13 @@
+//***************************************************************************************
+// Terrain.fx
+//
+//
+//
+//
+//
+//
+//
+//***************************************************************************************
  
 #include "LightHelper.fx"
  
@@ -37,12 +47,16 @@ cbuffer cbPerObject
 	
 	float4x4 gViewProj;
 	Material gMaterial;
+	float4x4 gShadowTransform;
+	float4x4 gShadowTransform2; 
 };
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2DArray gLayerMapArray;
 Texture2D gBlendMap;
 Texture2D gHeightMap;
+Texture2D gShadowMap;
+Texture2D gShadowMap2;
 
 SamplerState samLinear
 {
@@ -50,6 +64,17 @@ SamplerState samLinear
 
 	AddressU = WRAP;
 	AddressV = WRAP;
+};
+
+SamplerComparisonState samShadow
+{
+	Filter   = COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+	AddressU = BORDER;
+	AddressV = BORDER;
+	AddressW = BORDER;
+	BorderColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    ComparisonFunc = LESS;
 };
 
 SamplerState samHeightmap
@@ -88,7 +113,7 @@ VertexOut VS(VertexIn vin)
 	// Output vertex attributes to next stage.
 	vout.Tex      = vin.Tex;
 	vout.BoundsY  = vin.BoundsY;
-	
+
 	return vout;
 }
  
@@ -233,6 +258,8 @@ struct DomainOut
     float3 PosW     : POSITION;
 	float2 Tex      : TEXCOORD0;
 	float2 TiledTex : TEXCOORD1;
+	float4 ShadowPosH : TEXCOORD2;
+	float4 ShadowPosH2 : TEXCOORD3;
 };
 
 // The domain shader is called for every vertex created by the tessellator.  
@@ -269,6 +296,10 @@ DomainOut DS(PatchTess patchTess,
 	// Project to homogeneous clip space.
 	dout.PosH    = mul(float4(dout.PosW, 1.0f), gViewProj);
 	
+	// Generate projective tex-coords to project shadow map onto scene.
+	dout.ShadowPosH = mul(float4(dout.PosW, 1.0f), gShadowTransform);
+	dout.ShadowPosH2 = mul(float4(dout.PosW, 1.0f), gShadowTransform2);
+
 	return dout;
 }
 
@@ -336,6 +367,11 @@ float4 PS(DomainOut pin,
 		float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 		float4 spec    = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
+		// Only the first light casts a shadow.
+		float3 shadow = float3(1.0f, 1.0f, 1.0f);
+		shadow[0] = CalcShadowFactor(samShadow, gShadowMap, pin.ShadowPosH);
+		shadow[1] = CalcShadowFactor(samShadow, gShadowMap2, pin.ShadowPosH2);
+
 		// Sum the light contribution from each light source.  
 		[unroll]
 		for(int i = 0; i < gLightCount; ++i)
@@ -345,8 +381,8 @@ float4 PS(DomainOut pin,
 				A, D, S);
 
 			ambient += A;
-			diffuse += D;
-			spec    += S;
+			diffuse += shadow[i]*D;
+			spec    += shadow[i]*S;
 		}
 
 		litColor = texColor*(ambient + diffuse) + spec;

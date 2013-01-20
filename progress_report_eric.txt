@@ -1,0 +1,94 @@
+--- 1/17/12 ---
+Progress: 
+  Dynamic environment mapping, particle systems, instancing, frustum culling,
+  multiple light source shadow mapping, font engine, a distance to object check 
+  that enables/disables dynamic environment mapping, fixed alt-enter issue. 
+
+Todo: 
+  Omni-directional light shadow mapping.
+
+Issues: 
+  Still having the flipped mapping in the reflection of the sphere. PIX isn't 
+  allowing debugging on a D3D11 TexCube. It may be best to move on. 
+
+
+
+--- 1/10/12 ---
+Progress: 
+  Shadow mapping, environment mapping, tons o' stuff.
+
+Todo: 
+  Multiple dynamic cube mapping targets, multiple light source shadow mapping,
+  omni-directional light shadow mapping, font engine, particles (pretty much done).
+
+Issues: 
+  Alt-Enter causes a screen refresh error, probably an easy fix. 
+
+
+
+--- 12/6/12 ---
+Progress: 
+  Fixed z-buffer
+
+Todo: 
+  Finish environment mapping.
+  Continue work on shadow mapping and game timing.
+  Finish milestone 2.
+
+Blockers: 
+  Finals, and not understanding certain directx protocols. 
+
+
+
+--- 11/29/12 ---
+Progress: 
+  Finished normal mapping. 
+
+Todo: 
+  Finish environment mapping.
+  Continue work on shadow mapping and game timing.
+  Finish milestone 2.
+
+Blockers: 
+  Normal mapping was difficult, but Patrick helped us through it.
+
+
+
+--- 11/15/12 ---
+Progress: 
+  Still working on shadow mapping and game timing.
+
+Todo: 
+  Finish shadow mapping and game timing.
+  Finish milestone 2.
+
+Blockers: 
+  None.
+
+
+
+--- 11/08/12 ---
+Progress: 
+  Milestone 1 completed. 
+  Phong shading also done. 
+  Shadow mapping is about half-completed. 
+  Game timing is about a quarter of the way done. 
+
+Todo: 
+  Finish shadow mapping and game timing.
+  Work on; diffuse texturing, blending + alpha kill, normal mapping, and environment mapping.
+
+Blockers: 
+  None.
+
+
+
+--- 11/01/12 ---
+Progress: 
+  Window, triangle, quad, circle, transformations, and shaders completed. 
+
+Todo: 
+  Sphere.
+
+Blockers: 
+  None.

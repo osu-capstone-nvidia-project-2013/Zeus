@@ -216,7 +216,6 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if( LOWORD(wParam) == WA_INACTIVE )
 		{
 			mAppPaused = true;
-            ShowCursor(true);
 			mTimer.Stop();
 		}
 		else
@@ -301,7 +300,6 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
  
 	// WM_DESTROY is sent when the window is being destroyed.
 	case WM_DESTROY:
-        ShowCursor(true);
 		PostQuitMessage(0);
 		return 0;
 
@@ -337,7 +335,6 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			case 0x1B: // Esc key has been pressed
             {
-                ShowCursor(true);
 				PostQuitMessage(0);	
 				return 0;
             }
@@ -508,6 +505,13 @@ void D3DApp::CalculateFrameStats()
 	{
 		float fps = (float)frameCnt; // fps = frameCnt / 1
 		float mspf = 1000.0f / fps;
+
+		// Convert the fps to a w string
+		std::wstringstream fpss;
+		fpss << fps;
+		mfps_string = fpss.str();
+		// Set global fps
+		mfps = fps;
 
 		std::wostringstream outs;   
 		outs.precision(6);

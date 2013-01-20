@@ -34,12 +34,14 @@ cbuffer cbPerObject
 	float4x4 gViewProj;
 	float4x4 gWorldViewProj;
 	float4x4 gTexTransform;
-	float4x4 gShadowTransform; 
+	float4x4 gShadowTransform;
+	float4x4 gShadowTransform2; 
 	Material gMaterial;
 }; 
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D gShadowMap;
+Texture2D gShadowMap2;
 Texture2D gDiffuseMap;
 Texture2D gNormalMap;
 TextureCube gCubeMap;
@@ -165,6 +167,7 @@ struct DomainOut
 	float3 TangentW   : TANGENT;
 	float2 Tex        : TEXCOORD0;
 	float4 ShadowPosH : TEXCOORD1;
+	float4 ShadowPosH2 : TEXCOORD2;
 };
 
 // The domain shader is called for every vertex created by the tessellator.  
@@ -202,6 +205,7 @@ DomainOut DS(PatchTess patchTess,
 
 	// Generate projective tex-coords to project shadow map onto scene.
 	dout.ShadowPosH = mul(float4(dout.PosW, 1.0f), gShadowTransform);
+	dout.ShadowPosH2 = mul(float4(dout.PosW, 1.0f), gShadowTransform2);
 	
 	// Project to homogeneous clip space.
 	dout.PosH = mul(float4(dout.PosW, 1.0f), gViewProj);
@@ -266,6 +270,7 @@ float4 PS(DomainOut pin,
 		// Only the first light casts a shadow.
 		float3 shadow = float3(1.0f, 1.0f, 1.0f);
 		shadow[0] = CalcShadowFactor(samShadow, gShadowMap, pin.ShadowPosH);
+		shadow[1] = CalcShadowFactor(samShadow, gShadowMap2, pin.ShadowPosH2);
 
 		// Sum the light contribution from each light source.  
 		[unroll]

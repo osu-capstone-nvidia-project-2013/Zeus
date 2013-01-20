@@ -1,0 +1,56 @@
+=============
+11/29/2012
+
+Progress: We have normal mapping. 
+
+Todo: Do environment and shadow mapping. Also, apply some sort of sorting to our objects for rendering. And game timing
+
+Blockers: None
+
+
+=============
+11/15/2012
+
+Progress: We have blending, but are having issues with alpha killing. Texturing has also been worked on and near complete
+
+Todo: Continue to refactor code in order to maintain multiple objects.
+
+Blockers: None 
+
+
+=============
+11/8/2012
+
+Progress: Phong shading is nearing completion. 
+
+Todo: Continue modulizing our program, finish phong, and start texturing.
+
+Blockers: The way our code is now, we are not able to transform multiple objects. The one spot in code where we are
+          rendering the objects is too specific and need to redesign it where we have something such as:
+          
+          setRotate()
+          setTrans()
+          finalMatrix()
+          setConstantBuff()
+          
+          render(&vBuffer, &iBuffer)
+
+=============
+11/1/2012
+
+Progress: Circle created (without normal). Translation and rotation (over time) added to both a triangle and circle. 
+Added flat and smooth shading. 
+
+Todo: Add given normal to circle, create a sphere.
+
+Blockers: Figuring out how to connect sphere coordinates together 
+
+
+=============
+10/25/2012
+
+Progress: Created a window and a simple shader to draw a plain triangle
+
+Todo: Create rectangle, circle, and sphere then do some transforms with the vertex shader.
+
+Blockers: None at this point.

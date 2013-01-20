@@ -112,6 +112,7 @@
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="TextureHelper.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="xnacollision.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
@@ -128,6 +129,7 @@
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="SpriteBatch.cpp" />
     <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="xnacollision.cpp" />
     <ClCompile Include="Zeus.cpp" />
     <ClCompile Include="Sky.cpp" />
     <ClCompile Include="TextureHelper.cpp" />

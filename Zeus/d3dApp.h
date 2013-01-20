@@ -21,6 +21,9 @@ class D3DApp
 public:
 	D3DApp(HINSTANCE hInstance);
 	virtual ~D3DApp();
+
+	std::wstring mfps_string;
+	int mfps;
 	
 	HINSTANCE AppInst()const;
 	HWND      MainWnd()const;

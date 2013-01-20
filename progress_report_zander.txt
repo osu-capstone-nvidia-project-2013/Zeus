@@ -1,0 +1,46 @@
+Date: 1/17/2013
+Progress: Multiple light source shadow mapping, shadow mapping on terrain, text on screen, particle system (Based on shader),
+multiple dynamic environment maps, instanced trees
+Todo: Point light with omni-direction shadow maps. Starting PhysX initialization for next milestone.
+Blockers: PhysX sdk documentation is minimal. Still looking for more detailed explanations of how to use physX.
+
+//////////////////////
+Date: 1/10/2013
+Progress: Used a book to rewrite code over break. Made it much much faster and smoother. Have shadow mapping and dynamic mapping.
+Tons of other cool stuff like xbox controller input, terrain mapping, sky box and more.
+Todo: Redo particles, multiple shadow maps, multiple dynamic cube mapping, font on screen.
+Blockers: Not much. Will continue to email with specific questions.
+
+//////////////////////
+Date: 11/28/2012
+Progress: Finished normal mapping. Have some effects toggling and some movement. Blending,Texturing, alpha killing are done.
+Todo: Still need a shitty sorting so we can render back to front. Started on shadow mapping and environment mapping.
+Game timing is still an important todo as well.
+Blockers: We have been emailing Patrick with any blocks we run into. He helped us solve our normal problem on tuesday. 
+We will continue to inquire about problems we have rammed our heads against for a long time.
+
+//////////////////////
+Date: 11/15/2012
+Progress: Phong shading done, blending mostly works, alpha kill needs some work. Close to finish on texturing.
+Todo: Finish alpha kill and texturing. Include toggling features on/off. Refactor code to support multiple objects.
+Blockers: Our blending\alpha kill doesn't quite work right I believe because we aren't drawing from back to fron when
+we move the scene around. Not quite sure how to implement that.
+
+///////////////////
+Date: 11/8/2012
+Progress: Phong shading is close to being done
+Todo: Continue to modularize code
+Blockers: CGEL still doesn't have DIRECTX or Git. 
+Need to redo structure of code to allow for individual object manipulation.
+
+////////////////
+Date: 11/1/2012
+Progress: Created a quad, and a basic circle. Did world rotations of the scene and coloring on a per vertex basis.
+Todo: Working on fixing circle normals. Draw a sphere, per object rotation and transformations over time.
+Blockers: None
+
+////////////////////
+Date: 10/25/2012
+Progress: Created a window, Hooked in DIrectX, cleared the back buffer and drew a triangle
+Todo: Draw a quad, circle and sphere, do simple shading and perform model and camera transformations.
+Blockers: None

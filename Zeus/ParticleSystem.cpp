@@ -1,7 +1,14 @@
 //***************************************************************************************
-// ParticleSystem.cpp by Frank Luna (C) 2011 All Rights Reserved.
+// ParticleSystem.cpp
+//
+//
+//
+//
+//
+//
+//
 //***************************************************************************************
-/*
+
 #include "ParticleSystem.h"
 #include "TextureHelper.h"
 #include "Vertex.h"
@@ -185,4 +192,4 @@ void ParticleSystem::BuildVB(ID3D11Device* device)
 
     HR(device->CreateBuffer(&vbd, 0, &mDrawVB));
 	HR(device->CreateBuffer(&vbd, 0, &mStreamOutVB));
-}*/
+}

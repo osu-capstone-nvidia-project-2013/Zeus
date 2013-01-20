@@ -101,6 +101,9 @@
     <ClInclude Include="SpriteBatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="xnacollision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vertex.cpp">
@@ -155,6 +158,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SpriteBatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xnacollision.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,0 +1,67 @@
+1-17
+Progress: On Screen Text
+
+Todo: Refactor code so it doesn't suck as much to add objects
+
+Blocks: Sick
+
+1-10
+Progress: Christmas Break
+
+Todo: Text on screen
+
+Blocks: object loading and exporting taking longer than expected
+
+12-6
+Progress: object loading optimization
+
+Todo: shadowing
+
+Blocks: finals, depth testing
+
+11-29
+Progress: Normal mapping
+
+Todo: shadow, environment, game timing, camera controls
+
+Blocks: finals, rocket launcher, modifying code base
+
+11-15
+Progress: Blending
+
+Todo: Make the code moduler and pretty
+
+Blocks: Redesigning code base needed
+
+11-8
+Progress: Let me see that Phhhhonnnnng. phong, phong phong phong
+
+Todo: Texturing, tools, tranformation matrix's
+
+Blocks: Github and DirectX missing as of 10:45 today. Claims to be done this week.
+
+11-2
+Progress: Got the world spinning and a sphere with a lil tear in it.
+
+Todo: work on milestone 1 saturday and sunday ( completeness and neatness )
+
+Blocks: 6am shifts and poor cooking abilities and school
+
+11-1
+
+Progress: Made a circle triangle and box with an index vector
+
+Todo: Finish milestone 1
+
+Blocks: none
+
+
+10-25
+
+Progress: Render a Triangle
+
+Plans: Rendering Multiple triangles
+
+problems: 3 midterms friday
+
+problems: My last name is selt Ay, not 50 Shades style :-D
