@@ -1,3 +1,17 @@
+--- 1/24/12 ---
+Progress: 
+  Omni-directional light.
+
+Todo: 
+  Finish shadow map for omni-directional light.
+
+Issues: 
+  Still having the flipped mapping in the reflection of the sphere.
+
+
+
+
+
 --- 1/17/12 ---
 Progress: 
   Dynamic environment mapping, particle systems, instancing, frustum culling,
