@@ -1,3 +1,9 @@
+Date: 1/24/2013
+Progress: we have a point light. Working on initializing Physx.
+Todo: Point light shadow maps, create Physx scene object. Planning demo.
+Blockers: Physx libraries conflicting with current libraries. Working on build and linking settings and creating Physx in its own project and recreating it in our graphics engine.
+
+//////////////////////
 Date: 1/17/2013
 Progress: Multiple light source shadow mapping, shadow mapping on terrain, text on screen, particle system (Based on shader),
 multiple dynamic environment maps, instanced trees
