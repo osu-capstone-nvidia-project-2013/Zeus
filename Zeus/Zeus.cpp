@@ -11,6 +11,7 @@
 //***************************************************************************************
 
 #include "d3dApp.h"
+#include "PhysX.h"
 #include "d3dx11Effect.h"
 #include "GeometryGenerator.h"
 #include "MathHelper.h"
@@ -74,8 +75,10 @@ private:
     void BuildDynamicCubeMapViewsSkull();
     void BuildDynamicCubeMapViewsMirror();
 
-    void DrawSceneToShadowMap(int map);
-    void BuildShadowTransform(int source);
+	void BuildCubeFaceShadowTransforms(float x, float y, float z);
+
+    void DrawSceneToShadowMap();
+    void BuildShadowTransform(int source, bool omni);
     void BuildShapeGeometryBuffers();
     void BuildSkullGeometryBuffers();
     void BuildScreenQuadGeometryBuffers();
@@ -86,6 +89,8 @@ private:
 
     Sky* mSky;
     Terrain mTerrain;
+
+	PhysX* mPhysX;
 
     ID3D11Buffer* mInstancedBuffer;
 
@@ -111,11 +116,11 @@ private:
     ID3D11ShaderResourceView* mBrickNormalTexSRV;
 
     ID3D11ShaderResourceView* mFlareTexSRV;
-    ID3D11ShaderResourceView* mRainTexSRV;
+    //ID3D11ShaderResourceView* mRainTexSRV;
     ID3D11ShaderResourceView* mRandomTexSRV;
 
     ParticleSystem mFire;
-    ParticleSystem mRain;
+    //ParticleSystem mRain;
 
     BoundingSphere mSceneBounds;
 
@@ -129,13 +134,16 @@ private:
     XNA::AxisAlignedBox mSkullBox;
     XNA::Frustum mCamFrustum;
 
-    static const int SMapSize = 2048;
+    static const int SMapSize = 512;
     ShadowMap* mSmap;
     ShadowMap* mSmap2;
     XMFLOAT4X4 mLightView;
     XMFLOAT4X4 mLightProj;
     XMFLOAT4X4 mShadowTransform;
     XMFLOAT4X4 mShadowTransform2;
+
+    ShadowMap* mOmniSmaps[6];
+	XMFLOAT4X4 mShadowTransformOmni[6];
 
     static const int CubeMapSizeSphere = 512;
     static const int CubeMapSizeSkull = 512;
@@ -153,6 +161,7 @@ private:
 
     XMFLOAT3 mOriginalLightDir[3];
     DirectionalLight mDirLights[3];
+	PointLight mPointLights[1];
     Material mGridMat;
     Material mBoxMat;
     Material mCylinderMat;
@@ -227,7 +236,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
   mScreenQuadVB(0), mScreenQuadIB(0), mStoneTexSRV(0), mBrickTexSRV(0), mStoneNormalTexSRV(0), 
   mBrickNormalTexSRV(0), mDynamicCubeMapDSVSphere(0), mDynamicCubeMapSRVSphere(0), mDynamicCubeMapDSVSkull(0), 
   mDynamicCubeMapSRVSkull(0), mDynamicCubeMapDSVMirror(0), mDynamicCubeMapSRVMirror(0), mSkullIndexCount(0), mInstancedBuffer(0),
-  mRenderOptions(RenderOptionsNormalMap), mSmap(0), mSmap2(0), mLightRotationAngle(0.0f), mFrustumCullingEnabled(true), mVisibleObjectCount(0)
+  mRenderOptions(RenderOptionsNormalMap), mSmap(0), mSmap2(0), mPhysX(0), mLightRotationAngle(0.0f), mFrustumCullingEnabled(true), mVisibleObjectCount(0)
 {
     mMainWndCaption = L"Zeus";
     
@@ -240,13 +249,17 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mCam.SetPosition(0.0f, 0.5f, -14.0f);
     camPosition = mCam.GetPosition(); 
 
-
     for(int i = 0; i < 6; ++i)
     {
         mDynamicCubeMapRTVSphere[i] = 0;
         mDynamicCubeMapRTVSkull[i] = 0;
         mDynamicCubeMapRTVMirror[i] = 0;
+
+        mOmniSmaps[i] = 0;
     }
+
+	int source = 0;
+	bool omni = false;
 
     // Estimate the scene bounding sphere manually since we know how the scene was constructed.
     // The grid is the "widest object" with a width of 20 and depth of 30.0f, and centered at
@@ -311,6 +324,12 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     ////////////////////////////
     //    Lights/Materials    //
     ////////////////////////////
+	mPointLights[0].Ambient = XMFLOAT4(0.8f, 0.2f, 0.2f, 1.0f);
+	mPointLights[0].Diffuse = XMFLOAT4(0.7f, 0.7f, 0.6f, 1.0f);
+	mPointLights[0].Specular = XMFLOAT4(0.8f, 0.8f, 0.7f, 1.0f);
+	mPointLights[0].Position = XMFLOAT3(-5.0f, 4.5f, 10.0f);
+	mPointLights[0].Range = 40.3f;
+	mPointLights[0].Att = XMFLOAT3(1.0f, .05f, .0075f);
 
     mDirLights[0].Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[0].Diffuse  = XMFLOAT4(0.7f, 0.7f, 0.6f, 1.0f);
@@ -376,6 +395,7 @@ ZeusApp::~ZeusApp()
     SafeDelete(mSky);
     SafeDelete(mSmap);
     SafeDelete(mSmap2);
+	SafeDelete(mPhysX);
     ReleaseCOM(mInstancedBuffer);
     ReleaseCOM(mShapesVB);
     ReleaseCOM(mShapesIB);
@@ -391,7 +411,7 @@ ZeusApp::~ZeusApp()
     ReleaseCOM(mBrickNormalTexSRV);
     ReleaseCOM(mRandomTexSRV);
     ReleaseCOM(mFlareTexSRV);
-    ReleaseCOM(mRainTexSRV);
+    //ReleaseCOM(mRainTexSRV);
     ReleaseCOM(mDynamicCubeMapDSVSphere);
     ReleaseCOM(mDynamicCubeMapSRVSphere);
     ReleaseCOM(mDynamicCubeMapDSVSkull);
@@ -402,6 +422,7 @@ ZeusApp::~ZeusApp()
         ReleaseCOM(mDynamicCubeMapRTVSphere[i]);
         ReleaseCOM(mDynamicCubeMapRTVSkull[i]);
         ReleaseCOM(mDynamicCubeMapRTVMirror[i]);
+        SafeDelete(mOmniSmaps[i]);
     }
 
     Effects::DestroyAll();
@@ -412,6 +433,8 @@ ZeusApp::~ZeusApp()
 
 bool ZeusApp::Init()
 {
+	mPhysX->Init();
+
     if(!D3DApp::Init())
         return false;
 
@@ -439,6 +462,10 @@ bool ZeusApp::Init()
 
     mSmap = new ShadowMap(md3dDevice, SMapSize, SMapSize);
     mSmap2 = new ShadowMap(md3dDevice, SMapSize, SMapSize);
+    for(int i = 0; i < 6; i++)
+    {
+        mOmniSmaps[i] = new ShadowMap(md3dDevice, SMapSize, SMapSize);
+    }
 
     HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
         L"Textures/floor.dds", 0, 0, &mStoneTexSRV, 0 ));
@@ -467,11 +494,11 @@ bool ZeusApp::Init()
     mFire.SetEmitPos(XMFLOAT3(-5.0f, 3.75f, 10.0f));
 
 
-    std::vector<std::wstring> raindrops;
+    /*std::vector<std::wstring> raindrops;
     raindrops.push_back(L"Textures/raindrop.dds");
     mRainTexSRV = d3dHelper::CreateTexture2DArraySRV(md3dDevice, md3dImmediateContext, raindrops);
 
-    mRain.Init(md3dDevice, Effects::RainFX, mRainTexSRV, mRandomTexSRV, 10000); 
+    mRain.Init(md3dDevice, Effects::RainFX, mRainTexSRV, mRandomTexSRV, 10000);*/
 
 
     BuildDynamicCubeMapViewsSphere();
@@ -652,8 +679,11 @@ void ZeusApp::UpdateScene(float dt)
     lightDir = XMVector3TransformNormal(lightDir, SkullLocalRotate2);
     XMStoreFloat3(&mDirLights[1].Direction, lightDir);
 
+	//lightDir = XMLoadFloat3(&XMFLOAT3(10.0f, 3.0f, 10.0f));
+	//lightDir = XMVector3TransformNormal(lightDir, XMMatrixRotationY( fmodf( mLightRotationAngle * 15, (XM_PI * 2) ) ));
+	//XMStoreFloat3(&mPointLights[0].Position, lightDir);
 
-    mRain.SetEmitPos(mCam.GetPosition());
+    //mRain.SetEmitPos(mCam.GetPosition());
 
     //
     // Reset particle systems.
@@ -661,11 +691,11 @@ void ZeusApp::UpdateScene(float dt)
     if(GetAsyncKeyState('R') & 0x8000)
     {
         mFire.Reset();
-        mRain.Reset();
+        //mRain.Reset();
     }
  
     mFire.Update(dt/10, mTimer.TotalTime());
-    mRain.Update(dt/10, mTimer.TotalTime());
+    //mRain.Update(dt/10, mTimer.TotalTime());
 
     camPosition = mCam.GetPosition();
 
@@ -739,14 +769,18 @@ void ZeusApp::UpdateScene(float dt)
 
 void ZeusApp::DrawScene()
 {
-    BuildShadowTransform(0);
+	// Draw directional shadow maps
+    /*BuildShadowTransform(0, false);
     mSmap->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
-    DrawSceneToShadowMap(0);
+    DrawSceneToShadowMap();
 
-    BuildShadowTransform(1);
+    BuildShadowTransform(1, false);
     mSmap2->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
-    DrawSceneToShadowMap(1);
-    
+    DrawSceneToShadowMap();*/
+	
+	// Draw omni directional shadow maps
+	BuildCubeFaceShadowTransforms(mPointLights[0].Position.x, mPointLights[0].Position.y, mPointLights[0].Position.z); // point light position
+
     md3dImmediateContext->RSSetState(0);
     ID3D11RenderTargetView* renderTargets[1];
 
@@ -754,26 +788,28 @@ void ZeusApp::DrawScene()
     md3dImmediateContext->RSSetViewports(1, &mCubeMapViewport);
     
     if(!((camPosition.x > 15.0f || camPosition.x < -25.0) ||
-       (camPosition.z > 15.0f || camPosition.z < -25.0)) ){
-    // Sphere with dynamic cube mapping
-    for(int i = 0; i < 6; ++i) // for mirror, just do (int i = 0; i < 1; ++i) for 1 camera mapped to mirror surface
-    {
-        BuildCubeFaceCamera(-5.0f, 4.0f, 5.0f); // Sphere position
+		 (camPosition.y > 25.0f || camPosition.y < -25.0) ||
+         (camPosition.z > 15.0f || camPosition.z < -25.0)) ){
+    
+		// Sphere with dynamic cube mapping
+		BuildCubeFaceCamera(-5.0f, 4.0f, 5.0f); // Sphere position
+    
+		for(int i = 0; i < 6; ++i) // for mirror, just do (int i = 0; i < 1; ++i) for 1 camera mapped to mirror surface
+		{
+			// Clear cube map face and depth buffer.
+			md3dImmediateContext->ClearRenderTargetView(mDynamicCubeMapRTVSphere[i], reinterpret_cast<const float*>(&Colors::Silver));
+			md3dImmediateContext->ClearDepthStencilView(mDynamicCubeMapDSVSphere, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-        // Clear cube map face and depth buffer.
-        md3dImmediateContext->ClearRenderTargetView(mDynamicCubeMapRTVSphere[i], reinterpret_cast<const float*>(&Colors::Silver));
-        md3dImmediateContext->ClearDepthStencilView(mDynamicCubeMapDSVSphere, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+	        // Bind cube map face as render target.
+	        renderTargets[0] = mDynamicCubeMapRTVSphere[i];
+	        md3dImmediateContext->OMSetRenderTargets(1, renderTargets, mDynamicCubeMapDSVSphere);
 
-        // Bind cube map face as render target.
-        renderTargets[0] = mDynamicCubeMapRTVSphere[i];
-        md3dImmediateContext->OMSetRenderTargets(1, renderTargets, mDynamicCubeMapDSVSphere);
+	        // Draw the scene with the exception of the center sphere to this cube map face
+	        DrawScene(mCubeMapCamera[i], false, false, false);
+	    }
 
-        // Draw the scene with the exception of the center sphere to this cube map face
-        DrawScene(mCubeMapCamera[i], false, false, false);
-    }
-
-    // Have hardware generate lower mipmap levels of cube map
-    md3dImmediateContext->GenerateMips(mDynamicCubeMapSRVSphere);
+		// Have hardware generate lower mipmap levels of cube map
+		md3dImmediateContext->GenerateMips(mDynamicCubeMapSRVSphere);
     }
 
 
@@ -781,11 +817,12 @@ void ZeusApp::DrawScene()
     if(!((camPosition.x > 25.0f || camPosition.x < -25.0) ||
          (camPosition.y > 25.0f || camPosition.y < -25.0) ||
          (camPosition.z > 25.0f || camPosition.z < -25.0)) ){
+	
+		BuildCubeFaceCamera(0.0f, 4.0f, 0.0f); // Skull position
+   
         for(int i = 0; i < 6; ++i) // for mirror, just do (int i = 0; i < 1; ++i) for 1 camera mapped to mirror surface
         {
-            BuildCubeFaceCamera(0.0f, 4.0f, 0.0f); // Skull position
-
-            // Clear cube map face and depth buffer.
+             // Clear cube map face and depth buffer.
             md3dImmediateContext->ClearRenderTargetView(mDynamicCubeMapRTVSkull[i], reinterpret_cast<const float*>(&Colors::Silver));
             md3dImmediateContext->ClearDepthStencilView(mDynamicCubeMapDSVSkull, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
 
@@ -840,8 +877,8 @@ void ZeusApp::DrawScene()
     mFire.Draw(md3dImmediateContext, mCam);
     md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff); // restore default
 
-    mRain.SetEyePos(mCam.GetPosition());
-    mRain.Draw(md3dImmediateContext, mCam);
+    //mRain.SetEyePos(mCam.GetPosition());
+    //mRain.Draw(md3dImmediateContext, mCam);
 
     // restore default states.
     md3dImmediateContext->RSSetState(0);
@@ -931,8 +968,8 @@ void ZeusApp::DrawScene()
         mSpriteBatch.DrawString(md3dImmediateContext, mFont, text, textPos, XMCOLOR(0xffffffff));
         mSpriteBatch.DrawString(md3dImmediateContext, mFontc, hair, hairPos, XMCOLOR(0xff2C2CEE));
         mSpriteBatch.DrawString(md3dImmediateContext, mFont, pos, posPos, XMCOLOR(0xffffffff));
-    // End of text draw	
-    ///////////////////////////////////////////////////////////////////////////////////////////////
+		// End of text draw	
+		///////////////////////////////////////////////////////////////////////////////////////////////
 
     HR(mSwapChain->Present(0, 0));
 }
@@ -951,6 +988,15 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
     Effects::TerrainFX->SetShadowMap2(mSmap2->DepthMapSRV());
     Effects::TerrainFX->SetShadowTransform(shadowTransform);
     Effects::TerrainFX->SetShadowTransform2(shadowTransform2);
+	
+    Effects::TerrainFX->SetPointLights(mPointLights);
+    Effects::TerrainFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+        mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+	
+	Effects::TerrainFX->SetShadowTransforms(XMLoadFloat4x4(&mShadowTransformOmni[0]),XMLoadFloat4x4(&mShadowTransformOmni[1]),
+		XMLoadFloat4x4(&mShadowTransformOmni[2]),XMLoadFloat4x4(&mShadowTransformOmni[3]),
+		XMLoadFloat4x4(&mShadowTransformOmni[4]),XMLoadFloat4x4(&mShadowTransformOmni[5]));
+	
     mTerrain.Draw(md3dImmediateContext, camera, mDirLights);
 
     ID3D11Buffer* vbs[2] = {mSkullVB, mInstancedBuffer};
@@ -963,18 +1009,21 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 
     // Set per frame constants.
     Effects::BasicFX->SetDirLights(mDirLights);
+	Effects::BasicFX->SetPointLights(mPointLights);
     Effects::BasicFX->SetEyePosW(mCam.GetPosition());
     //Effects::BasicFX->SetCubeMap(mSky->CubeMapSRV());
     Effects::BasicFX->SetShadowMap(mSmap->DepthMapSRV());
     Effects::BasicFX->SetShadowMap2(mSmap2->DepthMapSRV());
 
     Effects::NormalMapFX->SetDirLights(mDirLights);
+	Effects::NormalMapFX->SetPointLights(mPointLights);
     Effects::NormalMapFX->SetEyePosW(mCam.GetPosition());
     //Effects::NormalMapFX->SetCubeMap(mSky->CubeMapSRV());
     Effects::NormalMapFX->SetShadowMap(mSmap->DepthMapSRV());
     Effects::NormalMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
 
     Effects::DisplacementMapFX->SetDirLights(mDirLights);
+	Effects::DisplacementMapFX->SetPointLights(mPointLights);
     Effects::DisplacementMapFX->SetEyePosW(mCam.GetPosition());
     //Effects::DisplacementMapFX->SetCubeMap(mSky->CubeMapSRV());
     Effects::DisplacementMapFX->SetShadowMap(mSmap->DepthMapSRV());
@@ -1366,8 +1415,8 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
     mFire.Draw(md3dImmediateContext, camera);
     md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff); // restore default
 
-    mRain.SetEyePos(camera.GetPosition());
-    mRain.Draw(md3dImmediateContext, camera);
+    //mRain.SetEyePos(camera.GetPosition());
+    //mRain.Draw(md3dImmediateContext, camera);
 
     // restore default states.
     md3dImmediateContext->RSSetState(0);
@@ -1442,6 +1491,62 @@ void ZeusApp::BuildCubeFaceCamera(float x, float y, float z)
         mCubeMapCamera[i].SetLens(0.5f*XM_PI, 1.0f, 0.1f, 1000.0f);
         mCubeMapCamera[i].UpdateViewMatrix();
     }
+}
+
+void ZeusApp::BuildCubeFaceShadowTransforms(float x, float y, float z)
+{
+    // Generate the cube map about the given position.
+    XMFLOAT3 center(x, y, z);
+    XMFLOAT3 worldUp(0.0f, 1.0f, 0.0f);
+
+    // Look along each coordinate axis.
+    XMFLOAT3 targets[6] = 
+    {
+        XMFLOAT3(x+1.0f, y, z), // +X
+        XMFLOAT3(x-1.0f, y, z), // -X
+        XMFLOAT3(x, y+1.0f, z), // +Y
+        XMFLOAT3(x, y-1.0f, z), // -Y
+        XMFLOAT3(x, y, z+1.0f), // +Z
+        XMFLOAT3(x, y, z-1.0f)  // -Z
+    };
+
+    // Use world up vector (0,1,0) for all directions except +Y/-Y.  In these cases, we are looking down +Y or -Y, so we need a different "up" vector.
+    XMFLOAT3 ups[6] = 
+    {
+        XMFLOAT3(0.0f, 1.0f, 0.0f),  // +X
+        XMFLOAT3(0.0f, 1.0f, 0.0f),  // -X
+        XMFLOAT3(0.0f, 0.0f, -1.0f), // +Y
+        XMFLOAT3(0.0f, 0.0f, +1.0f), // -Y
+        XMFLOAT3(0.0f, 1.0f, 0.0f),	 // +Z
+        XMFLOAT3(0.0f, 1.0f, 0.0f)	 // -Z
+    };
+
+    for(int i = 0; i < 6; ++i)
+    {
+        XMMATRIX V = XMMatrixLookAtLH( XMLoadFloat3(&center), XMLoadFloat3(&targets[i]), XMLoadFloat3(&ups[i]) );
+	
+		// Transform bounding sphere to light space.
+		XMFLOAT3 sphereCenterLS;
+		XMStoreFloat3(&sphereCenterLS, XMVector3TransformCoord(XMLoadFloat3(&targets[i]), V));
+    
+		XMMATRIX P = XMMatrixPerspectiveFovLH(XM_PI/2, 1., 1., 20.*mPointLights[0].Range);
+
+		// Transform NDC space [-1,+1]^2 to texture space [0,1]^2
+		XMMATRIX T(
+			0.5f, 0.0f, 0.0f, 0.0f,
+			0.0f, -0.5f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.5f, 0.5f, 0.0f, 1.0f);
+
+		XMMATRIX S = V*P*T;
+
+		XMStoreFloat4x4(&mLightView, V);
+		XMStoreFloat4x4(&mLightProj, P);
+		XMStoreFloat4x4(&mShadowTransformOmni[i], S);
+
+		mOmniSmaps[i]->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
+        DrawSceneToShadowMap();
+	}
 }
 
 
@@ -1684,8 +1789,7 @@ void ZeusApp::BuildDynamicCubeMapViewsMirror()
     mCubeMapViewport.MaxDepth = 1.0f;
 }
 
-
-void ZeusApp::DrawSceneToShadowMap(int map)
+void ZeusApp::DrawSceneToShadowMap()
 {
     if( GetAsyncKeyState('1') & 0x8000 )
         md3dImmediateContext->RSSetState(RenderStates::WireframeRS);
@@ -1874,20 +1978,27 @@ void ZeusApp::DrawSceneToShadowMap(int map)
     }
 }
 
-void ZeusApp::BuildShadowTransform(int source)
+void ZeusApp::BuildShadowTransform(int source, bool omni)
 {
     // Only the first "main" light casts a shadow.
     XMVECTOR lightDir = XMLoadFloat3(&mDirLights[source].Direction);
     XMVECTOR lightPos = -2.0f*mSceneBounds.Radius*lightDir;
     XMVECTOR targetPos = XMLoadFloat3(&mSceneBounds.Center);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
+	
     XMMATRIX V = XMMatrixLookAtLH(lightPos, targetPos, up);
-
+	
     // Transform bounding sphere to light space.
     XMFLOAT3 sphereCenterLS;
     XMStoreFloat3(&sphereCenterLS, XMVector3TransformCoord(targetPos, V));
-    float scale = 4.0f;
+	
+	if(omni)
+	{
+		V = mCubeMapCamera[source].View();
+		XMStoreFloat3(&sphereCenterLS, XMVector3TransformCoord(-2.0f*mSceneBounds.Radius*XMLoadFloat3(&mCubeMapCamera[source].GetLook()), V)); //??? removed and doesn't appear to change anything
+	}
+    
+	float scale = 4.0f;
     // Ortho frustum in light space encloses scene.
     float l = sphereCenterLS.x - scale*mSceneBounds.Radius;
     float b = sphereCenterLS.y - scale*mSceneBounds.Radius;
@@ -1908,10 +2019,17 @@ void ZeusApp::BuildShadowTransform(int source)
 
     XMStoreFloat4x4(&mLightView, V);
     XMStoreFloat4x4(&mLightProj, P);
-    if(source == 0)
-        XMStoreFloat4x4(&mShadowTransform, S);
-    else
-        XMStoreFloat4x4(&mShadowTransform2, S);
+	if(!omni)
+	{
+		if(source == 0)
+			XMStoreFloat4x4(&mShadowTransform, S);
+		else
+			XMStoreFloat4x4(&mShadowTransform2, S);
+	}
+	else
+	{
+		XMStoreFloat4x4(&mShadowTransformOmni[source], S); //??? removed and doesn't appear to change anything
+	}
 }
 
 

@@ -48,6 +48,7 @@ public:
 	void SetFogStart(float f)                           { FogStart->SetFloat(f); }
 	void SetFogRange(float f)                           { FogRange->SetFloat(f); }
 	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
+	void SetPointLights(const PointLight* lights)		{ PointLights->SetRawValue(lights, 0, sizeof(PointLight)); }
 	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
 	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { DiffuseMap->SetResource(tex); }
 	void SetShadowMap(ID3D11ShaderResourceView* tex)    { ShadowMap->SetResource(tex); }
@@ -121,6 +122,7 @@ public:
 	ID3DX11EffectScalarVariable* FogStart;
 	ID3DX11EffectScalarVariable* FogRange;
 	ID3DX11EffectVariable* DirLights;
+	ID3DX11EffectVariable* PointLights;
 	ID3DX11EffectVariable* Mat;
 
 	ID3DX11EffectShaderResourceVariable* DiffuseMap;
@@ -148,6 +150,7 @@ public:
 	void SetFogStart(float f)                           { FogStart->SetFloat(f); }
 	void SetFogRange(float f)                           { FogRange->SetFloat(f); }
 	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
+	void SetPointLights(const PointLight* lights)		{ PointLights->SetRawValue(lights, 0, sizeof(PointLight)); }
 	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
 	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { DiffuseMap->SetResource(tex); }
 	void SetCubeMap(ID3D11ShaderResourceView* tex)      { CubeMap->SetResource(tex); }
@@ -222,6 +225,7 @@ public:
 	ID3DX11EffectScalarVariable* FogStart;
 	ID3DX11EffectScalarVariable* FogRange;
 	ID3DX11EffectVariable* DirLights;
+	ID3DX11EffectVariable* PointLights;
 	ID3DX11EffectVariable* Mat;
 
 	ID3DX11EffectShaderResourceVariable* DiffuseMap;
@@ -251,6 +255,7 @@ public:
 	void SetFogStart(float f)                           { FogStart->SetFloat(f); }
 	void SetFogRange(float f)                           { FogRange->SetFloat(f); }
 	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
+	void SetPointLights(const PointLight* lights)		{ PointLights->SetRawValue(lights, 0, sizeof(PointLight)); }
 	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
 	void SetHeightScale(float f)                        { HeightScale->SetFloat(f); }
 	void SetMaxTessDistance(float f)                    { MaxTessDistance->SetFloat(f); }
@@ -332,6 +337,7 @@ public:
 	ID3DX11EffectScalarVariable* FogStart;
 	ID3DX11EffectScalarVariable* FogRange;
 	ID3DX11EffectVariable* DirLights;
+	ID3DX11EffectVariable* PointLights;
 	ID3DX11EffectVariable* Mat;
 	ID3DX11EffectScalarVariable* HeightScale;
 	ID3DX11EffectScalarVariable* MaxTessDistance;
@@ -423,6 +429,7 @@ public:
 	void SetFogStart(float f)                           { FogStart->SetFloat(f); }
 	void SetFogRange(float f)                           { FogRange->SetFloat(f); }
 	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
+	void SetPointLights(const PointLight* lights)		{ PointLights->SetRawValue(lights, 0, sizeof(PointLight)); }
 	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
 	void SetShadowTransform(CXMMATRIX M)                { ShadowTransform->SetMatrix(reinterpret_cast<const float*>(&M)); }
 	void SetShadowTransform2(CXMMATRIX M)               { ShadowTransform2->SetMatrix(reinterpret_cast<const float*>(&M)); }
@@ -442,6 +449,23 @@ public:
 	void SetShadowMap(ID3D11ShaderResourceView* tex)       { ShadowMap->SetResource(tex); }
 	void SetShadowMap2(ID3D11ShaderResourceView* tex)      { ShadowMap2->SetResource(tex); }
 
+	void SetOmniShadowMaps(ID3D11ShaderResourceView* M0, ID3D11ShaderResourceView* M1,
+        ID3D11ShaderResourceView* M2, ID3D11ShaderResourceView* M3, ID3D11ShaderResourceView* M4, 
+        ID3D11ShaderResourceView* M5)	   { OmniShadowMap0->SetResource(M0);
+                                             OmniShadowMap1->SetResource(M1);
+                                             OmniShadowMap2->SetResource(M2);
+                                             OmniShadowMap3->SetResource(M3);
+                                             OmniShadowMap4->SetResource(M4);
+                                             OmniShadowMap5->SetResource(M5);}
+	void SetShadowTransforms(CXMMATRIX M0, CXMMATRIX M1, 
+		CXMMATRIX M2, CXMMATRIX M3, 
+		CXMMATRIX M4, CXMMATRIX M5)						   { ShadowTransCube0->SetMatrix(reinterpret_cast<const float*>(&M0)); 
+															 ShadowTransCube1->SetMatrix(reinterpret_cast<const float*>(&M1)); 
+															 ShadowTransCube2->SetMatrix(reinterpret_cast<const float*>(&M2)); 
+															 ShadowTransCube3->SetMatrix(reinterpret_cast<const float*>(&M3)); 
+															 ShadowTransCube4->SetMatrix(reinterpret_cast<const float*>(&M4)); 
+															 ShadowTransCube5->SetMatrix(reinterpret_cast<const float*>(&M5)); }
+
 	ID3DX11EffectTechnique* Light1Tech;
 	ID3DX11EffectTechnique* Light2Tech;
 	ID3DX11EffectTechnique* Light3Tech;
@@ -460,6 +484,7 @@ public:
 	ID3DX11EffectScalarVariable* FogStart;
 	ID3DX11EffectScalarVariable* FogRange;
 	ID3DX11EffectVariable* DirLights;
+	ID3DX11EffectVariable* PointLights;
 	ID3DX11EffectVariable* Mat;
 	ID3DX11EffectScalarVariable* ScreenWidth;
 	ID3DX11EffectScalarVariable* ScreenHeight;
@@ -477,6 +502,19 @@ public:
 	ID3DX11EffectShaderResourceVariable* HeightMap;
 	ID3DX11EffectShaderResourceVariable* ShadowMap;
 	ID3DX11EffectShaderResourceVariable* ShadowMap2;
+
+	ID3DX11EffectShaderResourceVariable* OmniShadowMap0;
+    ID3DX11EffectShaderResourceVariable* OmniShadowMap1;
+    ID3DX11EffectShaderResourceVariable* OmniShadowMap2;
+    ID3DX11EffectShaderResourceVariable* OmniShadowMap3;
+    ID3DX11EffectShaderResourceVariable* OmniShadowMap4;
+    ID3DX11EffectShaderResourceVariable* OmniShadowMap5;
+	ID3DX11EffectMatrixVariable* ShadowTransCube0;
+	ID3DX11EffectMatrixVariable* ShadowTransCube1;
+	ID3DX11EffectMatrixVariable* ShadowTransCube2;
+	ID3DX11EffectMatrixVariable* ShadowTransCube3;
+	ID3DX11EffectMatrixVariable* ShadowTransCube4;
+	ID3DX11EffectMatrixVariable* ShadowTransCube5;
 };
 #pragma endregion
 

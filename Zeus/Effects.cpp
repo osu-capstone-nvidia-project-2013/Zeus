@@ -106,6 +106,7 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
 	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
 	DirLights         = mFX->GetVariableByName("gDirLights");
+	PointLights		   = mFX->GetVariableByName("gPointLights");
 	Mat               = mFX->GetVariableByName("gMaterial");
 	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	CubeMap           = mFX->GetVariableByName("gCubeMap")->AsShaderResource();
@@ -189,6 +190,7 @@ NormalMapEffect::NormalMapEffect(ID3D11Device* device, const std::wstring& filen
 	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
 	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
 	DirLights         = mFX->GetVariableByName("gDirLights");
+	PointLights		   = mFX->GetVariableByName("gPointLights");
 	Mat               = mFX->GetVariableByName("gMaterial");
 	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
 	CubeMap           = mFX->GetVariableByName("gCubeMap")->AsShaderResource();
@@ -274,6 +276,7 @@ DisplacementMapEffect::DisplacementMapEffect(ID3D11Device* device, const std::ws
 	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
 	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
 	DirLights         = mFX->GetVariableByName("gDirLights");
+	PointLights		   = mFX->GetVariableByName("gPointLights");
 	Mat               = mFX->GetVariableByName("gMaterial");
 	HeightScale       = mFX->GetVariableByName("gHeightScale")->AsScalar();
 	MaxTessDistance   = mFX->GetVariableByName("gMaxTessDistance")->AsScalar();
@@ -353,6 +356,7 @@ TerrainEffect::TerrainEffect(ID3D11Device* device, const std::wstring& filename)
 	FogStart           = mFX->GetVariableByName("gFogStart")->AsScalar();
 	FogRange           = mFX->GetVariableByName("gFogRange")->AsScalar();
 	DirLights          = mFX->GetVariableByName("gDirLights");
+	PointLights		   = mFX->GetVariableByName("gPointLights");
 	Mat                = mFX->GetVariableByName("gMaterial");
 
 	MinDist            = mFX->GetVariableByName("gMinDist")->AsScalar();
@@ -372,6 +376,20 @@ TerrainEffect::TerrainEffect(ID3D11Device* device, const std::wstring& filename)
 	HeightMap          = mFX->GetVariableByName("gHeightMap")->AsShaderResource();
 	ShadowMap          = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
 	ShadowMap2         = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
+
+	OmniShadowMap0	   = mFX->GetVariableByName("gOmniShadowMap0")->AsShaderResource();
+    OmniShadowMap1	   = mFX->GetVariableByName("gOmniShadowMap1")->AsShaderResource();
+    OmniShadowMap2	   = mFX->GetVariableByName("gOmniShadowMap2")->AsShaderResource();
+    OmniShadowMap3	   = mFX->GetVariableByName("gOmniShadowMap3")->AsShaderResource();
+    OmniShadowMap4	   = mFX->GetVariableByName("gOmniShadowMap4")->AsShaderResource();
+    OmniShadowMap5	   = mFX->GetVariableByName("gOmniShadowMap5")->AsShaderResource();
+
+	ShadowTransCube0   = mFX->GetVariableByName("gShadowTransCube0")->AsMatrix();
+	ShadowTransCube1   = mFX->GetVariableByName("gShadowTransCube1")->AsMatrix();
+	ShadowTransCube2   = mFX->GetVariableByName("gShadowTransCube2")->AsMatrix();
+	ShadowTransCube3   = mFX->GetVariableByName("gShadowTransCube3")->AsMatrix();
+	ShadowTransCube4   = mFX->GetVariableByName("gShadowTransCube4")->AsMatrix();
+	ShadowTransCube5   = mFX->GetVariableByName("gShadowTransCube5")->AsMatrix();
 }
 
 TerrainEffect::~TerrainEffect()
