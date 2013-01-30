@@ -13,7 +13,8 @@
  
 cbuffer cbPerFrame
 {
-	DirectionalLight gDirLights[3];
+	DirectionalLight	gDirLights[3];
+	PointLight			gPointLights[1];
 	float3 gEyePosW;
 
 	float  gFogStart;
@@ -39,6 +40,15 @@ Texture2D gShadowMap2;
 
 TextureCube gCubeMap;
 
+SamplerState samAnisotropic
+{
+	Filter = ANISOTROPIC;
+	MaxAnisotropy = 4;
+
+	AddressU = WRAP;
+	AddressV = WRAP;
+};
+
 SamplerState samLinear
 {
 	Filter = MIN_MAG_MIP_LINEAR;
@@ -62,9 +72,6 @@ struct VertexIn
 	float3 PosL    : POSITION;
 	float3 NormalL : NORMAL;
 	float2 Tex     : TEXCOORD;
-	row_major float4x4 World : WORLD;
-	float4 Color   : COLOR;
-	uint InstanceId: SV_InstanceId;
 };
 
 struct VertexOut
@@ -73,7 +80,6 @@ struct VertexOut
     float3 PosW       : POSITION;
     float3 NormalW    : NORMAL;
 	float2 Tex        : TEXCOORD0;
-	float4 Color	  : COLOR;
 	float4 ShadowPosH : TEXCOORD1;
 	float4 ShadowPosH2 : TEXCOORD2;
 };
@@ -83,16 +89,15 @@ VertexOut VS(VertexIn vin)
 	VertexOut vout;
 	
 	// Transform to world space space.
-	vout.PosW    = mul(float4(vin.PosL, 1.0f), vin.World).xyz;
-	vout.NormalW = mul(vin.NormalL, (float3x3)vin.World);
+	vout.PosW    = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
+	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
 		
 	// Transform to homogeneous clip space.
-	vout.PosH = mul(float4(vout.PosL, 1.0f), gWorldViewProj);
+	vout.PosH = mul(float4(vin.PosL, 1.0f), gWorldViewProj);
 	
 	// Output vertex attributes for interpolation across triangle.
 	vout.Tex = mul(float4(vin.Tex, 0.0f, 1.0f), gTexTransform).xy;
-	vout.Color = vin.Color;
-
+	
 	// Generate projective tex-coords to project shadow map onto scene.
 	vout.ShadowPosH = mul(float4(vin.PosL, 1.0f), gShadowTransform);
 	vout.ShadowPosH2 = mul(float4(vin.PosL, 1.0f), gShadowTransform2);
@@ -139,6 +144,8 @@ float4 PS(VertexOut pin,
 	// Lighting.
 	//
 
+
+
 	float4 litColor = texColor;
 	if( gLightCount > 0  )
 	{  
@@ -160,10 +167,19 @@ float4 PS(VertexOut pin,
 			ComputeDirectionalLight(gMaterial, gDirLights[i], pin.NormalW, toEye, 
 				A, D, S);
 
-			ambient += A*pin.Color;    
-			diffuse += shadow[i]*D*pin.Color;
+			ambient += A;    
+			diffuse += shadow[i]*D;
 			spec    += shadow[i]*S;
 		}
+		
+		float4 Aa, Dd, Ss;
+		ComputePointLight(gMaterial, gPointLights[0], pin.PosW, pin.NormalW, toEye, 
+				Aa, Dd, Ss);
+
+		ambient += Aa;
+		diffuse += Dd;
+		spec    += Ss;
+
 
 		litColor = texColor*(ambient + diffuse) + spec;
 

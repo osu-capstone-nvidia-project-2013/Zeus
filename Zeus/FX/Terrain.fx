@@ -14,6 +14,7 @@
 cbuffer cbPerFrame
 {
 	DirectionalLight gDirLights[3];
+	PointLight		 gPointLights[1];
 	float3 gEyePosW;
 
 	float  gFogStart;
@@ -49,6 +50,13 @@ cbuffer cbPerObject
 	Material gMaterial;
 	float4x4 gShadowTransform;
 	float4x4 gShadowTransform2; 
+
+	float4x4 gShadowTransCube0;
+	float4x4 gShadowTransCube1;
+	float4x4 gShadowTransCube2;
+	float4x4 gShadowTransCube3;
+	float4x4 gShadowTransCube4;
+	float4x4 gShadowTransCube5;
 };
 
 // Nonnumeric values cannot be added to a cbuffer.
@@ -57,6 +65,13 @@ Texture2D gBlendMap;
 Texture2D gHeightMap;
 Texture2D gShadowMap;
 Texture2D gShadowMap2;
+
+Texture2D gOmniShadowMap0;
+Texture2D gOmniShadowMap1;
+Texture2D gOmniShadowMap2;
+Texture2D gOmniShadowMap3;
+Texture2D gOmniShadowMap4;
+Texture2D gOmniShadowMap5;
 
 SamplerState samLinear
 {
@@ -260,6 +275,12 @@ struct DomainOut
 	float2 TiledTex : TEXCOORD1;
 	float4 ShadowPosH : TEXCOORD2;
 	float4 ShadowPosH2 : TEXCOORD3;
+	float4 ShadowPosCube0 : TEXCOORD4;
+	float4 ShadowPosCube1 : TEXCOORD5;
+	float4 ShadowPosCube2 : TEXCOORD6;
+	float4 ShadowPosCube3 : TEXCOORD7;
+	float4 ShadowPosCube4 : TEXCOORD8;
+	float4 ShadowPosCube5 : TEXCOORD9;
 };
 
 // The domain shader is called for every vertex created by the tessellator.  
@@ -299,6 +320,14 @@ DomainOut DS(PatchTess patchTess,
 	// Generate projective tex-coords to project shadow map onto scene.
 	dout.ShadowPosH = mul(float4(dout.PosW, 1.0f), gShadowTransform);
 	dout.ShadowPosH2 = mul(float4(dout.PosW, 1.0f), gShadowTransform2);
+
+	// Generate projective tex-coords to project shadow map cube onto scene.
+	dout.ShadowPosCube0 = mul(float4(dout.PosW, 1.0f), gShadowTransCube0);
+	dout.ShadowPosCube1 = mul(float4(dout.PosW, 1.0f), gShadowTransCube1);
+	dout.ShadowPosCube2 = mul(float4(dout.PosW, 1.0f), gShadowTransCube2);
+	dout.ShadowPosCube3 = mul(float4(dout.PosW, 1.0f), gShadowTransCube3);
+	dout.ShadowPosCube4 = mul(float4(dout.PosW, 1.0f), gShadowTransCube4);
+	dout.ShadowPosCube5 = mul(float4(dout.PosW, 1.0f), gShadowTransCube5);
 
 	return dout;
 }
@@ -367,10 +396,19 @@ float4 PS(DomainOut pin,
 		float4 diffuse = float4(0.0f, 0.0f, 0.0f, 0.0f);
 		float4 spec    = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-		// Only the first light casts a shadow.
 		float3 shadow = float3(1.0f, 1.0f, 1.0f);
 		shadow[0] = CalcShadowFactor(samShadow, gShadowMap, pin.ShadowPosH);
 		shadow[1] = CalcShadowFactor(samShadow, gShadowMap2, pin.ShadowPosH2);
+
+		float3 shadowcube1 = float3(1.0f, 1.0f, 1.0f);
+		shadowcube1[0] = CalcShadowFactor(samShadow, gOmniShadowMap0, pin.ShadowPosCube0);
+		shadowcube1[1] = CalcShadowFactor(samShadow, gOmniShadowMap1, pin.ShadowPosCube1);
+		shadowcube1[2] = CalcShadowFactor(samShadow, gOmniShadowMap2, pin.ShadowPosCube2);
+		float3 shadowcube2 = float3(1.0f, 1.0f, 1.0f);
+		shadowcube2[0] = CalcShadowFactor(samShadow, gOmniShadowMap3, pin.ShadowPosCube3);
+		shadowcube2[1] = CalcShadowFactor(samShadow, gOmniShadowMap4, pin.ShadowPosCube4);
+		shadowcube2[2] = CalcShadowFactor(samShadow, gOmniShadowMap5, pin.ShadowPosCube5);
+        float shadowcubeave = ( shadowcube1[0] + shadowcube1[1] + shadowcube1[2] + shadowcube2[0] + shadowcube2[1] + shadowcube2[2] ) / 6.;
 
 		// Sum the light contribution from each light source.  
 		[unroll]
@@ -384,7 +422,12 @@ float4 PS(DomainOut pin,
 			diffuse += shadow[i]*D;
 			spec    += shadow[i]*S;
 		}
-
+		float4 Aa, Dd, Ss;
+		ComputePointLight(gMaterial, gPointLights[0], pin.PosW, normalW, toEye,
+				   Aa, Dd, Ss);
+			ambient += shadowcubeave*Aa;
+			diffuse += shadowcubeave*Dd;
+			spec    += shadowcubeave*Ss;
 		litColor = texColor*(ambient + diffuse) + spec;
 	}
  

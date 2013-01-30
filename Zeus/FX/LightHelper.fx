@@ -142,6 +142,12 @@ void ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, fl
 	// Attenuate
 	float att = 1.0f / dot(L.Att, float3(1.0f, d, d*d));
 
+	
+//	ambient *= 
+//	float softie = .8;
+
+
+
 	diffuse *= att;
 	spec    *= att;
 }
@@ -256,6 +262,37 @@ float CalcShadowFactor(SamplerComparisonState samShadow,
 	{
 		percentLit += shadowMap.SampleCmpLevelZero(samShadow, 
 			shadowPosH.xy + offsets[i], depth).r;
+	}
+
+	return percentLit /= 9.0f;
+}
+
+float CalcShadowFactorCube(SamplerComparisonState samShadow, 
+                       TextureCube shadowMap, 
+					   float4 shadowPosH)
+{
+	// Complete projection by doing division by w.
+	shadowPosH.xyz /= shadowPosH.w;
+	
+	// Depth in NDC space.
+	float depth = shadowPosH.z;
+
+	// Texel size.
+	const float dx = SMAP_DX;
+
+	float percentLit = 0.0f;
+	const float3 offsets[9] = 
+	{
+		float3(-dx,  -dx, 0.0f), float3(0.0f,  -dx, 0.0f), float3(dx,  -dx, 0.0f),
+		float3(-dx, 0.0f, 0.0f), float3(0.0f, 0.0f, 0.0f), float3(dx, 0.0f, 0.0f),
+		float3(-dx,  +dx, 0.0f), float3(0.0f,  +dx, 0.0f), float3(dx,  +dx, 0.0f)
+	};
+
+	[unroll]
+	for(int i = 0; i < 9; ++i)
+	{
+		percentLit += shadowMap.SampleCmpLevelZero(samShadow, 
+			shadowPosH.xyz + offsets[i], depth).r;
 	}
 
 	return percentLit /= 9.0f;

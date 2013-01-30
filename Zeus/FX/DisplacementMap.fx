@@ -14,6 +14,7 @@
 cbuffer cbPerFrame
 {
 	DirectionalLight gDirLights[3];
+	PointLight		gPointLights[1];
 	float3 gEyePosW;
 
 	float  gFogStart;
@@ -258,7 +259,7 @@ float4 PS(DomainOut pin,
 	//
 	// Lighting.
 	//
-
+	
 	float4 litColor = texColor;
 	if( gLightCount > 0  )
 	{  
@@ -284,6 +285,13 @@ float4 PS(DomainOut pin,
 			diffuse += shadow[i]*D;
 			spec    += shadow[i]*S;
 		}
+			float4 Aa, Dd, Ss;
+			ComputePointLight(gMaterial, gPointLights[0], pin.PosW, bumpedNormalW, toEye,
+					Aa, Dd, Ss);
+
+			ambient += Aa;
+			diffuse += Dd;
+			spec    += Ss;
 
 		litColor = texColor*(ambient + diffuse) + spec;
 
