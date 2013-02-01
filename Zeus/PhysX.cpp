@@ -79,7 +79,7 @@ void PhysX::Init()
 
 	pxScene = pxPhysics->createScene(sceneDesc);
 
-	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.1f);    //static friction, dynamic friction, restitution
+	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.5f);    //static friction, dynamic friction, restitution
 	if(!pxMaterial)
 		return;
 
@@ -93,6 +93,7 @@ void PhysX::Init()
 
 float mAccumulator = 0.0f;
 float mStepSize = 1.0f / 60.0f;
+float mCooldown = 0.0f;
 
 void PhysX::advance(float dt)
 {
@@ -102,55 +103,96 @@ void PhysX::advance(float dt)
 
     mAccumulator -= mStepSize;
 
+	if(mCooldown > 0.0f)
+		mCooldown -= mStepSize;
+
     pxScene->simulate(mStepSize);
 	pxScene->fetchResults(true);
 }
 
-
-PxShape* aSphereShape;
-PxRigidActor *box;
 void PhysX::CreateSphere(float x, float y, float z)
 {
-	PxReal density = 1.0f;
-	PxTransform transform(PxVec3(x, y, z), PxQuat::createIdentity());
-	PxVec3 dimensions(1.5,1.5,1.5);
-	PxBoxGeometry geometry(dimensions);
-    
-	PxRigidDynamic *boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *pxMaterial, density);
-		boxActor->setAngularDamping(0.75);
-		boxActor->setLinearVelocity(PxVec3(1.,0,1.)); 
-	 if (!boxActor)
+	return;
+}
+
+
+//PxShape* aSphereShape;
+//PxRigidDynamic *boxActor;
+PxRigidActor *boxes[MAX_BOXES];
+int numbox = 0;
+void PhysX::CreateBox(float x, float y, float z)
+{
+	if(numbox > MAX_BOXES)
+		return;
+
+	if(mCooldown > 0.0f)
 		return;
 	
+	PxReal density = 1.0f;
+	PxTransform transform(PxVec3(x, y, z), PxQuat::createIdentity());
+	PxVec3 dimensions(.5,.5,.5);
+	PxBoxGeometry geometry(dimensions);
+	PxRigidDynamic* boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *pxMaterial, density);
+	if (!boxActor)
+		return;
+
+	boxActor->setAngularDamping(0.75);
+	boxActor->setLinearVelocity(PxVec3(0,0,0));
+	PxRigidBodyExt::updateMassAndInertia(*boxActor, density);
 	pxScene->addActor(*boxActor);
-	box = boxActor;
+	boxes[numbox] = boxActor;
+
+	mCooldown = 0.01f;
+	numbox++;
+}
+
+PxTransform PhysX::GetBoxWorld(int boxnum)
+{
+	PxU32 nShapes = 0;
+	if(boxes[boxnum])
+		nShapes = boxes[boxnum]->getNbShapes();
+	else	
+		return PxTransform(PxVec3(0, 0, 0));
+
+	if(numbox-1 < boxnum)
+		return PxTransform(PxVec3(0, 0, 0));
+
+	PxShape** shapes = new PxShape*[nShapes];
+ 
+	boxes[boxnum]->getShapes(shapes, nShapes);     
+	PxTransform pt = PxShapeExt::getGlobalPose(*shapes[0]);
+
+	delete [] shapes;
+	
+	return pt;
 }
 
 PxTransform PhysX::GetSphereWorld()
 {
-	PxU32 nShapes = 0;
-	if(box)
-		nShapes = box->getNbShapes();
-	else	
-		return PxTransform(PxVec3(0, 0, 0));
+	//PxU32 nShapes = 0;
+	//if(boxes[boxnum])
+	//	nShapes = boxes[boxnum]->getNbShapes();
+	//else	
+	//	return PxTransform(PxVec3(0, 0, 0),PxQuat(0,0,0,1));
 
 
-	if(nShapes > 0)
-	{
-		PxShape** shapes = new PxShape*[nShapes];
- 
-		box->getShapes(shapes, nShapes);     
-		
-		PxTransform pt = PxShapeExt::getGlobalPose(shapes[0][0]);
+	//if(nShapes > 0)
+	//{
+	//	PxShape** shapes = new PxShape*[nShapes];
+ //
+	//	box->getShapes(shapes, nShapes);     
+	//	
+	//	PxTransform pt = PxShapeExt::getGlobalPose(shapes[0][0]);
 
-		delete [] shapes;
-	
-		return pt;
-	}
+	//	delete [] shapes;
+	//
+	//	return pt;
+	//}
 	
 }
 
+
 void PhysX::Draw(PxTransform &transform)
 {
-	transform = PxShapeExt::getGlobalPose(*aSphereShape);
+	//transform = PxShapeExt::getGlobalPose(*aSphereShape);
 }
