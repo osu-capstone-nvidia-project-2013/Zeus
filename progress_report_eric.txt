@@ -41,6 +41,7 @@ Issues:
 
 
 
+
 --- 1/10/12 ---
 Progress: 
   Shadow mapping, environment mapping, tons o' stuff.
@@ -51,6 +52,7 @@ Todo:
 
 Issues: 
   Alt-Enter causes a screen refresh error, probably an easy fix. 
+
 
 
 
@@ -68,6 +70,7 @@ Blockers:
 
 
 
+
 --- 11/29/12 ---
 Progress: 
   Finished normal mapping. 
@@ -79,6 +82,7 @@ Todo:
 
 Blockers: 
   Normal mapping was difficult, but Patrick helped us through it.
+
 
 
 
@@ -95,6 +99,7 @@ Blockers:
 
 
 
+
 --- 11/08/12 ---
 Progress: 
   Milestone 1 completed. 
@@ -108,6 +113,7 @@ Todo:
 
 Blockers: 
   None.
+
 
 
 
