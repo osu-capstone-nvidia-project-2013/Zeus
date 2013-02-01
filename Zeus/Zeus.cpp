@@ -85,6 +85,8 @@ private:
     void LoadObjectBuffers();
     void BuildInstancedBuffer();
 
+	void PxtoXMMatrix(PxTransform input, XMMATRIX* start);
+
 private:
 
     Sky* mSky;
@@ -208,9 +210,9 @@ private:
 
     POINT mLastMousePos;
 
-    FontSheet mFont;
-    FontSheet mFontc;
-    SpriteBatch mSpriteBatch;
+    //FontSheet mFont;
+    //FontSheet mFontc;
+    //SpriteBatch mSpriteBatch;
 };
 
 
@@ -479,10 +481,10 @@ bool ZeusApp::Init()
     HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
         L"Textures/bricks_nmap.dds", 0, 0, &mBrickNormalTexSRV, 0 ));
 
-    HR(mFont.Initialize(md3dDevice, L"Perpetua", 36.0f, FontSheet::FontStyleRegular, true));
-    HR(mFontc.Initialize(md3dDevice, L"Perpetua", 48.0f, FontSheet::FontStyleRegular, true));
+    //HR(mFont.Initialize(md3dDevice, L"Perpetua", 36.0f, FontSheet::FontStyleRegular, true));
+    //HR(mFontc.Initialize(md3dDevice, L"Perpetua", 48.0f, FontSheet::FontStyleRegular, true));
 
-    HR(mSpriteBatch.Initialize(md3dDevice));
+    //HR(mSpriteBatch.Initialize(md3dDevice));
 
     mRandomTexSRV = d3dHelper::CreateRandomTexture1DSRV(md3dDevice);
 
@@ -651,10 +653,14 @@ void ZeusApp::UpdateScene(float dt)
     if( GetAsyncKeyState('4') & 0x8000 )
         mRenderOptions = RenderOptionsDisplacementMap; 
 
+	if( GetAsyncKeyState('B') & 0x8000 )
+		mPhysX->CreateSphere(0.,5.,0.);
     
     /////////////////////////////////////
     //    Animated objects in scene    //
     /////////////////////////////////////
+	mPhysX->advance(dt);
+
 
     // Skull 
     XMMATRIX SkullScale = XMMatrixScaling(2.6f, 2.6f, 2.6f);
@@ -912,11 +918,11 @@ void ZeusApp::DrawScene()
             WCHAR character = text[i];
             if(character == ' ') 
             {
-                textWidth += mFont.GetSpaceWidth();
+                //textWidth += mFont.GetSpaceWidth();
             }
             else{
-                const CD3D11_RECT& r = mFont.GetCharRect(text[i]);
-                textWidth += (r.right - r.left + 1);
+                //const CD3D11_RECT& r = mFont.GetCharRect(text[i]);
+                //textWidth += (r.right - r.left + 1);
             }
         }
         
@@ -927,11 +933,11 @@ void ZeusApp::DrawScene()
             WCHAR character = hair[i];
             if(character == ' ') 
             {
-                hairWidth += mFontc.GetSpaceWidth();
+                //hairWidth += mFontc.GetSpaceWidth();
             }
             else{
-                const CD3D11_RECT& r = mFontc.GetCharRect(hair[i]);
-                hairWidth += (r.right - r.left + 1);
+                ///const CD3D11_RECT& r = mFontc.GetCharRect(hair[i]);
+               // hairWidth += (r.right - r.left + 1);
             }
         }
 
@@ -942,11 +948,11 @@ void ZeusApp::DrawScene()
             WCHAR character = pos[i];
             if(character == ' ') 
             {
-                hairWidth += mFont.GetSpaceWidth();
+                //hairWidth += mFont.GetSpaceWidth();
             }
             else{
-                const CD3D11_RECT& r = mFont.GetCharRect(pos[i]);
-                posWidth += (r.right - r.left + 1);
+                //const CD3D11_RECT& r = mFont.GetCharRect(pos[i]);
+               // posWidth += (r.right - r.left + 1);
             }
         }
 
@@ -958,16 +964,16 @@ void ZeusApp::DrawScene()
         // Center the text in the screen.
         POINT hairPos;
         hairPos.x = (mClientWidth - hairWidth) / 2;
-        hairPos.y = (mClientHeight - mFont.GetCharHeight()) / 2 ;
+        //hairPos.y = (mClientHeight - mFont.GetCharHeight()) / 2 ;
 
         // Put the position in the top left of the screen
         POINT posPos;
         posPos.x = 2.0;
         posPos.y = 1.0;
 
-        mSpriteBatch.DrawString(md3dImmediateContext, mFont, text, textPos, XMCOLOR(0xffffffff));
-        mSpriteBatch.DrawString(md3dImmediateContext, mFontc, hair, hairPos, XMCOLOR(0xff2C2CEE));
-        mSpriteBatch.DrawString(md3dImmediateContext, mFont, pos, posPos, XMCOLOR(0xffffffff));
+        //mSpriteBatch.DrawString(md3dImmediateContext, mFont, text, textPos, XMCOLOR(0xffffffff));
+       // mSpriteBatch.DrawString(md3dImmediateContext, mFontc, hair, hairPos, XMCOLOR(0xff2C2CEE));
+        //mSpriteBatch.DrawString(md3dImmediateContext, mFont, pos, posPos, XMCOLOR(0xffffffff));
 		// End of text draw	
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1196,7 +1202,10 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
         md3dImmediateContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
 
         // Draw the box.
-        world = XMLoadFloat4x4(&mBoxWorld);
+		PxTransform pt = mPhysX->GetSphereWorld();
+		world = XMLoadFloat4x4(&mBoxWorld);
+		PxtoXMMatrix(pt, &world);
+
         worldInvTranspose = MathHelper::InverseTranspose(world);
         worldViewProj = world*view*proj;
 
@@ -2378,4 +2387,14 @@ void ZeusApp::BuildInstancedBuffer()
     vbd.StructureByteStride = 0;
     
     HR(md3dDevice->CreateBuffer(&vbd, 0, &mInstancedBuffer));
+}
+
+
+void ZeusApp::PxtoXMMatrix(PxTransform input, XMMATRIX* start)
+{
+	
+	start->_41 = input.p.x;
+	start->_42 = input.p.y;
+	start->_43 = input.p.z;
+	
 }

@@ -23,8 +23,12 @@ public:
     PhysX();
     ~PhysX();
     void Init();
+	void advance(float dt);
+	void CreateSphere(float x, float y, float z);
+	PxTransform GetSphereWorld();
+	void Draw(PxTransform &transform);
 
-private:
+public:
     PxFoundation*           mFoundation;
     PxPhysics*              mPhysics;
 	PxScene*				mScene;
@@ -34,6 +38,8 @@ private:
 	//pxtask::CudaContextManager*				mCudaContextManager;
 
 	PxU32									mNbThreads;
+
+	
 
 	
 
