@@ -1,3 +1,17 @@
+--- 2/1/12 ---
+Progress: 
+  PhysX hooked in! 
+
+Todo: 
+  Fix game timing.
+
+Issues: 
+  Still having the flipped mapping in the reflection of the sphere.
+  Omni-directional light shadow mapping still not working properly. 
+
+
+
+
 --- 1/24/12 ---
 Progress: 
   Omni-directional light.
