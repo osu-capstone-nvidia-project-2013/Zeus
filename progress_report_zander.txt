@@ -1,3 +1,9 @@
+Date: 1/31/2013
+Progress: Omni-direction shadow map mostly works. Starting physx initialization.
+Todo: Initialize physx. Fix omni shadow map problem
+Blockers: Can't get physx to initialize. 
+
+//////////////////////
 Date: 1/24/2013
 Progress: we have a point light. Working on initializing Physx.
 Todo: Point light shadow maps, create Physx scene object. Planning demo.
