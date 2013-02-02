@@ -31,11 +31,26 @@ cbuffer cbPerObject
 	float4x4 gShadowTransform;
 	float4x4 gShadowTransform2; 
 	Material gMaterial;
+
+	float4x4 gShadowTransCube0;
+	float4x4 gShadowTransCube1;
+	float4x4 gShadowTransCube2;
+	float4x4 gShadowTransCube3;
+	float4x4 gShadowTransCube4;
+	float4x4 gShadowTransCube5;
 }; 
 
 // Nonnumeric values cannot be added to a cbuffer.
 Texture2D gShadowMap;
 Texture2D gShadowMap2;
+
+Texture2D gOmniShadowMap0;
+Texture2D gOmniShadowMap1;
+Texture2D gOmniShadowMap2;
+Texture2D gOmniShadowMap3;
+Texture2D gOmniShadowMap4;
+Texture2D gOmniShadowMap5;
+
 Texture2D gDiffuseMap;
 Texture2D gNormalMap;
 
@@ -76,6 +91,12 @@ struct VertexOut
 	float2 Tex        : TEXCOORD0;
 	float4 ShadowPosH : TEXCOORD1;
 	float4 ShadowPosH2 : TEXCOORD2;
+	float4 ShadowPosCube0 : TEXCOORD3;
+	float4 ShadowPosCube1 : TEXCOORD4;
+	float4 ShadowPosCube2 : TEXCOORD5;
+	float4 ShadowPosCube3 : TEXCOORD6;
+	float4 ShadowPosCube4 : TEXCOORD7;
+	float4 ShadowPosCube5 : TEXCOORD8;
 };
 
 VertexOut VS(VertexIn vin)
@@ -96,6 +117,14 @@ VertexOut VS(VertexIn vin)
 	// Generate projective tex-coords to project shadow map onto scene.
 	vout.ShadowPosH = mul(float4(vin.PosL, 1.0f), gShadowTransform);
 	vout.ShadowPosH2 = mul(float4(vin.PosL, 1.0f), gShadowTransform2);
+	
+	// Generate projective tex-coords to project shadow map cube onto scene.
+	vout.ShadowPosCube0 = mul(float4(vin.PosL, 1.0f), gShadowTransCube0);
+	vout.ShadowPosCube1 = mul(float4(vin.PosL, 1.0f), gShadowTransCube1);
+	vout.ShadowPosCube2 = mul(float4(vin.PosL, 1.0f), gShadowTransCube2);
+	vout.ShadowPosCube3 = mul(float4(vin.PosL, 1.0f), gShadowTransCube3);
+	vout.ShadowPosCube4 = mul(float4(vin.PosL, 1.0f), gShadowTransCube4);
+	vout.ShadowPosCube5 = mul(float4(vin.PosL, 1.0f), gShadowTransCube5);
 
 	return vout;
 }
@@ -159,6 +188,16 @@ float4 PS(VertexOut pin,
 		shadow[0] = CalcShadowFactor(samShadow, gShadowMap, pin.ShadowPosH);
 		shadow[1] = CalcShadowFactor(samShadow, gShadowMap2, pin.ShadowPosH2);
 		
+		float3 shadowcube1 = float3(1.0f, 1.0f, 1.0f);
+		shadowcube1[0] = CalcShadowFactor(samShadow, gOmniShadowMap0, pin.ShadowPosCube0);
+		shadowcube1[1] = CalcShadowFactor(samShadow, gOmniShadowMap1, pin.ShadowPosCube1);
+		shadowcube1[2] = CalcShadowFactor(samShadow, gOmniShadowMap2, pin.ShadowPosCube2);
+		float3 shadowcube2 = float3(1.0f, 1.0f, 1.0f);
+		shadowcube2[0] = CalcShadowFactor(samShadow, gOmniShadowMap3, pin.ShadowPosCube3);
+		shadowcube2[1] = CalcShadowFactor(samShadow, gOmniShadowMap4, pin.ShadowPosCube4);
+		shadowcube2[2] = CalcShadowFactor(samShadow, gOmniShadowMap5, pin.ShadowPosCube5);
+        float shadowcubeave = ( shadowcube1[0] + shadowcube1[1] + shadowcube1[2] + shadowcube2[0] + shadowcube2[1] + shadowcube2[2] ) / 6.;
+		
 		// Sum the light contribution from each light source.  
 		[unroll] 
 		for(int i = 0; i < gLightCount; ++i)
@@ -176,9 +215,9 @@ float4 PS(VertexOut pin,
 		ComputePointLight(gMaterial, gPointLights[0], pin.PosW, bumpedNormalW, toEye,
 				Aa, Dd, Ss);
 
-		ambient += Aa;
-		diffuse += Dd;
-		spec    += Ss;	
+		ambient += shadowcubeave*Aa;
+		diffuse += shadowcubeave*Dd;
+		spec    += shadowcubeave*Ss;
 
 		litColor = texColor*(ambient + diffuse) + spec;		  
 		if( gReflectionEnabled )

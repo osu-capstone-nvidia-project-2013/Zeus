@@ -120,7 +120,7 @@ void PhysX::CreateSphere(float x, float y, float z)
 //PxRigidDynamic *boxActor;
 PxRigidActor *boxes[MAX_BOXES];
 int numbox = 0;
-void PhysX::CreateBox(float x, float y, float z)
+void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float lookz)
 {
 	if(numbox > MAX_BOXES)
 		return;
@@ -129,15 +129,21 @@ void PhysX::CreateBox(float x, float y, float z)
 		return;
 	
 	PxReal density = 1.0f;
-	PxTransform transform(PxVec3(x, y, z), PxQuat::createIdentity());
+	PxVec3 look = PxVec3(lookx,looky,lookz);
+	look.normalize();
+	PxTransform transform(PxVec3(x, y, z) + (look * 2.), PxQuat::createIdentity());
 	PxVec3 dimensions(.5,.5,.5);
 	PxBoxGeometry geometry(dimensions);
 	PxRigidDynamic* boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *pxMaterial, density);
 	if (!boxActor)
 		return;
-
+	
+	float firespeed = 5.0;
+	float vx = look.x * firespeed;
+	float vy = look.y * firespeed;
+	float vz = look.z * firespeed;
 	boxActor->setAngularDamping(0.75);
-	boxActor->setLinearVelocity(PxVec3(0,0,0));
+	boxActor->setLinearVelocity(PxVec3(vx,vy,vz));
 	PxRigidBodyExt::updateMassAndInertia(*boxActor, density);
 	pxScene->addActor(*boxActor);
 	boxes[numbox] = boxActor;
@@ -152,10 +158,10 @@ PxTransform PhysX::GetBoxWorld(int boxnum)
 	if(boxes[boxnum])
 		nShapes = boxes[boxnum]->getNbShapes();
 	else	
-		return PxTransform(PxVec3(0, 0, 0));
+		return PxTransform(PxVec3(0, -100., 0));
 
 	if(numbox-1 < boxnum)
-		return PxTransform(PxVec3(0, 0, 0));
+		return PxTransform(PxVec3(0, -100., 0));
 
 	PxShape** shapes = new PxShape*[nShapes];
  

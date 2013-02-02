@@ -27,7 +27,7 @@ public:
     void Init();
 	void advance(float dt);
 	void CreateSphere(float x, float y, float z);
-	void CreateBox(float x, float y, float z);
+	void CreateBox(float x, float y, float z, float vx, float vy, float vz);
 	PxTransform GetSphereWorld();
 	PxTransform GetBoxWorld(int boxnum);
 	void Draw(PxTransform &transform);

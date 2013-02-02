@@ -142,14 +142,19 @@ void ComputePointLight(Material mat, PointLight L, float3 pos, float3 normal, fl
 	// Attenuate
 	float att = 1.0f / dot(L.Att, float3(1.0f, d, d*d));
 
+	diffuse *= att*(d / L.Range );
+	spec    *= att*(d / L.Range );
 	
-//	ambient *= 
-//	float softie = .8;
+	float softie = .75;
+	
+	if( d < softie*L.Range )
+		ambient  *= 1/((d/L.Range+1)*(d/L.Range+1));
+	if( d > softie*L.Range )
+	{
+		ambient *= 1/((softie*L.Range/L.Range+1)*(softie*L.Range/L.Range+1));
+		ambient *= (L.Range-d)/(L.Range-softie*L.Range);
+	}
 
-
-
-	diffuse *= att;
-	spec    *= att;
 }
 
 //---------------------------------------------------------------------------------------
