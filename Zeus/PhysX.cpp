@@ -83,7 +83,7 @@ void PhysX::Init()
 	if(!pxMaterial)
 		return;
 
-	PxRigidStatic* plane = PxCreatePlane(*pxPhysics, PxPlane(PxVec3(0,1,0), 0), *pxMaterial);
+	PxRigidStatic* plane = PxCreatePlane(*pxPhysics, PxPlane(PxVec3(0,1,0), -1.0f), *pxMaterial);
 	if (!plane)
 		return;
 	
@@ -118,7 +118,7 @@ void PhysX::CreateSphere(float x, float y, float z)
     
 	PxRigidDynamic *boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *pxMaterial, density);
 		boxActor->setAngularDamping(0.75);
-		boxActor->setLinearVelocity(PxVec3(1.,0,1.)); 
+		boxActor->setLinearVelocity(PxVec3(0.1,0.1,0.1)); 
 	 if (!boxActor)
 		return;
 	
