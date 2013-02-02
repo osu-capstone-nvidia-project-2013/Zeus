@@ -112,6 +112,20 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	CubeMap           = mFX->GetVariableByName("gCubeMap")->AsShaderResource();
 	ShadowMap         = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
 	ShadowMap2        = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
+
+	OmniShadowMap0	   = mFX->GetVariableByName("gOmniShadowMap0")->AsShaderResource();
+    OmniShadowMap1	   = mFX->GetVariableByName("gOmniShadowMap1")->AsShaderResource();
+    OmniShadowMap2	   = mFX->GetVariableByName("gOmniShadowMap2")->AsShaderResource();
+    OmniShadowMap3	   = mFX->GetVariableByName("gOmniShadowMap3")->AsShaderResource();
+    OmniShadowMap4	   = mFX->GetVariableByName("gOmniShadowMap4")->AsShaderResource();
+    OmniShadowMap5	   = mFX->GetVariableByName("gOmniShadowMap5")->AsShaderResource();
+
+	ShadowTransCube0   = mFX->GetVariableByName("gShadowTransCube0")->AsMatrix();
+	ShadowTransCube1   = mFX->GetVariableByName("gShadowTransCube1")->AsMatrix();
+	ShadowTransCube2   = mFX->GetVariableByName("gShadowTransCube2")->AsMatrix();
+	ShadowTransCube3   = mFX->GetVariableByName("gShadowTransCube3")->AsMatrix();
+	ShadowTransCube4   = mFX->GetVariableByName("gShadowTransCube4")->AsMatrix();
+	ShadowTransCube5   = mFX->GetVariableByName("gShadowTransCube5")->AsMatrix();
 }
 
 BasicEffect::~BasicEffect()
@@ -197,6 +211,20 @@ NormalMapEffect::NormalMapEffect(ID3D11Device* device, const std::wstring& filen
 	NormalMap         = mFX->GetVariableByName("gNormalMap")->AsShaderResource();
 	ShadowMap         = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
 	ShadowMap2        = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
+
+	OmniShadowMap0	   = mFX->GetVariableByName("gOmniShadowMap0")->AsShaderResource();
+    OmniShadowMap1	   = mFX->GetVariableByName("gOmniShadowMap1")->AsShaderResource();
+    OmniShadowMap2	   = mFX->GetVariableByName("gOmniShadowMap2")->AsShaderResource();
+    OmniShadowMap3	   = mFX->GetVariableByName("gOmniShadowMap3")->AsShaderResource();
+    OmniShadowMap4	   = mFX->GetVariableByName("gOmniShadowMap4")->AsShaderResource();
+    OmniShadowMap5	   = mFX->GetVariableByName("gOmniShadowMap5")->AsShaderResource();
+
+	ShadowTransCube0   = mFX->GetVariableByName("gShadowTransCube0")->AsMatrix();
+	ShadowTransCube1   = mFX->GetVariableByName("gShadowTransCube1")->AsMatrix();
+	ShadowTransCube2   = mFX->GetVariableByName("gShadowTransCube2")->AsMatrix();
+	ShadowTransCube3   = mFX->GetVariableByName("gShadowTransCube3")->AsMatrix();
+	ShadowTransCube4   = mFX->GetVariableByName("gShadowTransCube4")->AsMatrix();
+	ShadowTransCube5   = mFX->GetVariableByName("gShadowTransCube5")->AsMatrix();
 }
 
 NormalMapEffect::~NormalMapEffect()
@@ -288,6 +316,20 @@ DisplacementMapEffect::DisplacementMapEffect(ID3D11Device* device, const std::ws
 	NormalMap         = mFX->GetVariableByName("gNormalMap")->AsShaderResource();
 	ShadowMap         = mFX->GetVariableByName("gShadowMap")->AsShaderResource();
 	ShadowMap2        = mFX->GetVariableByName("gShadowMap2")->AsShaderResource();
+
+	OmniShadowMap0	   = mFX->GetVariableByName("gOmniShadowMap0")->AsShaderResource();
+    OmniShadowMap1	   = mFX->GetVariableByName("gOmniShadowMap1")->AsShaderResource();
+    OmniShadowMap2	   = mFX->GetVariableByName("gOmniShadowMap2")->AsShaderResource();
+    OmniShadowMap3	   = mFX->GetVariableByName("gOmniShadowMap3")->AsShaderResource();
+    OmniShadowMap4	   = mFX->GetVariableByName("gOmniShadowMap4")->AsShaderResource();
+    OmniShadowMap5	   = mFX->GetVariableByName("gOmniShadowMap5")->AsShaderResource();
+
+	ShadowTransCube0   = mFX->GetVariableByName("gShadowTransCube0")->AsMatrix();
+	ShadowTransCube1   = mFX->GetVariableByName("gShadowTransCube1")->AsMatrix();
+	ShadowTransCube2   = mFX->GetVariableByName("gShadowTransCube2")->AsMatrix();
+	ShadowTransCube3   = mFX->GetVariableByName("gShadowTransCube3")->AsMatrix();
+	ShadowTransCube4   = mFX->GetVariableByName("gShadowTransCube4")->AsMatrix();
+	ShadowTransCube5   = mFX->GetVariableByName("gShadowTransCube5")->AsMatrix();
 }
 
 DisplacementMapEffect::~DisplacementMapEffect()
