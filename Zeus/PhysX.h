@@ -17,7 +17,7 @@ using namespace physx;
 #pragma comment(lib, "PhysX3Common_x86.lib") 
 #pragma comment(lib, "PhysX3Extensions.lib")
 
-#define MAX_BOXES 1000
+#define MAX_BOXES 10000
 
 class PhysX
 {
@@ -26,8 +26,10 @@ public:
     ~PhysX();
     void Init();
 	void advance(float dt);
+	void fetchupdates();
 	void CreateSphere(float x, float y, float z);
 	void CreateBox(float x, float y, float z, float vx, float vy, float vz);
+	int GetNumBoxes();
 	PxTransform GetSphereWorld();
 	PxTransform GetBoxWorld(int boxnum);
 	void Draw(PxTransform &transform);

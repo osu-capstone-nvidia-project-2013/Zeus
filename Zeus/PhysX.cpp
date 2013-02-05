@@ -79,7 +79,7 @@ void PhysX::Init()
 
 	pxScene = pxPhysics->createScene(sceneDesc);
 
-	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.5f);    //static friction, dynamic friction, restitution
+	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.1f);    //static friction, dynamic friction, restitution
 	if(!pxMaterial)
 		return;
 
@@ -122,13 +122,13 @@ PxRigidActor *boxes[MAX_BOXES];
 int numbox = 0;
 void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float lookz)
 {
-	if(numbox > MAX_BOXES)
+	if(numbox >= MAX_BOXES)
 		return;
 
 	if(mCooldown > 0.0f)
 		return;
 	
-	PxReal density = 1.0f;
+	PxReal density = 5.0f;
 	PxVec3 look = PxVec3(lookx,looky,lookz);
 	look.normalize();
 	PxTransform transform(PxVec3(x, y, z) + (look * 2.), PxQuat::createIdentity());
