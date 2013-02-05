@@ -24,6 +24,7 @@ public:
 	ID3D11ShaderResourceView* DepthMapSRV();
 
 	void BindDsvAndSetNullRenderTarget(ID3D11DeviceContext* dc);
+    void SetNullRenderTarget(ID3D11DeviceContext* dc);
 
 private:
 	ShadowMap(const ShadowMap& rhs);

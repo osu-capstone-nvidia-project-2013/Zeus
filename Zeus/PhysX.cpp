@@ -95,11 +95,11 @@ float mAccumulator = 0.0f;
 float mStepSize = 1.0f / 60.0f;
 float mCooldown = 0.0f;
 
-void PhysX::advance(float dt)
+bool PhysX::advance(float dt)
 {
 	mAccumulator  += dt;
     if(mAccumulator < mStepSize)
-        return;
+        return false;
 
     mAccumulator -= mStepSize;
 
@@ -107,7 +107,12 @@ void PhysX::advance(float dt)
 		mCooldown -= mStepSize;
 
     pxScene->simulate(mStepSize);
-	pxScene->fetchResults(true);
+    return true;
+}
+
+void PhysX::fetch()
+{
+    pxScene->fetchResults(true);
 }
 
 void PhysX::CreateSphere(float x, float y, float z)
@@ -120,9 +125,9 @@ void PhysX::CreateSphere(float x, float y, float z)
 //PxRigidDynamic *boxActor;
 PxRigidActor *boxes[MAX_BOXES];
 int numbox = 0;
-void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float lookz)
+void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float lookz, float firespeed)
 {
-	if(numbox > MAX_BOXES)
+	if(numbox >= MAX_BOXES)
 		return;
 
 	if(mCooldown > 0.0f)
@@ -131,14 +136,13 @@ void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float
 	PxReal density = 1.0f;
 	PxVec3 look = PxVec3(lookx,looky,lookz);
 	look.normalize();
-	PxTransform transform(PxVec3(x, y, z) + (look * 2.), PxQuat::createIdentity());
+	PxTransform transform(PxVec3(x, y, z) + (look * 4.), PxQuat::createIdentity());
 	PxVec3 dimensions(.5,.5,.5);
 	PxBoxGeometry geometry(dimensions);
 	PxRigidDynamic* boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *pxMaterial, density);
 	if (!boxActor)
 		return;
-	
-	float firespeed = 5.0;
+
 	float vx = look.x * firespeed;
 	float vy = look.y * firespeed;
 	float vz = look.z * firespeed;
@@ -148,9 +152,14 @@ void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float
 	pxScene->addActor(*boxActor);
 	boxes[numbox] = boxActor;
 
-	mCooldown = 0.01f;
+	mCooldown = 0.02f;
 	numbox++;
 }
+
+int PhysX::GetNumBoxes()
+{
+    return numbox;
+} 
 
 PxTransform PhysX::GetBoxWorld(int boxnum)
 {

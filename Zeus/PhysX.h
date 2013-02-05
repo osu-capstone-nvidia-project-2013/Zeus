@@ -25,11 +25,13 @@ public:
     PhysX();
     ~PhysX();
     void Init();
-	void advance(float dt);
+	bool advance(float dt);
+    void fetch();
 	void CreateSphere(float x, float y, float z);
-	void CreateBox(float x, float y, float z, float vx, float vy, float vz);
+	void CreateBox(float x, float y, float z, float vx, float vy, float vz, float speed);
 	PxTransform GetSphereWorld();
 	PxTransform GetBoxWorld(int boxnum);
+    int GetNumBoxes();
 	void Draw(PxTransform &transform);
 
 public:

@@ -136,7 +136,7 @@ private:
     XNA::AxisAlignedBox mSkullBox;
     XNA::Frustum mCamFrustum;
 
-    static const int SMapSize = 1024;
+    static const int SMapSize = 2048;
     ShadowMap* mSmap;
     ShadowMap* mSmap2;
     XMFLOAT4X4 mLightView;
@@ -164,6 +164,8 @@ private:
     XMFLOAT3 mOriginalLightDir[3];
     DirectionalLight mDirLights[3];
 	PointLight mPointLights[1];
+    DirectionalLight mNoLight[3];
+    PointLight mNoPointLight[1];
     Material mGridMat;
     Material mBoxMat;
     Material mCylinderMat;
@@ -207,13 +209,24 @@ private:
     Camera mCubeMapCamera[6];
     XMFLOAT3 camPosition;
 
+    /************ Toggles ***************/
     bool mWalkCamMode;
+    bool directionalLight;      // Turns on or off directional lights
+    bool pointLight;            // Turns on or off point lights
+    bool pointLightMove;        // Turns on or off point light movement
+    bool shootBox;              // Switches between firing boxes and creating at origin.
+    bool showHelp;              // Toggles display of help screen
+    /************************************/
 
     POINT mLastMousePos;
 
     FontSheet mFont;
     FontSheet mFontc;
     SpriteBatch mSpriteBatch;
+
+    float accumulator;
+    float stepsize;
+    bool  toggleable;
 };
 
 
@@ -247,6 +260,10 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mSkullPos = 0;
     mLastMousePos.x = 0;
     mLastMousePos.y = 0;
+
+    float accumulator = 0.0f;
+    float stepsize = 100000.0f;
+    bool  toggleable = true;
 
     extern float fps;
     mCam.SetPosition(0.0f, 0.5f, -14.0f);
@@ -359,6 +376,17 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mDirLights[2].Diffuse  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[2].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[2].Direction = XMFLOAT3(0.0f, 0.0, -1.0f);
+
+    for(int i = 0; i < 3; i++)
+    {
+        mNoLight[i].Ambient = XMFLOAT4(0.06666666667f, 0.06666666667f, 0.06666666667f, 1.0f);
+        mNoLight[i].Diffuse  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+        mNoLight[i].Specular = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    mNoPointLight[0].Ambient = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	mNoPointLight[0].Diffuse = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	mNoPointLight[0].Specular = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 
     mOriginalLightDir[0] = mDirLights[0].Direction;
     mOriginalLightDir[1] = mDirLights[1].Direction;
@@ -508,6 +536,11 @@ bool ZeusApp::Init()
 
     mRain.Init(md3dDevice, Effects::RainFX, mRainTexSRV, mRandomTexSRV, 10000);*/
 
+    directionalLight = true;
+    pointLight = true;
+    pointLightMove = false;
+    shootBox = true;
+    showHelp = false;
 
     BuildDynamicCubeMapViewsSphere();
     BuildDynamicCubeMapViewsSkull();
@@ -535,6 +568,11 @@ void ZeusApp::OnResize()
 
 void ZeusApp::UpdateScene(float dt)
 {
+    // Tell physx to get to work
+    bool fetch = mPhysX->advance(dt);
+
+    float shootspeed = 10.0;
+
     //////////////////////////////////
     //    XINPUT Camera Controls    //
     //////////////////////////////////
@@ -573,7 +611,7 @@ void ZeusApp::UpdateScene(float dt)
         float rightThumbY = state.Gamepad.sThumbRY;
         float rightThumbX = state.Gamepad.sThumbRX;
 
-        // Aiming
+        // Aiming with left trigger
         if(state.Gamepad.bLeftTrigger && state.Gamepad.bRightTrigger < 256){ // 256 disables the right trigger
             
             //TODO: 
@@ -593,6 +631,22 @@ void ZeusApp::UpdateScene(float dt)
             mCam.Pitch((-rightThumbY / 12000.0f) * dt);
             mCam.RotateY((rightThumbX / 8500.0f) * dt);
         }
+
+        // Shoot block with right trigger     
+        if( state.Gamepad.bRightTrigger && state.Gamepad.bLeftTrigger < 256 )
+        {
+            shootspeed = (state.Gamepad.bRightTrigger / 255) * 40.0f;
+            if(shootBox)
+            {
+                mPhysX->CreateBox( mCam.GetPosition().x, mCam.GetPosition().y, mCam.GetPosition().z,
+					    	       mCam.GetLook().x, mCam.GetLook().y, mCam.GetLook().z, shootspeed);
+            }
+            else
+            {
+                mPhysX->CreateBox( 0., 10.0f, 0., 0., 0., 0., 0.);
+            }
+        }
+
     }
     else{ // Controller is disconnected, oh balls
         float speed = 10.0f;
@@ -612,8 +666,8 @@ void ZeusApp::UpdateScene(float dt)
         if( GetAsyncKeyState('D') & 0x8000 )
             mCam.Strafe(speed*dt);
 
-        if( GetAsyncKeyState('P') & 0x8000 )
-            mCam.SetLens(0.01f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f); //setlens(zoom factor, , ,)
+        //if( GetAsyncKeyState('P') & 0x8000 )
+        //   mCam.SetLens(0.01f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f); //setlens(zoom factor, , ,)
     }
         
     // Walk/fly mode
@@ -625,6 +679,17 @@ void ZeusApp::UpdateScene(float dt)
         mFrustumCullingEnabled = true;
     if( GetAsyncKeyState('G') & 0x8000 )
         mFrustumCullingEnabled = false;
+    if( GetAsyncKeyState('H') & 0x8000 )
+    {
+        if(showHelp)
+        {
+            showHelp = false;
+        }
+        else
+        {
+            showHelp = true;
+        }
+    }
 
     // Set height, crouch, jump
     if( mWalkCamMode )
@@ -659,17 +724,102 @@ void ZeusApp::UpdateScene(float dt)
     if( GetAsyncKeyState('4') & 0x8000 )
         mRenderOptions = RenderOptionsDisplacementMap; 
 
-	if( GetAsyncKeyState('B') & 0x8000 )
-		mPhysX->CreateBox( mCam.GetPosition().x, mCam.GetPosition().y, mCam.GetPosition().z,
-						   mCam.GetLook().x, mCam.GetLook().y, mCam.GetLook().z);
+    if(!toggleable)
+    {
+        accumulator += dt / (2.0f);
+        if(accumulator >= stepsize)
+        {
+            accumulator = 0.0f;
+            toggleable = true;
+        }
+    }
+
+
+    // Turn on/off moving point light
+    if( (GetAsyncKeyState('M') & 0x8000) && toggleable )
+    {
+        toggleable = false;
+        if(pointLightMove)
+        {
+            pointLightMove = false;
+        }
+        else
+        {
+            pointLightMove = true;
+        }
+    }
+
+    // Turn on/off point light
+    if( (GetAsyncKeyState('P') & 0x8000) && toggleable )
+    {
+        toggleable = false;
+        if(pointLight)
+        {
+            pointLight = false;
+            for(int i = 0; i < 6; i++)
+                mOmniSmaps[i]->SetNullRenderTarget(md3dImmediateContext); // Clears the shadows
+        }
+        else
+        {
+            pointLight = true;
+        }
+    }
+
+    // Turn on/off directional light
+    if( (GetAsyncKeyState('I') & 0x8000) && toggleable )
+    {
+        toggleable = false;
+        if(directionalLight)
+        {
+            directionalLight = false;
+            mSmap->SetNullRenderTarget(md3dImmediateContext); // Clears the shadows for one
+            mSmap2->SetNullRenderTarget(md3dImmediateContext); // Clears the shadows for two
+        }
+        else
+        {
+            directionalLight = true;
+        }
+    }
+
+    // Turn on/off shooting blocks
+    if( (GetAsyncKeyState('N') & 0x8000) && toggleable )
+    {
+        toggleable = false;
+        if(shootBox)
+        {
+            shootBox = false;
+        }
+        else
+        {
+            shootBox = true;
+        }
+    }
+
+  // (state.Gamepad.bRightTrigger < 256) 
+
+    // Shoot block with 'B'
+    if( (GetAsyncKeyState('B') & 0x8000) )
+    {
+        if(shootBox)
+        {
+            mPhysX->CreateBox( mCam.GetPosition().x, mCam.GetPosition().y, mCam.GetPosition().z,
+					    	   mCam.GetLook().x, mCam.GetLook().y, mCam.GetLook().z, shootspeed);
+        }
+        else
+        {
+            mPhysX->CreateBox( 0., 10.0f, 0., 0., 0., 0., 0.);
+        }
+    }
 	
+
+
     /////////////////////////////////////
     //    Animated objects in scene    //
     /////////////////////////////////////
-	mPhysX->advance(dt);
+	
 
 	// Box
-	for(int i = 0; i < MAX_BOXES; i++)
+	for(int i = 0; i < mPhysX->GetNumBoxes(); i++)
 	{
 		PxTransform pt = mPhysX->GetBoxWorld(i);
 		XMMATRIX world = /*XMLoadFloat4x4(&mBoxScale) **/ XMLoadFloat4x4(&mBoxWorld[i]) ;
@@ -699,10 +849,12 @@ void ZeusApp::UpdateScene(float dt)
     XMVECTOR lightDir = XMLoadFloat3(&mOriginalLightDir[1]);
     lightDir = XMVector3TransformNormal(lightDir, SkullLocalRotate2);
     //XMStoreFloat3(&mDirLights[1].Direction, lightDir);
-
-	//lightDir = XMLoadFloat3(&XMFLOAT3(10.0f, 3.0f, 10.0f));
-	//lightDir = XMVector3TransformNormal(lightDir, XMMatrixRotationY( fmodf( mLightRotationAngle * 15, (XM_PI * 2) ) ));
-	//XMStoreFloat3(&mPointLights[0].Position, lightDir);
+    if(pointLightMove)
+    {
+	    lightDir = XMLoadFloat3(&XMFLOAT3(15.0f, 3.0f, 15.0f));
+	    lightDir = XMVector3TransformNormal(lightDir, XMMatrixRotationY( fmodf( mLightRotationAngle * 15, (XM_PI * 2) ) ));
+	    XMStoreFloat3(&mPointLights[0].Position, lightDir);
+    }
 
     //mRain.SetEmitPos(mCam.GetPosition());
 
@@ -785,22 +937,32 @@ void ZeusApp::UpdateScene(float dt)
         L"    " << mVisibleObjectCount << 
         L" objects visible out of " << mInstancedData.size();
     mMainWndCaption = outs.str();
+
+    // If things are ready to get, fetch 'em
+    if(fetch)
+        mPhysX->fetch();
 }
 
 
 void ZeusApp::DrawScene()
 {
 	// Draw directional shadow maps
-    BuildShadowTransform(0, false);
-    mSmap->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
-    DrawSceneToShadowMap();
-
-    BuildShadowTransform(1, false);
-    mSmap2->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
-    DrawSceneToShadowMap();
+    
+    if(directionalLight) {
+        BuildShadowTransform(0, false);
+        mSmap->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
+        DrawSceneToShadowMap();
+    
+        BuildShadowTransform(1, false);
+        mSmap2->BindDsvAndSetNullRenderTarget(md3dImmediateContext);
+        DrawSceneToShadowMap();
+    }
 	
 	// Draw omni directional shadow maps
-	BuildCubeFaceShadowTransforms(mPointLights[0].Position.x, mPointLights[0].Position.y, mPointLights[0].Position.z); // point light position
+    if(pointLight)
+    {
+	    BuildCubeFaceShadowTransforms(mPointLights[0].Position.x, mPointLights[0].Position.y, mPointLights[0].Position.z); // point light position
+    }
 
     md3dImmediateContext->RSSetState(0);
     ID3D11RenderTargetView* renderTargets[1];
@@ -914,6 +1076,7 @@ void ZeusApp::DrawScene()
     std::wstring text = L"FPS: " + mfps_string;
     std::wstring hair = L"+";
 
+
     // Convert the pos to a w string
     std::wstring xs,ys,zs;
         std::wstringstream posx,posy,posz;
@@ -1004,21 +1167,76 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
     XMMATRIX shadowTransform = XMLoadFloat4x4(&mShadowTransform);
     XMMATRIX shadowTransform2 = XMLoadFloat4x4(&mShadowTransform2);
 
-    // Draw Terrain
-    Effects::TerrainFX->SetShadowMap(mSmap->DepthMapSRV());
-    Effects::TerrainFX->SetShadowMap2(mSmap2->DepthMapSRV());
-    Effects::TerrainFX->SetShadowTransform(shadowTransform);
-    Effects::TerrainFX->SetShadowTransform2(shadowTransform2);
+    
+    if(pointLight)
+    {
+        // Draw Terrain
+        Effects::TerrainFX->SetPointLights(mPointLights);
+        Effects::TerrainFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+                mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+        Effects::TerrainFX->SetShadowTransforms(XMLoadFloat4x4(&mShadowTransformOmni[0]),XMLoadFloat4x4(&mShadowTransformOmni[1]),
+		                                        XMLoadFloat4x4(&mShadowTransformOmni[2]),XMLoadFloat4x4(&mShadowTransformOmni[3]),
+		                                        XMLoadFloat4x4(&mShadowTransformOmni[4]),XMLoadFloat4x4(&mShadowTransformOmni[5]));
+
+        // Set per frame constants.
+	    Effects::BasicFX->SetPointLights(mPointLights);
+	    Effects::BasicFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+        
+	    Effects::NormalMapFX->SetPointLights(mPointLights);
+	    Effects::NormalMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+
+	    Effects::DisplacementMapFX->SetPointLights(mPointLights);
+	    Effects::DisplacementMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+    }
+    else
+    {
+        Effects::TerrainFX->SetPointLights(mNoPointLight);
+
+        Effects::BasicFX->SetPointLights(mNoPointLight);
+        Effects::NormalMapFX->SetPointLights(mNoPointLight);
+        Effects::DisplacementMapFX->SetPointLights(mNoPointLight);
+    }
+
+    if(directionalLight)
+    {
+        // Draw Terrain
+        Effects::TerrainFX->SetShadowMap(mSmap->DepthMapSRV());
+        Effects::TerrainFX->SetShadowMap2(mSmap2->DepthMapSRV());
+        Effects::TerrainFX->SetShadowTransform(shadowTransform);
+        Effects::TerrainFX->SetShadowTransform2(shadowTransform2);
 	
-    Effects::TerrainFX->SetPointLights(mPointLights);
-    Effects::TerrainFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-        mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
-	
-	Effects::TerrainFX->SetShadowTransforms(XMLoadFloat4x4(&mShadowTransformOmni[0]),XMLoadFloat4x4(&mShadowTransformOmni[1]),
-		XMLoadFloat4x4(&mShadowTransformOmni[2]),XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		XMLoadFloat4x4(&mShadowTransformOmni[4]),XMLoadFloat4x4(&mShadowTransformOmni[5]));
-	
-    mTerrain.Draw(md3dImmediateContext, camera, mDirLights);
+        mTerrain.Draw(md3dImmediateContext, camera, mDirLights);
+
+        // Set per frame constants.
+        Effects::BasicFX->SetDirLights(mDirLights);
+        Effects::BasicFX->SetEyePosW(mCam.GetPosition());
+        //Effects::BasicFX->SetCubeMap(mSky->CubeMapSRV());
+        Effects::BasicFX->SetShadowMap(mSmap->DepthMapSRV());
+        Effects::BasicFX->SetShadowMap2(mSmap2->DepthMapSRV());
+
+        Effects::NormalMapFX->SetDirLights(mDirLights);
+        Effects::NormalMapFX->SetEyePosW(mCam.GetPosition());
+        //Effects::NormalMapFX->SetCubeMap(mSky->CubeMapSRV());
+        Effects::NormalMapFX->SetShadowMap(mSmap->DepthMapSRV());
+        Effects::NormalMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
+
+        Effects::DisplacementMapFX->SetDirLights(mDirLights);
+        Effects::DisplacementMapFX->SetEyePosW(mCam.GetPosition());
+        //Effects::DisplacementMapFX->SetCubeMap(mSky->CubeMapSRV());
+        Effects::DisplacementMapFX->SetShadowMap(mSmap->DepthMapSRV());
+        Effects::DisplacementMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
+    }
+    else
+    {
+        mTerrain.Draw(md3dImmediateContext, camera, mNoLight);
+
+        Effects::BasicFX->SetDirLights(mNoLight);
+        Effects::NormalMapFX->SetDirLights(mNoLight);
+        Effects::DisplacementMapFX->SetDirLights(mNoLight);
+    }
 
     ID3D11Buffer* vbs[2] = {mSkullVB, mInstancedBuffer};
 
@@ -1028,33 +1246,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 
     float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-    // Set per frame constants.
-    Effects::BasicFX->SetDirLights(mDirLights);
-	Effects::BasicFX->SetPointLights(mPointLights);
-    Effects::BasicFX->SetEyePosW(mCam.GetPosition());
-    //Effects::BasicFX->SetCubeMap(mSky->CubeMapSRV());
-    Effects::BasicFX->SetShadowMap(mSmap->DepthMapSRV());
-    Effects::BasicFX->SetShadowMap2(mSmap2->DepthMapSRV());
-	Effects::BasicFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-        mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
-
-    Effects::NormalMapFX->SetDirLights(mDirLights);
-	Effects::NormalMapFX->SetPointLights(mPointLights);
-    Effects::NormalMapFX->SetEyePosW(mCam.GetPosition());
-    //Effects::NormalMapFX->SetCubeMap(mSky->CubeMapSRV());
-    Effects::NormalMapFX->SetShadowMap(mSmap->DepthMapSRV());
-    Effects::NormalMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
-	Effects::NormalMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-        mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
-
-    Effects::DisplacementMapFX->SetDirLights(mDirLights);
-	Effects::DisplacementMapFX->SetPointLights(mPointLights);
-    Effects::DisplacementMapFX->SetEyePosW(mCam.GetPosition());
-    //Effects::DisplacementMapFX->SetCubeMap(mSky->CubeMapSRV());
-    Effects::DisplacementMapFX->SetShadowMap(mSmap->DepthMapSRV());
-    Effects::DisplacementMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
-	Effects::DisplacementMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-        mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
 	
     // These properties could be set per object if needed.
     Effects::DisplacementMapFX->SetHeightScale(0.07f);
@@ -1241,7 +1432,7 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
         md3dImmediateContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
 
         // Draw the boxes.
-		for(int i = 0; i < MAX_BOXES; i++)
+        for(int i = 0; i < mPhysX->GetNumBoxes(); i++)
 		{
 			world = XMLoadFloat4x4(&mBoxWorld[i]);
 			worldInvTranspose = MathHelper::InverseTranspose(world);
@@ -1972,7 +2163,7 @@ void ZeusApp::DrawSceneToShadowMap()
         md3dImmediateContext->DrawIndexed(mGridIndexCount, mGridIndexOffset, mGridVertexOffset);
 
         // Draw the box.
-		for(int i = 0; i < MAX_BOXES; i++)
+		for(int i = 0; i < mPhysX->GetNumBoxes(); i++)
 		{
 			world = XMLoadFloat4x4(&mBoxWorld[i]);
 			worldInvTranspose = MathHelper::InverseTranspose(world);
