@@ -26,6 +26,7 @@ PhysX::PhysX() :
 	PxPhysics*					pxPhysics;
 	PxDefaultCpuDispatcher*		pxCpuDispatcher;
 	PxMaterial*					pxMaterial;
+	PxCooking*					pxCooking;
 	
 PhysX::~PhysX()
 {
@@ -69,7 +70,6 @@ void PhysX::Init()
 	//customizeSceneDesc(sceneDesc);
 
 
-
 	pxCpuDispatcher = PxDefaultCpuDispatcherCreate(1);
 	sceneDesc.cpuDispatcher	= pxCpuDispatcher;
 
@@ -81,6 +81,10 @@ void PhysX::Init()
 
 	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.1f);    //static friction, dynamic friction, restitution
 	if(!pxMaterial)
+		return;
+
+	pxCooking = PxCreateCooking(PX_PHYSICS_VERSION, *pxFoundation, PxCookingParams());
+	if(!pxCooking)
 		return;
 
 	PxRigidStatic* plane = PxCreatePlane(*pxPhysics, PxPlane(PxVec3(0,1,0), 0), *pxMaterial);
@@ -115,6 +119,41 @@ void PhysX::fetch()
     pxScene->fetchResults(true);
 }
 
+void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
+							int numInds, int* inds)
+{
+	PxRigidDynamic* meshActor = pxPhysics->createRigidDynamic(PxTransform::createIdentity());
+	PxShape* meshShape;
+	if(meshActor)
+	{
+			meshActor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+
+			PxTriangleMeshDesc meshDesc;
+			meshDesc.points.count           = nbVerts;
+			meshDesc.points.stride          = sizeof(PxVec3);
+			meshDesc.points.data            = verts;
+
+			meshDesc.triangles.count        = triCount;
+			meshDesc.triangles.stride       = 3*sizeof(PxU32);
+			meshDesc.triangles.data         = indices32;
+
+			PxToolkit::MemoryOutputStream writeBuffer;
+			bool status = pxCooking->cookTriangleMesh(meshDesc, writeBuffer);
+			if(!status)
+				return;
+
+			PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+			pxPhysics->createTriangleMesh(readBuffer);
+
+
+			PxTriangleMeshGeometry triGeom;
+			//triGeom.triangleMesh = triangleMesh;
+			meshShape = meshActor->createShape(triGeom, *pxMaterial);
+			
+			pxScene->addActor(*meshActor);
+	}
+}
+
 void PhysX::CreateSphere(float x, float y, float z)
 {
 	return;
@@ -146,8 +185,9 @@ void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float
 	float vx = look.x * firespeed;
 	float vy = look.y * firespeed;
 	float vz = look.z * firespeed;
-	boxActor->setAngularDamping(0.75);
 	boxActor->setLinearVelocity(PxVec3(vx,vy,vz));
+	boxActor->setAngularDamping(0.75);
+	boxActor->setLinearDamping(0.8);
 	PxRigidBodyExt::updateMassAndInertia(*boxActor, density);
 	pxScene->addActor(*boxActor);
 	boxes[numbox] = boxActor;

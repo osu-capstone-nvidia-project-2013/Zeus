@@ -107,6 +107,9 @@
     <ClInclude Include="PhysX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="importer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Vertex.cpp">
@@ -167,6 +170,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PhysX.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="importer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
