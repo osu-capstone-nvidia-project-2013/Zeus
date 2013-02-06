@@ -128,7 +128,7 @@ void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts
 	{
 			meshActor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
 
-			PxTriangleMeshDesc meshDesc;
+			/*PxTriangleMeshDesc meshDesc;
 			meshDesc.points.count           = nbVerts;
 			meshDesc.points.stride          = sizeof(PxVec3);
 			meshDesc.points.data            = verts;
@@ -143,7 +143,7 @@ void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts
 				return;
 
 			PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
-			pxPhysics->createTriangleMesh(readBuffer);
+			pxPhysics->createTriangleMesh(readBuffer);*/
 
 
 			PxTriangleMeshGeometry triGeom;

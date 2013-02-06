@@ -2723,7 +2723,7 @@ void ZeusApp::CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::
 										int numInds, std::vector<int> inds)
 
 {
-	PxVec3* vertices = new PxVec3[numVerts];
+	/*PxVec3* vertices = new PxVec3[numVerts];
 	for(int i = 0; i < numVerts; i++)
 	{
 		vertices[i].x = verts[i].x;
@@ -2739,5 +2739,5 @@ void ZeusApp::CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::
 
 	mPhysX->SetupTriangleMesh(objnum, numVerts, vertices, numInds, indices);
 	delete [] indices;
-	delete [] vertices;
+	delete [] vertices;*/
 }
