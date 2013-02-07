@@ -1,3 +1,10 @@
+2-7
+Progress: Wrote an fbx loader that loads in the model vertices, normals, and indices.
+
+Todo: Load in the rest of the fbx data such as textures and animation
+
+Blocks: Midterms
+
 1-24
 Progress: Omnidirectional light
 
