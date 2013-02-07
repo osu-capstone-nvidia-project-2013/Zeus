@@ -89,7 +89,8 @@ private:
 
 	void PxtoXMMatrix(PxTransform input, XMMATRIX* start);
 	void CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::vector<XMFLOAT3> verts,
-									int numInds, std::vector<int> inds);
+									int numInds, std::vector<int> inds, float x, float y, float z);
+	void CreatePhysXTriangleMeshTerrain( int numVerts, std::vector<XMFLOAT3> verts, int numInds, std::vector<int> inds);
 
 private:
 
@@ -194,6 +195,10 @@ private:
     float mLightRotationAngle;
     float mSkullRotationAngle;
     float mSkullPos;
+
+	std::vector<XMFLOAT3> mTreepositions;
+	std::vector<int> mTreeIndices;
+	int mTreeVertCount;
 
     UINT mBoxIndexOffset;
     UINT mGridIndexOffset;
@@ -329,8 +334,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     XMStoreFloat4x4(&mCylWorld[2*2+0], XMMatrixTranslation(-5.0f, 1.5f, 10.0f));
     XMStoreFloat4x4(&mSphereWorld[2*2+0], XMMatrixTranslation(-3.5f, 1.0f, 9.5f));
 
-    // Trees
-    CreateTreeMatrixes();
+    
 
     ////////////////////////////
     //    Lights/Materials    //
@@ -457,6 +461,8 @@ bool ZeusApp::Init()
 {
 	mPhysX->Init();
 
+	
+
     if(!D3DApp::Init())
         return false;
 
@@ -481,6 +487,9 @@ bool ZeusApp::Init()
     tii.CellSpacing = 0.5f;
 
     mTerrain.Init(md3dDevice, md3dImmediateContext, tii);
+
+	terrainMeshInfo terMesh = mTerrain.GetMeshInfo();
+	CreatePhysXTriangleMeshTerrain(terMesh.vertcount,terMesh.positions,terMesh.indcount,terMesh.indices);
 
     mSmap = new ShadowMap(md3dDevice, SMapSize, SMapSize);
     mSmap2 = new ShadowMap(md3dDevice, SMapSize, SMapSize);
@@ -538,6 +547,9 @@ bool ZeusApp::Init()
     LoadTreeBuffer();
     BuildInstancedBuffer();
 
+	// Trees
+    CreateTreeMatrixes();
+
     return true;
 }
 
@@ -557,7 +569,7 @@ void ZeusApp::UpdateScene(float dt)
     // Tell physx to get to work
     bool fetch = mPhysX->advance(dt);
 
-    float shootspeed = 10.0;
+    float shootspeed = 100.0;
 
     //////////////////////////////////
     //    XINPUT Camera Controls    //
@@ -2566,9 +2578,9 @@ void ZeusApp::LoadTreeBuffer()
 		positions.push_back(verts[i].Pos);
     }
     mTreeIndexCount = indices.size();
-    
-	CreatePhysXTriangleMesh(ObjectNumbers::tree, positions.size(),positions,
-							indices.size(), indices);
+    mTreeVertCount = positions.size();
+	mTreepositions = positions;
+	mTreeIndices = indices;
 
     D3D11_BUFFER_DESC vbd;
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
@@ -2631,8 +2643,8 @@ void ZeusApp::CreateTreeMatrixes()
 
 	mTreecount = sizeof( treepositions ) / sizeof( XMVECTOR );
     mTreeWorld = new XMFLOAT4X4[mTreecount];
-
-	XMMATRIX treeScale = XMMatrixScaling(8.0f, 8.0f, 8.0f);
+	float scale = 8.0f;
+	XMMATRIX treeScale = XMMatrixScaling(scale, scale, scale);
     XMMATRIX treeOffset;
 	XMFLOAT3 treeposition;
 
@@ -2641,6 +2653,8 @@ void ZeusApp::CreateTreeMatrixes()
 		XMStoreFloat3(&treeposition, treepositions[i]);
 		treeOffset = XMMatrixTranslation(treeposition.x,treeposition.y, treeposition.z);
 		XMStoreFloat4x4(&mTreeWorld[i], XMMatrixMultiply(treeScale, treeOffset));
+		CreatePhysXTriangleMesh(ObjectNumbers::tree, mTreeVertCount, mTreepositions,
+			mTreeIndexCount, mTreeIndices, treeposition.x, treeposition.y, treeposition.z);
 	}
 }
 
@@ -2720,10 +2734,10 @@ void ZeusApp::PxtoXMMatrix(PxTransform input, XMMATRIX* start)
 }
 
 void ZeusApp::CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::vector<XMFLOAT3> verts,
-										int numInds, std::vector<int> inds)
+										int numInds, std::vector<int> inds, float x, float y, float z)
 
 {
-	/*PxVec3* vertices = new PxVec3[numVerts];
+	PxVec3* vertices = new PxVec3[numVerts];
 	for(int i = 0; i < numVerts; i++)
 	{
 		vertices[i].x = verts[i].x;
@@ -2737,7 +2751,28 @@ void ZeusApp::CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::
 		indices[i] = inds[i];
 	}
 
-	mPhysX->SetupTriangleMesh(objnum, numVerts, vertices, numInds, indices);
+	mPhysX->SetupTriangleMesh(objnum, numVerts, vertices, numInds, indices, x, y, z);
 	delete [] indices;
-	delete [] vertices;*/
+	delete [] vertices;
+}
+
+void ZeusApp::CreatePhysXTriangleMeshTerrain( int numVerts, std::vector<XMFLOAT3> verts, int numInds, std::vector<int> inds)
+{
+	PxVec3* vertices = new PxVec3[numVerts];
+	for(int i = 0; i < numVerts; i++)
+	{
+		vertices[i].x = verts[i].x;
+		vertices[i].y = verts[i].y;
+		vertices[i].z = verts[i].z;
+	}
+
+	int* indices = new int[numInds];
+	for(int i = 0; i < numInds; i++)
+	{
+		indices[i] = inds[i];
+	}
+
+	mPhysX->CreateTerrain(numVerts,vertices,numInds,indices);
+	delete [] indices;
+	delete [] vertices;
 }

@@ -47,8 +47,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>PhysX\Bin\win32;bin\x86;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>PhysX\Include;Include;$(IncludePath)</IncludePath>
+    <IncludePath>PhysX\Include;PhysX\Include\RepX;Include;PhysX\Source\foundation\include;PhysX\Source\RepX\src;$(IncludePath)</IncludePath>
     <LibraryPath>PhysX\Lib\win32;Lib\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -81,7 +82,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>fbxsdk-2013.3.lib;fbxsdk-2013.3d.lib;d3d11.lib;d3dx11.lib;D3DCompiler.lib;Effects11.lib;dxerr.lib;dxgi.lib;dxguid.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>PxToolkit.lib;RepX3.lib;fbxsdk-2013.3.lib;fbxsdk-2013.3d.lib;d3d11.lib;d3dx11.lib;D3DCompiler.lib;Effects11.lib;dxerr.lib;dxgi.lib;dxguid.lib;gdiplus.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>

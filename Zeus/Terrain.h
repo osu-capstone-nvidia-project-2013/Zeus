@@ -1,5 +1,5 @@
 //***************************************************************************************
-// Terrain.h by Frank Luna (C) 2011 All Rights Reserved.
+// Terrain.h 
 //   
 // Class that renders a terrain using hardware tessellation and multitexturing.
 //***************************************************************************************
@@ -11,6 +11,14 @@
 
 class Camera;
 struct DirectionalLight;
+
+struct terrainMeshInfo
+{
+	int vertcount;
+	int indcount;
+	std::vector<XMFLOAT3> positions;
+	std::vector<int> indices;
+};
 
 class Terrain
 {
@@ -45,6 +53,8 @@ public:
 
 	void Draw(ID3D11DeviceContext* dc, const Camera& cam, DirectionalLight lights[3]);
 
+	terrainMeshInfo GetMeshInfo();
+
 private:
 	void LoadHeightmap();
 	void Smooth();
@@ -55,6 +65,9 @@ private:
 	void BuildQuadPatchVB(ID3D11Device* device);
 	void BuildQuadPatchIB(ID3D11Device* device);
 	void BuildHeightmapSRV(ID3D11Device* device);
+
+	
+	terrainMeshInfo mMesh;
 
 private:
 

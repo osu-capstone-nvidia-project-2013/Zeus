@@ -10,6 +10,7 @@
 #include <PxPhysicsAPI.h>
 #include < extensions/PxDefaultErrorCallback.h >
 #include < extensions/PxDefaultAllocator.h > 
+#include < PxToolkit.h >
 
 
 
@@ -23,10 +24,11 @@ using namespace physx;
 #define MAX_BOXES 1000
 
 enum ObjectNumbers{
-	block,
-	tree,
-	cow,
-	terrain
+	block = 0,
+	tree = 1,
+	cow = 2,
+	terrain = 3,
+	Last = 4
 };
 
 struct TriMeshObj{
@@ -43,8 +45,12 @@ public:
 	bool advance(float dt);
     void fetch();
 
+	void CreateTerrain( int numVerts, PxVec3* verts, int numInds, int* inds);
+
 	void SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
-							int numInds, int* inds);
+							int numInds, int* inds, float x, float y, float z);
+
+	void PlaceTriangleMesh( ObjectNumbers objnum, float x, float y, float z, float scale, bool statc );
 
 	void CreateSphere(float x, float y, float z);
 	void CreateBox(float x, float y, float z, float vx, float vy, float vz, float speed);

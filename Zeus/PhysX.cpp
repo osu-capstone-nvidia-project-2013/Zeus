@@ -27,6 +27,8 @@ PhysX::PhysX() :
 	PxDefaultCpuDispatcher*		pxCpuDispatcher;
 	PxMaterial*					pxMaterial;
 	PxCooking*					pxCooking;
+
+	struct TriMeshObj*			objectsLoaded;
 	
 PhysX::~PhysX()
 {
@@ -87,16 +89,18 @@ void PhysX::Init()
 	if(!pxCooking)
 		return;
 
+	objectsLoaded = new TriMeshObj[ObjectNumbers::Last];
+
 	PxRigidStatic* plane = PxCreatePlane(*pxPhysics, PxPlane(PxVec3(0,1,0), 0), *pxMaterial);
 	if (!plane)
 		return;
 	
 	pxScene->addActor(*plane);
-
+	
 }
 
 float mAccumulator = 0.0f;
-float mStepSize = 1.0f / 60.0f;
+float mStepSize = 1.0f / 120.0f;
 float mCooldown = 0.0f;
 
 bool PhysX::advance(float dt)
@@ -119,23 +123,21 @@ void PhysX::fetch()
     pxScene->fetchResults(true);
 }
 
-void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
-							int numInds, int* inds)
+void PhysX::CreateTerrain( int numVerts, PxVec3* verts, int numInds, int* inds)
 {
-	PxRigidDynamic* meshActor = pxPhysics->createRigidDynamic(PxTransform::createIdentity());
+	PxRigidStatic* meshActor = pxPhysics->createRigidStatic(PxTransform::createIdentity());
 	PxShape* meshShape;
 	if(meshActor)
 	{
-			meshActor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
-
-			/*PxTriangleMeshDesc meshDesc;
-			meshDesc.points.count           = nbVerts;
+			
+			PxTriangleMeshDesc meshDesc;
+			meshDesc.points.count           = numVerts;
 			meshDesc.points.stride          = sizeof(PxVec3);
 			meshDesc.points.data            = verts;
 
-			meshDesc.triangles.count        = triCount;
-			meshDesc.triangles.stride       = 3*sizeof(PxU32);
-			meshDesc.triangles.data         = indices32;
+			meshDesc.triangles.count        = numInds/3.;
+			meshDesc.triangles.stride       = 3*sizeof(int);
+			meshDesc.triangles.data         = inds;
 
 			PxToolkit::MemoryOutputStream writeBuffer;
 			bool status = pxCooking->cookTriangleMesh(meshDesc, writeBuffer);
@@ -143,14 +145,93 @@ void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts
 				return;
 
 			PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
-			pxPhysics->createTriangleMesh(readBuffer);*/
-
-
-			PxTriangleMeshGeometry triGeom;
-			//triGeom.triangleMesh = triangleMesh;
-			meshShape = meshActor->createShape(triGeom, *pxMaterial);
 			
+			PxTriangleMeshGeometry triGeom;
+			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
+
+			meshShape = meshActor->createShape(triGeom, *pxMaterial);
+
 			pxScene->addActor(*meshActor);
+	}
+}
+
+int nv,ni;
+int* indes;
+PxVec3* vertas;
+
+void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
+							int numInds, int* inds, float x, float y, float z)
+{
+	PxRigidStatic* meshActor = pxPhysics->createRigidStatic(PxTransform::createIdentity());
+	PxShape* meshShape;
+	if(meshActor)
+	{
+			
+
+			PxTriangleMeshDesc meshDesc;
+			meshDesc.points.count           = numVerts;
+			meshDesc.points.stride          = sizeof(PxVec3);
+			meshDesc.points.data            = verts;
+
+			meshDesc.triangles.count        = numInds/3.;
+			meshDesc.triangles.stride       = 3*sizeof(int);
+			meshDesc.triangles.data         = inds;
+
+			PxToolkit::MemoryOutputStream writeBuffer;
+			bool status = pxCooking->cookTriangleMesh(meshDesc, writeBuffer);
+			if(!status)
+				return;
+
+			PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+			
+			PxTriangleMeshGeometry triGeom;
+			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
+			triGeom.scale = PxMeshScale(PxVec3(8.0,8.0,8.0),PxQuat());
+
+			meshShape = meshActor->createShape(triGeom, *pxMaterial);
+			meshShape->setLocalPose(PxTransform(PxVec3(x,y,z)));
+
+			pxScene->addActor(*meshActor);
+
+			nv = numVerts;
+			ni = numInds;
+			indes = inds;
+			vertas = verts;
+	}
+}
+
+void PhysX::PlaceTriangleMesh( ObjectNumbers objnum, float x, float y, float z, float scale, bool statc )
+{
+	PxRigidDynamic* meshActor = pxPhysics->createRigidDynamic(PxTransform::createIdentity());
+	PxShape* meshShape;
+	if(meshActor)
+	{
+			meshActor->setRigidDynamicFlag(PxRigidDynamicFlag::eKINEMATIC, true);
+
+			PxTriangleMeshDesc meshDesc;
+			meshDesc.points.count           = nv;
+			meshDesc.points.stride          = sizeof(PxVec3);
+			meshDesc.points.data            = vertas;
+
+			meshDesc.triangles.count        = ni/3.;
+			meshDesc.triangles.stride       = 3*sizeof(int);
+			meshDesc.triangles.data         = indes;
+
+			PxToolkit::MemoryOutputStream writeBuffer;
+			/*bool status = pxCooking->cookTriangleMesh(meshDesc, writeBuffer);
+			if(!status)
+				return;
+
+			PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+			
+			PxTriangleMeshGeometry triGeom;
+			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
+			triGeom.scale = PxMeshScale(PxVec3(scale,scale,scale),PxQuat());
+
+			meshShape = meshActor->createShape(triGeom, *pxMaterial);
+			meshShape->setLocalPose(PxTransform(PxVec3(x, y, z)));
+
+			pxScene->addActor(*meshActor);*/
 	}
 }
 
@@ -192,7 +273,7 @@ void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float
 	pxScene->addActor(*boxActor);
 	boxes[numbox] = boxActor;
 
-	mCooldown = 0.02f;
+	mCooldown = 0.1f;
 	numbox++;
 }
 
