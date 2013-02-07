@@ -1,5 +1,18 @@
 --- 2/1/12 ---
 Progress: 
+  PhysX hooked in, boxes shooting, cheating the game timing for now. 
+
+Todo: 
+  Point light shadow map, still. 
+
+Issues: 
+  Omni-directional light shadow mapping is headache inducing.  
+
+
+
+
+--- 2/1/12 ---
+Progress: 
   PhysX hooked in! 
 
 Todo: 
