@@ -1,3 +1,10 @@
+Date: 2/7/2013
+Progress: Initialized physx and created a box shooter. Triangle mesh loader somewhat works.
+Todo: Next I will do the particles card on trello to make smoke, then move onto the cloth, rope and water card.
+Blockers: PhysX plug in for maya would help us create attributes for our objects, but isn't installed on the lab computers (we just got maya yesterday).
+I tried installing it on my home machine but was having trouble.
+
+///////////////////////
 Date: 1/31/2013
 Progress: Omni-direction shadow map mostly works. Starting physx initialization.
 Todo: Initialize physx. Fix omni shadow map problem
