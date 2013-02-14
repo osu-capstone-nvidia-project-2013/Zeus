@@ -1,3 +1,10 @@
+2-14
+Progress: modified engine to take multiple textures for objects with multiple meshes
+
+Todo: Animation loading
+
+Blocks: Midterms
+
 2-7
 Progress: Wrote an fbx loader that loads in the model vertices, normals, and indices.
 
