@@ -1,3 +1,10 @@
+Date: 2/14/2013
+Progress: Figured out that our tirangle mesh loader works, but we need to enable continuous collision. Also the way we create our terrain doesn't allow just loading in the triangle mesh because it is tessalated. 
+Starting Initializing particles and cloth.
+Todo: Create particles and cloth by hand.
+Blockers: Updating each vertex in a vertex buffer without recreating the buffer. Also getting another access violation error when updating the cloth particles.
+
+///////////////////////
 Date: 2/7/2013
 Progress: Initialized physx and created a box shooter. Triangle mesh loader somewhat works.
 Todo: Next I will do the particles card on trello to make smoke, then move onto the cloth, rope and water card.
