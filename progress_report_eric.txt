@@ -1,3 +1,19 @@
+--- 2/14/12 ---
+Progress: 
+  Created cloth in Maya and Max using the PhysX plugin.
+  Created destructible objects using PhysXLab. 
+
+Todo: 
+  Rope (will be the same as cloth in Maya)
+  More more stuff in Maya and PhysXLab. 
+
+Issues: 
+  Exporting as .repx from Maya/Max.
+  Loading .repx into the engine.  
+
+
+
+
 --- 2/1/12 ---
 Progress: 
   PhysX hooked in, boxes shooting, cheating the game timing for now. 
