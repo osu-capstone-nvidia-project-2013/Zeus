@@ -1,4 +1,15 @@
 =============
+2/14/2013
+
+Progress: Able to have multiple textures on a given object
+
+Todo: Convert how vertices are going to be inserted to keep it to one type as opposed to multiple
+
+Blockers: none
+
+
+
+=============
 2/4/2013
 
 Progress: Working on creating a rope in phsyx
