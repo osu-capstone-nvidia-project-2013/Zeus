@@ -1,5 +1,5 @@
 //***************************************************************************************
-// Terrain.cpp by Frank Luna (C) 2011 All Rights Reserved.
+// Terrain.cpp
 //***************************************************************************************
 
 #include "Terrain.h"
@@ -350,6 +350,13 @@ void Terrain::BuildQuadPatchVB(ID3D11Device* device)
 		}
 	}
 
+	mMesh.vertcount = patchVertices.size();
+	
+	for(int i = 0; i < patchVertices.size(); i++)
+	{
+		mMesh.positions.push_back(patchVertices[i].Pos);
+	}
+
     D3D11_BUFFER_DESC vbd;
     vbd.Usage = D3D11_USAGE_IMMUTABLE;
 	vbd.ByteWidth = sizeof(Vertex::Terrain) * patchVertices.size();
@@ -383,6 +390,13 @@ void Terrain::BuildQuadPatchIB(ID3D11Device* device)
 
 			k += 4; // next quad
 		}
+	}
+	
+	mMesh.indcount = indices.size();
+	
+	for(int i = 0; i < indices.size(); i++)
+	{
+		mMesh.indices.push_back(indices[i]);
 	}
 
 	D3D11_BUFFER_DESC ibd;
@@ -434,4 +448,9 @@ void Terrain::BuildHeightmapSRV(ID3D11Device* device)
 
 	// SRV saves reference.
 	ReleaseCOM(hmapTex);
+}
+
+terrainMeshInfo Terrain::GetMeshInfo()
+{
+	return mMesh;
 }
