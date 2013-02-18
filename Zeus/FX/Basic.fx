@@ -52,6 +52,8 @@ Texture2D gOmniShadowMap3;
 Texture2D gOmniShadowMap4;
 Texture2D gOmniShadowMap5;
 
+Texture2D gTextureArray[5];
+
 TextureCube gCubeMap;
 
 SamplerState samAnisotropic
@@ -86,6 +88,7 @@ struct VertexIn
 	float3 PosL    : POSITION;
 	float3 NormalL : NORMAL;
 	float2 Tex     : TEXCOORD;
+	int  TexNum  : TEXNUM;
 };
 
 struct VertexOut
@@ -102,12 +105,16 @@ struct VertexOut
 	float4 ShadowPosCube3 : TEXCOORD6;
 	float4 ShadowPosCube4 : TEXCOORD7;
 	float4 ShadowPosCube5 : TEXCOORD8;
+	int  TexNum  : TEXNUM;
+
 };
 
 VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	
+	vout.TexNum = vin.TexNum;
+
 	// Transform to world space space.
 	vout.PosW    = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
 	vout.NormalW = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
@@ -153,11 +160,18 @@ float4 PS(VertexOut pin,
 	toEye /= distToEye;
 	
     // Default to multiplicative identity.
-    float4 texColor = float4(1, 1, 1, 1);
+    float4 texColor = float4(0, 0, 0, 1);
     if(gUseTexure)
 	{
 		// Sample texture.
-		texColor = gDiffuseMap.Sample( samLinear, pin.Tex );
+		//texColor =  gTextureArray[0].Sample( samLinear, pin.Tex );
+
+		if(pin.TexNum == 1)
+			texColor = gTextureArray[pin.TexNum].Sample(samLinear, pin.Tex);
+		else if(pin.TexNum == 0)
+			texColor = gTextureArray[pin.TexNum].Sample(samLinear, pin.Tex);
+		else
+			texColor = gDiffuseMap.Sample(samLinear, pin.Tex);
 
 		if(gAlphaClip)
 		{

@@ -7,13 +7,15 @@
 //***************************************************************************************
 #ifndef PHYSX_H
 #define PHYSX_H
-#include <PxPhysicsAPI.h>
+#include < PxPhysicsAPI.h >
 #include < extensions/PxDefaultErrorCallback.h >
 #include < extensions/PxDefaultAllocator.h > 
 #include < PxToolkit.h >
+#include "PhysXParticles.h"
 
+#include <vector>
 
-
+using namespace std;
 using namespace physx;
 
 #pragma comment(lib, "PhysX3_x86.lib")
@@ -22,6 +24,7 @@ using namespace physx;
 #pragma comment(lib, "PhysX3Extensions.lib")
 
 #define MAX_BOXES 1000
+#define MAX_PARTICLES 100;
 
 enum ObjectNumbers{
 	block = 0,
@@ -51,28 +54,26 @@ public:
 							int numInds, int* inds, float x, float y, float z);
 
 	void PlaceTriangleMesh( ObjectNumbers objnum, float x, float y, float z, float scale, bool statc );
-
-	void CreateSphere(float x, float y, float z);
+	
 	void CreateBox(float x, float y, float z, float vx, float vy, float vz, float speed);
-	PxTransform GetSphereWorld();
 	PxTransform GetBoxWorld(int boxnum);
     int GetNumBoxes();
 
-	void Draw(PxTransform &transform);
+	void InitParticles(int count, float x, float y, float z, float vx, float vy, float vz, bool gravity);
 
 public:
-    PxFoundation*           mFoundation;
-    PxPhysics*              mPhysics;
-	PxScene*				mScene;
+    PxFoundation*					mFoundation;
+    PxPhysics*						mPhysics;
+	PxScene*						mScene;
 	
-	PxMaterial*								mMaterial;
-	PxDefaultCpuDispatcher*					mCpuDispatcher;
-	//pxtask::CudaContextManager*				mCudaContextManager;
+	PxMaterial*						mMaterial;
+	PxDefaultCpuDispatcher*			mCpuDispatcher;
+	//pxtask::CudaContextManager*	mCudaContextManager;
 
-	PxU32									mNbThreads;
+	PxU32							mNbThreads;
 
 	
-
+	//std::vector<PhysXParticles>  mParticles;
 	
 
 	//std::vector<PxRigidActor*>				mPhysicsActors;

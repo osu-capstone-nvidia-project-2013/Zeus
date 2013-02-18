@@ -25,10 +25,13 @@ PhysX::PhysX() :
 	PxScene*					pxScene;
 	PxPhysics*					pxPhysics;
 	PxDefaultCpuDispatcher*		pxCpuDispatcher;
-	PxMaterial*					pxMaterial;
+	PxMaterial*					defaultMaterial;
+	PxMaterial*					blockMaterial;
 	PxCooking*					pxCooking;
 
 	struct TriMeshObj*			objectsLoaded;
+
+	PxParticleSystem* particleSys;
 	
 PhysX::~PhysX()
 {
@@ -42,7 +45,24 @@ PhysX::~PhysX()
 	pxScene->release();
 	pxPhysics->release();
 	pxCpuDispatcher->release();
-	pxMaterial->release();
+	defaultMaterial->release();
+	blockMaterial->release();
+
+	particleSys->releaseParticles();
+}
+
+static PxFilterFlags filterShader(
+        PxFilterObjectAttributes attributes0,
+        PxFilterData filterData0,
+        PxFilterObjectAttributes attributes1,
+        PxFilterData filterData1,
+        PxPairFlags& pairFlags,
+        const void* constantBlock,
+        PxU32 constantBlockSize)
+{
+        pairFlags = PxPairFlag::eRESOLVE_CONTACTS;
+        pairFlags |= PxPairFlag::eSWEPT_INTEGRATION_LINEAR;
+        return PxFilterFlags();
 }
 
 void PhysX::Init()
@@ -69,8 +89,13 @@ void PhysX::Init()
     
 	PxSceneDesc sceneDesc(pxPhysics->getTolerancesScale());
 	sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
+	
 	//customizeSceneDesc(sceneDesc);
-
+	//Continuous Collision Detection
+	sceneDesc.flags |= PxSceneFlag::eENABLE_SWEPT_INTEGRATION;
+	sceneDesc.filterShader = filterShader;
+	sceneDesc.sweptIntegrationLinearSpeedFactor = .00005;
+	sceneDesc.sweptIntegrationAngularSpeedFactor = .00005;
 
 	pxCpuDispatcher = PxDefaultCpuDispatcherCreate(1);
 	sceneDesc.cpuDispatcher	= pxCpuDispatcher;
@@ -81,9 +106,14 @@ void PhysX::Init()
 
 	pxScene = pxPhysics->createScene(sceneDesc);
 
-	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.1f);    //static friction, dynamic friction, restitution
-	if(!pxMaterial)
+	defaultMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.1f);    //static friction, dynamic friction, restitution
+	if(!defaultMaterial)
 		return;
+
+	blockMaterial = pxPhysics->createMaterial(0.8f, 0.8f, 0.1f);    //static friction, dynamic friction, restitution
+	if(!blockMaterial)
+		return;
+
 
 	pxCooking = PxCreateCooking(PX_PHYSICS_VERSION, *pxFoundation, PxCookingParams());
 	if(!pxCooking)
@@ -91,7 +121,7 @@ void PhysX::Init()
 
 	objectsLoaded = new TriMeshObj[ObjectNumbers::Last];
 
-	PxRigidStatic* plane = PxCreatePlane(*pxPhysics, PxPlane(PxVec3(0,1,0), 0), *pxMaterial);
+	PxRigidStatic* plane = PxCreatePlane(*pxPhysics, PxPlane(PxVec3(0,1,0), 0), *defaultMaterial);
 	if (!plane)
 		return;
 	
@@ -100,7 +130,7 @@ void PhysX::Init()
 }
 
 float mAccumulator = 0.0f;
-float mStepSize = 1.0f / 120.0f;
+float mStepSize = 1.0f / 60.0f;
 float mCooldown = 0.0f;
 
 bool PhysX::advance(float dt)
@@ -149,7 +179,7 @@ void PhysX::CreateTerrain( int numVerts, PxVec3* verts, int numInds, int* inds)
 			PxTriangleMeshGeometry triGeom;
 			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
 
-			meshShape = meshActor->createShape(triGeom, *pxMaterial);
+			meshShape = meshActor->createShape(triGeom, *defaultMaterial);
 
 			pxScene->addActor(*meshActor);
 	}
@@ -188,8 +218,9 @@ void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts
 			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
 			triGeom.scale = PxMeshScale(PxVec3(8.0,8.0,8.0),PxQuat());
 
-			meshShape = meshActor->createShape(triGeom, *pxMaterial);
+			meshShape = meshActor->createShape(triGeom, *defaultMaterial);
 			meshShape->setLocalPose(PxTransform(PxVec3(x,y,z)));
+			meshShape->setFlag(PxShapeFlag::eUSE_SWEPT_BOUNDS, true);
 
 			pxScene->addActor(*meshActor);
 
@@ -235,11 +266,6 @@ void PhysX::PlaceTriangleMesh( ObjectNumbers objnum, float x, float y, float z, 
 	}
 }
 
-void PhysX::CreateSphere(float x, float y, float z)
-{
-	return;
-}
-
 
 //PxShape* aSphereShape;
 //PxRigidDynamic *boxActor;
@@ -253,23 +279,30 @@ void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float
 	if(mCooldown > 0.0f)
 		return;
 	
-	PxReal density = 5.0f;
+	PxReal density = 10.0f;
 	PxVec3 look = PxVec3(lookx,looky,lookz);
 	look.normalize();
 	PxTransform transform(PxVec3(x, y, z) + (look * 4.), PxQuat::createIdentity());
 	PxVec3 dimensions(.5,.5,.5);
 	PxBoxGeometry geometry(dimensions);
-	PxRigidDynamic* boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *pxMaterial, density);
+	PxRigidDynamic* boxActor = PxCreateDynamic(*pxPhysics, transform, geometry, *blockMaterial, density);
 	if (!boxActor)
 		return;
-
+	
 	float vx = look.x * firespeed;
 	float vy = look.y * firespeed;
 	float vz = look.z * firespeed;
 	boxActor->setLinearVelocity(PxVec3(vx,vy,vz));
-	boxActor->setAngularDamping(0.75);
+	boxActor->setAngularDamping(0.95);
 	boxActor->setLinearDamping(0.8);
 	PxRigidBodyExt::updateMassAndInertia(*boxActor, density);
+
+	//CCD
+	PxShape** shapes = new PxShape*[1];
+	boxActor->getShapes(shapes, 1, 0);
+	shapes[0]->setFlag(PxShapeFlag::eUSE_SWEPT_BOUNDS, true);
+	delete [] shapes;
+
 	pxScene->addActor(*boxActor);
 	boxes[numbox] = boxActor;
 
@@ -303,32 +336,12 @@ PxTransform PhysX::GetBoxWorld(int boxnum)
 	return pt;
 }
 
-PxTransform PhysX::GetSphereWorld()
+void PhysX::InitParticles(int count, float x, float y, float z, float vx, float vy, float vz, bool gravity)
 {
-	//PxU32 nShapes = 0;
-	//if(boxes[boxnum])
-	//	nShapes = boxes[boxnum]->getNbShapes();
-	//else	
-	//	return PxTransform(PxVec3(0, 0, 0),PxQuat(0,0,0,1));
+	PhysXParticles particles;
 
+	particles.InitParticles(count, pxPhysics, pxScene);
+	//particles.CreateParticles();
 
-	//if(nShapes > 0)
-	//{
-	//	PxShape** shapes = new PxShape*[nShapes];
- //
-	//	box->getShapes(shapes, nShapes);     
-	//	
-	//	PxTransform pt = PxShapeExt::getGlobalPose(shapes[0][0]);
-
-	//	delete [] shapes;
-	//
-	//	return pt;
-	//}
-	
-}
-
-
-void PhysX::Draw(PxTransform &transform)
-{
-	//transform = PxShapeExt::getGlobalPose(*aSphereShape);
+	//mParticles.push_back(particles);
 }

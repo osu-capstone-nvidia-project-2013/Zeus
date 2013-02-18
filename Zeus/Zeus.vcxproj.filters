@@ -1,179 +1,241 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="PhysX">
+      <UniqueIdentifier>{52ec68b8-5f12-4cd7-88b8-68279dca2966}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    <Filter Include="d3d">
+      <UniqueIdentifier>{26313f0c-e024-46fa-8462-1a3343b61529}</UniqueIdentifier>
     </Filter>
-    <Filter Include="FX">
+    <Filter Include="Camera">
+      <UniqueIdentifier>{604c7080-d82c-40af-92a3-6512d5a66e0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Effects">
+      <UniqueIdentifier>{f1365e7a-5065-4622-be4f-931346ff33d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameTimer">
+      <UniqueIdentifier>{12a2f519-375b-4370-b9c5-621660d0f049}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Text">
+      <UniqueIdentifier>{ebf7ef09-8644-4558-b6bf-03e5941a4f7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Helpers">
+      <UniqueIdentifier>{49590981-aa90-4c07-913c-efc4cdc336a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PhysX\PhysXParticles">
+      <UniqueIdentifier>{b581e37a-1866-4126-bb6b-0e77a5ac2f83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PhysX\PhysXGeometry">
+      <UniqueIdentifier>{6dac54b6-d498-425b-bfa8-ed71ca99f846}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PhysX\PhysXHeightField">
+      <UniqueIdentifier>{7073d278-40c4-4ce8-b0fb-e0e64cd094a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PhysX\PhysXRepXLoader">
+      <UniqueIdentifier>{830623e0-8bfa-417f-8754-0fb9c9eb47c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PhysX\PhysXCharControl">
+      <UniqueIdentifier>{432e2b3a-c188-4ff3-b0dc-09cc291197d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Effects\Light">
+      <UniqueIdentifier>{772f1002-81be-4dc3-ad45-848966121967}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Effects\FX">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{2f188d14-e2a8-4f09-b1ce-0f49e4c91ce3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\GeometryGenerator">
+      <UniqueIdentifier>{41305173-a4b8-498e-ac78-1911725f782c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\Terrain">
+      <UniqueIdentifier>{5ad656ae-c862-48c3-9d2b-a6a3f6e9cef9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\Skybox">
+      <UniqueIdentifier>{0a7ec3f3-3922-44c2-95b1-c5fe7d90a53d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\ParticleSystem">
+      <UniqueIdentifier>{b32e0169-5a2d-4045-b8fb-2e46654dda94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\FBX">
+      <UniqueIdentifier>{50aaa0e3-261f-424f-9816-735ffa81e5e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects\FBX\FBX Importer">
+      <UniqueIdentifier>{439faeb1-94e1-4863-b5fc-6a4fc94cdd57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="FX\BuildShadowMap.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\DebugTexture.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\DisplacementMap.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\LightHelper.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\NormalMap.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\Basic.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\Fire.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\Rain.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\Terrain.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
     <None Include="FX\Sprite.fx">
-      <Filter>FX</Filter>
+      <Filter>Effects\FX</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dApp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="d3dx11effect.h">
-      <Filter>Header Files</Filter>
+      <Filter>Camera</Filter>
     </ClInclude>
     <ClInclude Include="Effects.h">
-      <Filter>Header Files</Filter>
+      <Filter>Effects</Filter>
     </ClInclude>
     <ClInclude Include="GameTimer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GeometryGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LightHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MathHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderStates.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShadowMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Sky.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureHelper.h">
-      <Filter>Header Files</Filter>
+      <Filter>GameTimer</Filter>
     </ClInclude>
     <ClInclude Include="ParticleSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Terrain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FontSheet.h">
-      <Filter>Header Files</Filter>
+      <Filter>Objects\ParticleSystem</Filter>
     </ClInclude>
     <ClInclude Include="SpriteBatch.h">
-      <Filter>Header Files</Filter>
+      <Filter>Objects\ParticleSystem</Filter>
     </ClInclude>
-    <ClInclude Include="xnacollision.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="FontSheet.h">
+      <Filter>Text</Filter>
     </ClInclude>
-    <ClInclude Include="PhysX.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Terrain.h">
+      <Filter>Objects\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="Sky.h">
+      <Filter>Objects\Skybox</Filter>
     </ClInclude>
     <ClInclude Include="importer.h">
-      <Filter>Header Files</Filter>
+      <Filter>Objects\FBX\FBX Importer</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysXParticles.h">
+      <Filter>PhysX\PhysXParticles</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysX.h">
+      <Filter>PhysX</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryGenerator.h">
+      <Filter>Objects\GeometryGenerator</Filter>
+    </ClInclude>
+    <ClInclude Include="MathHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderStates.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureHelper.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMap.h">
+      <Filter>Effects\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="LightHelper.h">
+      <Filter>Effects\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="xnacollision.h">
+      <Filter>d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx11effect.h">
+      <Filter>d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dUtil.h">
+      <Filter>d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dApp.h">
+      <Filter>d3d</Filter>
+    </ClInclude>
+    <ClInclude Include="FBXObj.h">
+      <Filter>Objects\FBX</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Vertex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="Zeus.cpp" />
     <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="d3dApp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="d3dUtil.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Camera</Filter>
     </ClCompile>
     <ClCompile Include="Effects.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Effects</Filter>
     </ClCompile>
     <ClCompile Include="GameTimer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GeometryGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LightHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MathHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderStates.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ShadowMap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sky.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Zeus.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>GameTimer</Filter>
     </ClCompile>
     <ClCompile Include="ParticleSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Terrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FontSheet.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Objects\ParticleSystem</Filter>
     </ClCompile>
     <ClCompile Include="SpriteBatch.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Objects\ParticleSystem</Filter>
     </ClCompile>
-    <ClCompile Include="xnacollision.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="FontSheet.cpp">
+      <Filter>Text</Filter>
     </ClCompile>
-    <ClCompile Include="PhysX.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Terrain.cpp">
+      <Filter>Objects\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="Sky.cpp">
+      <Filter>Objects\Skybox</Filter>
     </ClCompile>
     <ClCompile Include="importer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Objects\FBX\FBX Importer</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysXParticles.cpp">
+      <Filter>PhysX\PhysXParticles</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysX.cpp">
+      <Filter>PhysX</Filter>
+    </ClCompile>
+    <ClCompile Include="GeometryGenerator.cpp">
+      <Filter>Objects\GeometryGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="MathHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Vertex.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderStates.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureHelper.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
+      <Filter>Effects\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="LightHelper.cpp">
+      <Filter>Effects\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="d3dApp.cpp">
+      <Filter>d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="xnacollision.cpp">
+      <Filter>d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="d3dUtil.cpp">
+      <Filter>d3d</Filter>
+    </ClCompile>
+    <ClCompile Include="FBXObj.cpp">
+      <Filter>Objects\FBX</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

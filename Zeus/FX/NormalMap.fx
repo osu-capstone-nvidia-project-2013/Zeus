@@ -54,6 +54,9 @@ Texture2D gOmniShadowMap5;
 Texture2D gDiffuseMap;
 Texture2D gNormalMap;
 
+Texture2D gTextureArray[5];
+Texture2D gNormalArray[5];
+
 TextureCube gCubeMap;
 
 SamplerState samLinear
@@ -79,7 +82,8 @@ struct VertexIn
 	float3 PosL     : POSITION;
 	float3 NormalL  : NORMAL;
 	float2 Tex      : TEXCOORD;
-	float3 TangentL : TANGENT;
+	int	   TexNum	: TEXNUM;
+	float3 TangentL : TANGENT;	
 };
 
 struct VertexOut
@@ -97,12 +101,15 @@ struct VertexOut
 	float4 ShadowPosCube3 : TEXCOORD6;
 	float4 ShadowPosCube4 : TEXCOORD7;
 	float4 ShadowPosCube5 : TEXCOORD8;
+	int	   TexNum	: TEXNUM;
 };
 
 VertexOut VS(VertexIn vin)
 {
 	VertexOut vout;
 	
+	vout.TexNum = vin.TexNum;
+
 	// Transform to world space space.
 	vout.PosW     = mul(float4(vin.PosL, 1.0f), gWorld).xyz;
 	vout.NormalW  = mul(vin.NormalL, (float3x3)gWorldInvTranspose);
@@ -149,11 +156,28 @@ float4 PS(VertexOut pin,
 	toEye /= distToEye;
 	
     // Default to multiplicative identity.
-    float4 texColor = float4(1, 1, 1, 1);
+    float4 texColor = float4(0, 0, 0, 1);
     if(gUseTexure)
 	{
 		// Sample texture.
-		texColor = gDiffuseMap.Sample( samLinear, pin.Tex );
+		
+		if(pin.TexNum == 1)
+		{
+			texColor = gTextureArray[pin.TexNum].Sample(samLinear, pin.Tex);
+			//return gTextureArray[pin.TexNum].Sample(samLinear, pin.Tex);
+		}
+
+		if(pin.TexNum == 0)
+		{
+			//texColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+			texColor = gTextureArray[0].Sample(samLinear, pin.Tex);
+			//return gTextureArray[pin.TexNum].Sample(samLinear, pin.Tex);
+		}
+		if(pin.TexNum != 0 && pin.TexNum != 1)
+		{
+			texColor = gDiffuseMap.Sample(samLinear, pin.Tex);
+		}
+		
 
 		if(gAlphaClip)
 		{
@@ -167,10 +191,21 @@ float4 PS(VertexOut pin,
 	//
 	// Normal mapping
 	//
+	float3 normalMapSample;
 
-	float3 normalMapSample = gNormalMap.Sample(samLinear, pin.Tex).rgb;
+	if(pin.TexNum == 1)
+			normalMapSample = gNormalArray[pin.TexNum].Sample(samLinear, pin.Tex).rgb;
+		else if(pin.TexNum == 0)
+			normalMapSample = gNormalArray[0].Sample(samLinear, pin.Tex).rgb;
+		else
+			normalMapSample = gNormalMap.Sample(samLinear, pin.Tex).rgb;
+
+	//normalMapSample = gNormalMap.Sample(samLinear, pin.Tex).rgb;
+
+	//normalMapSample = pin.NormalW;
+
 	float3 bumpedNormalW = NormalSampleToWorldSpace(normalMapSample, pin.NormalW, pin.TangentW);
-	 
+
 	//
 	// Lighting.
 	//
@@ -219,6 +254,7 @@ float4 PS(VertexOut pin,
 		diffuse += shadowcubeave*Dd;
 		spec    += shadowcubeave*Ss;
 
+				  
 		litColor = texColor*(ambient + diffuse) + spec;		  
 		if( gReflectionEnabled )
 		{

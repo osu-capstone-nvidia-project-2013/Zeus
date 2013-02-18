@@ -107,6 +107,7 @@
     <ClInclude Include="d3dUtil.h" />
     <ClInclude Include="d3dx11effect.h" />
     <ClInclude Include="Effects.h" />
+    <ClInclude Include="FBXObj.h" />
     <ClInclude Include="FontSheet.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="GeometryGenerator.h" />
@@ -115,6 +116,7 @@
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="PhysX.h" />
+    <ClInclude Include="PhysXParticles.h" />
     <ClInclude Include="RenderStates.h" />
     <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Sky.h" />
@@ -129,6 +131,7 @@
     <ClCompile Include="d3dApp.cpp" />
     <ClCompile Include="d3dUtil.cpp" />
     <ClCompile Include="Effects.cpp" />
+    <ClCompile Include="FBXObj.cpp" />
     <ClCompile Include="FontSheet.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
@@ -137,6 +140,7 @@
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="PhysX.cpp" />
+    <ClCompile Include="PhysXParticles.cpp" />
     <ClCompile Include="RenderStates.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="SpriteBatch.cpp" />

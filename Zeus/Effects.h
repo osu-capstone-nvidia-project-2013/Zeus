@@ -13,6 +13,8 @@
 #define EFFECTS_H
 
 #include "d3dUtil.h"
+#include <vector>
+using namespace std;
 
 #pragma region Effect
 class Effect
@@ -54,6 +56,7 @@ public:
 	void SetShadowMap(ID3D11ShaderResourceView* tex)    { ShadowMap->SetResource(tex); }
 	void SetShadowMap2(ID3D11ShaderResourceView* tex)   { ShadowMap2->SetResource(tex); }
 	void SetCubeMap(ID3D11ShaderResourceView* tex)      { CubeMap->SetResource(tex); }
+	void SetTextureArray(vector<ID3D11ShaderResourceView*> texVec) { TextureArrayPtr->SetResourceArray(&texVec[0], 0, texVec.size());}
 
 	void SetOmniShadowMaps(ID3D11ShaderResourceView* M0, ID3D11ShaderResourceView* M1,
         ID3D11ShaderResourceView* M2, ID3D11ShaderResourceView* M3, ID3D11ShaderResourceView* M4, 
@@ -147,6 +150,8 @@ public:
 	ID3DX11EffectShaderResourceVariable* ShadowMap2;
 	ID3DX11EffectShaderResourceVariable* CubeMap;
 
+	ID3DX11EffectShaderResourceVariable* TextureArrayPtr;
+
 	ID3DX11EffectShaderResourceVariable* OmniShadowMap0;
     ID3DX11EffectShaderResourceVariable* OmniShadowMap1;
     ID3DX11EffectShaderResourceVariable* OmniShadowMap2;
@@ -187,6 +192,8 @@ public:
 	void SetNormalMap(ID3D11ShaderResourceView* tex)    { NormalMap->SetResource(tex); }
 	void SetShadowMap(ID3D11ShaderResourceView* tex)    { ShadowMap->SetResource(tex); }
 	void SetShadowMap2(ID3D11ShaderResourceView* tex)   { ShadowMap2->SetResource(tex); }
+	void SetTextureArray(vector<ID3D11ShaderResourceView*> texVec) { TextureArrayPtr->SetResourceArray(&texVec[0], 0, texVec.size());}
+	void SetNormalArray(vector<ID3D11ShaderResourceView*> texVec) { NormalArrayPtr->SetResourceArray(&texVec[0], 0, texVec.size());}
 
 	void SetOmniShadowMaps(ID3D11ShaderResourceView* M0, ID3D11ShaderResourceView* M1,
         ID3D11ShaderResourceView* M2, ID3D11ShaderResourceView* M3, ID3D11ShaderResourceView* M4, 
@@ -274,6 +281,9 @@ public:
 	ID3DX11EffectVariable* DirLights;
 	ID3DX11EffectVariable* PointLights;
 	ID3DX11EffectVariable* Mat;
+
+	ID3DX11EffectShaderResourceVariable* TextureArrayPtr;
+	ID3DX11EffectShaderResourceVariable* NormalArrayPtr;
 
 	ID3DX11EffectShaderResourceVariable* DiffuseMap;
 	ID3DX11EffectShaderResourceVariable* CubeMap;

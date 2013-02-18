@@ -126,6 +126,8 @@ BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
 	ShadowTransCube3   = mFX->GetVariableByName("gShadowTransCube3")->AsMatrix();
 	ShadowTransCube4   = mFX->GetVariableByName("gShadowTransCube4")->AsMatrix();
 	ShadowTransCube5   = mFX->GetVariableByName("gShadowTransCube5")->AsMatrix();
+
+	TextureArrayPtr	   = mFX->GetVariableByName("gTextureArray")->AsShaderResource();
 }
 
 BasicEffect::~BasicEffect()
@@ -225,6 +227,9 @@ NormalMapEffect::NormalMapEffect(ID3D11Device* device, const std::wstring& filen
 	ShadowTransCube3   = mFX->GetVariableByName("gShadowTransCube3")->AsMatrix();
 	ShadowTransCube4   = mFX->GetVariableByName("gShadowTransCube4")->AsMatrix();
 	ShadowTransCube5   = mFX->GetVariableByName("gShadowTransCube5")->AsMatrix();
+
+	TextureArrayPtr	   = mFX->GetVariableByName("gTextureArray")->AsShaderResource();
+	NormalArrayPtr	   = mFX->GetVariableByName("gNormalArray")->AsShaderResource();
 }
 
 NormalMapEffect::~NormalMapEffect()

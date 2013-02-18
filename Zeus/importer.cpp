@@ -1,3 +1,6 @@
+//*********************************************************
+// importer.cpp
+//********************************************************
 #include "importer.h"
 
 /*
@@ -9,11 +12,14 @@ fbxsdk-2013.3.lib
 
 using namespace std;
 
-const char* lFilename = "Models/traingles.fbx";
+//const char* lFilename = "traingles.fbx";
+const char* lFilename;
 
 int size;
 int cornerIndex;
 int *index;
+
+int texNo = -1;
 
 FbxVector4 fbxVertex;
 FbxVector4 fbxNormal;
@@ -21,53 +27,23 @@ FbxVector2 fbxUV;
 
 vector<XMFLOAT3> *vertices;
 vector<XMFLOAT3> *normals;
-vector<XMFLOAT2> texcoords;
-vector<WORD>	 *indices;
+vector<XMFLOAT2> *texcoords;
+vector<int>	 *indices;
+vector<int>    *texnum;
 
-void loadVectors(KFbxNode* pNode, int polygonCount, FbxMesh *mesh, FbxVector4* meshVertices)
+FBXImporter::FBXImporter()
 {
-	for(int iPoly = 0; iPoly < polygonCount; iPoly++)
-	{
-		for(unsigned iPolyVert = 0; iPolyVert<3; iPolyVert++)
-		{
-			cornerIndex = mesh->GetPolygonVertex(iPoly, iPolyVert);
+}
 
-			fbxVertex = meshVertices[cornerIndex];
-			cout << vertices->size() << ": " << fbxVertex[0] << " " << fbxVertex[1] << " " << fbxVertex[2] <<endl;
-			vertices->push_back(XMFLOAT3((float)fbxVertex[0],(float)fbxVertex[1],(float)fbxVertex[2]));
-
-			mesh->GetPolygonVertexNormal(iPoly, iPolyVert, fbxNormal);
-			fbxNormal.Normalize();
-			normals->push_back(XMFLOAT3((float)fbxNormal[0],(float)fbxNormal[1],(float)fbxNormal[2]));
-
-			fbxUV = FbxVector2(0,0);
-			FbxLayerElementUV* fbxLayerUV = mesh -> GetLayer(0) -> GetUVs();
-			if(fbxLayerUV)
-			{
-				int iUVIndex = 0;
-				switch(fbxLayerUV->GetMappingMode())
-				{
-				case FbxLayerElement::eByControlPoint:
-					iUVIndex = cornerIndex;
-					break;
-				case FbxLayerElement::eByPolygonVertex:
-					iUVIndex = mesh->GetTextureUVIndex(iPoly, iPolyVert, FbxLayerElement::eTextureDiffuse);
-					break;
-				}
-				fbxUV = fbxLayerUV->GetDirectArray().GetAt(iUVIndex);
-			}
-			//cout << fbxUV[0] << " " << fbxUV[1] << endl;
-			texcoords.push_back(XMFLOAT2((float)fbxUV[0],(float)fbxUV[1])); 
-		}
-	}
-	return;
+FBXImporter::~FBXImporter()
+{
 }
 
 // recursive DisplayContent Where the magic happens
-void DisplayContent(KFbxNode* pNode)
+void FBXImporter::DisplayContent(KFbxNode* pNode)
 {
 	FbxVector4 v4; // Default translation values
-	//cout << "Child name: " << pNode->GetName() << endl;
+	cout << "Child name: " << pNode->GetName() << endl;
 
 	FbxMesh *mesh = pNode->GetMesh();
 
@@ -75,12 +51,12 @@ void DisplayContent(KFbxNode* pNode)
 	{
 		FbxVector4* meshVertices = mesh->GetControlPoints();
 		int polygonCount = mesh->GetPolygonCount();
-		//cout << "Polygon Count: " << polygonCount << endl;
+		cout << "Polygon Count: " << polygonCount << endl;
 
 		int numIndices=mesh->GetPolygonVertexCount();
 		index = new int[numIndices];
 		index = mesh->GetPolygonVertices();
-		//cout << "Num Indices: " << numIndices << endl;
+		cout << "Num Indices: " << numIndices << endl;
 
 		//Because our engine doesnt support multiple meshes
 		size = vertices->size();
@@ -92,7 +68,6 @@ void DisplayContent(KFbxNode* pNode)
 			for( int j =0; j<TriSize; j++)
 			{			
 				int index = mesh->GetPolygonVertex(i,j);
-				//cout << index << " ";
 				indices->push_back(index+size);
 
 			}
@@ -103,20 +78,18 @@ void DisplayContent(KFbxNode* pNode)
 		int i, lControlPointsCount = mesh->GetControlPointsCount();
 		FbxVector4* lControlPoints = mesh->GetControlPoints();
 
-		//float point = lControlPoints[0];
+		if( lControlPointsCount > 0 )
+			texNo++;
 
-		//cout << "    Control Points" << endl;
+		//		cout << "    Control Points" << endl;
 
 		for (i = 0; i < lControlPointsCount; i++)
 		{
-			//cout << "        Control Point " << i << endl;
-			//cout << "            Coordinates: ";
-			//for( int j = 0; j < 3; j++ )
-				 //cout << lControlPoints[i][j] << " ";
-			//cout << endl;
-
+			//** VERTICES **//
 			vertices->push_back( XMFLOAT3((float)lControlPoints[i][0], (float)lControlPoints[i][1], (float)lControlPoints[i][2]));
+			texnum->push_back( texNo );
 
+			//** NORMALS **//
 			for (int j = 0; j < mesh->GetElementNormalCount(); j++)
 			{
 				FbxGeometryElementNormal* leNormals = mesh->GetElementNormal( j);
@@ -124,22 +97,76 @@ void DisplayContent(KFbxNode* pNode)
 				if (leNormals->GetMappingMode() == FbxGeometryElement::eByControlPoint)
 				{
 					char header[100];
-					//cout << "            Normal Vector: "; 
-					if (leNormals->GetReferenceMode() == FbxGeometryElement::eDirect){
-						//for( int k = 0; k < 3; k++ )
-						//	cout << leNormals->GetDirectArray().GetAt(i)[k] << " ";
-						normals->push_back( XMFLOAT3( 
-							leNormals->GetDirectArray().GetAt(i)[0], 
-							leNormals->GetDirectArray().GetAt(i)[1], 
-							leNormals->GetDirectArray().GetAt(i)[2] ));
+					//					cout << "            normal Vector: "; 
+					if (leNormals->GetReferenceMode() == FbxGeometryElement::eDirect)
+					{
+						normals->push_back( XMFLOAT3( leNormals->GetDirectArray().GetAt(i)[0], 
+						leNormals->GetDirectArray().GetAt(i)[1], 
+						leNormals->GetDirectArray().GetAt(i)[2] ));
+					}
+				}
+			}
+		}
 
-						//cout << endl;
+	}
+	texcoords->resize(vertices->size());
+
+	if( mesh )
+	{
+		FbxStringList lUVSetNameList;
+		mesh->GetUVSetNames(lUVSetNameList);
+
+		for (int lUVSetIndex = 0; lUVSetIndex < lUVSetNameList.GetCount(); lUVSetIndex++)
+		{
+			//get lUVSetIndex-th uv set
+			const char* lUVSetName = lUVSetNameList.GetStringAt(lUVSetIndex);
+			const FbxGeometryElementUV* lUVElement = mesh->GetElementUV(lUVSetName);
+
+			if(!lUVElement)
+				continue;
+
+			// only support mapping mode eByPolygonVertex and eByControlPoint
+			if( lUVElement->GetMappingMode() != FbxGeometryElement::eByPolygonVertex &&
+				lUVElement->GetMappingMode() != FbxGeometryElement::eByControlPoint )
+				return;
+
+			//index array, where holds the index referenced to the uv data
+			const bool lUseIndex = lUVElement->GetReferenceMode() != FbxGeometryElement::eDirect;
+			const int lIndexCount= (lUseIndex) ? lUVElement->GetIndexArray().GetCount() : 0;
+
+			//iterating through the data by polygon
+			const int lPolyCount = mesh->GetPolygonCount();
+
+			if (lUVElement->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
+			{
+				int lPolyIndexCounter = 0;
+				for( int lPolyIndex = 0; lPolyIndex < lPolyCount; ++lPolyIndex )
+				{
+					// build the max index array that we need to pass into MakePoly
+					const int lPolySize = mesh->GetPolygonSize(lPolyIndex);
+					for( int lVertIndex = 0; lVertIndex < lPolySize; ++lVertIndex )
+					{
+						if (lPolyIndexCounter < lIndexCount)
+						{
+							FbxVector2 lUVValue;
+
+							//the UV index depends on the reference mode
+							int lUVIndex = lUseIndex ? lUVElement->GetIndexArray().GetAt(lPolyIndexCounter) : lPolyIndexCounter;
+
+							lUVValue = lUVElement->GetDirectArray().GetAt(lUVIndex);
+							int lControlPointIndex = mesh->GetPolygonVertex(lPolyIndex, lVertIndex);
+
+							cout << lControlPointIndex+size << ": " << lUVValue[0] << " " << lUVValue[1] << " " << size << endl;
+
+							texcoords[0][lControlPointIndex+size] = XMFLOAT2( (float)lUVValue[0], 1.0f-(float) lUVValue[1] );
+
+							lPolyIndexCounter++;
+						}
 					}
 				}
 			}
 		}
 	}
-
 	for(int i = 0; i < pNode->GetChildCount(); i++)
 	{
 		DisplayContent(pNode->GetChild(i));
@@ -147,9 +174,9 @@ void DisplayContent(KFbxNode* pNode)
 }
 
 // Non-recursive DisplayContent() is called once
-void DisplayContent(FbxScene* pScene)
+void FBXImporter::DisplayContent(FbxScene* pScene)
 {
-	//cout << "Starting Recursion" << endl;
+	cout << "Starting Recursion" << endl;
 
 	int i;
 	FbxNode* lNode = pScene->GetRootNode();
@@ -162,17 +189,23 @@ void DisplayContent(FbxScene* pScene)
 		}
 	}
 
-	//cout << "Done" << endl;
+	cout << "Done" << endl;
 }
 
 
-void Import(vector<XMFLOAT3> *vec, vector<WORD> *ind, vector<XMFLOAT3> *norm)
+int FBXImporter::Import(char *name, vector<XMFLOAT3> *vec, vector<int> *ind, vector<XMFLOAT3> *norm, vector<XMFLOAT2> *tex, vector<int> *num )
 {
+
+	texNo = -1;
+	//	char* lFilename = "traingles.fbx";
+	lFilename = name;
 
 	// point to the vectors for changes to be made
 	vertices = vec;
 	indices = ind;
 	normals = norm;
+	texcoords = tex;
+	texnum = num;
 
 	//const std::string &fileName = "sadirohyea.fbx";
 	FbxVector4 fbxVertex;
@@ -200,9 +233,6 @@ void Import(vector<XMFLOAT3> *vec, vector<WORD> *ind, vector<XMFLOAT3> *norm)
 		exit(-1);
 	}
 
-	//	cout << "success" << endl;
-	//	cout << "Creating scene......" << endl;
-
 	// Create a new scene so it can be populated by the imported file.
 	FbxScene* lScene = FbxScene::Create(lSdkManager, "MyScene");
 
@@ -212,8 +242,6 @@ void Import(vector<XMFLOAT3> *vec, vector<WORD> *ind, vector<XMFLOAT3> *norm)
 	// The file has been imported; we can get rid of the importer.
 	lImporter->Destroy();
 
-	//	cout << "Scene created" << endl;
-
 	FbxNode* rootNode = lScene->GetRootNode();
 	if(!rootNode)
 		cout << "failed. no rootNode" << endl;
@@ -221,20 +249,5 @@ void Import(vector<XMFLOAT3> *vec, vector<WORD> *ind, vector<XMFLOAT3> *norm)
 	// Traverse through the trees
 	DisplayContent( lScene );
 
-//	cout << "Vertices: " << vertices->size() << "\n";
-//	cout << "Normals:  " << normals->size() << "\n";
-//	cout << "Textures: " << texcoords.size() << "\n";
-//	cout << "Indices:  " << indices->size() << endl;
-
-//	for( int i = 0; i < indices->size(); i++ )
-//	{
-//		if( i%3 == 0 && i != 0 )
-//			cout << endl;
-//		cout << indices[i] << " ";
-
-//	}
-
-	/*int c;
-	cin >> c;*/
-	return;
+	return texNo;
 }
