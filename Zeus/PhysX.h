@@ -25,16 +25,25 @@ public:
     PhysX();
     ~PhysX();
     void Init();
-	bool advance(float dt);
+	
+    bool advance(float dt);
     void fetch();
-	void CreateSphere(float x, float y, float z);
+	
+    void CreateHeightfield();
+
+    void CreateSphere(float x, float y, float z);
 	void CreateBox(float x, float y, float z, float vx, float vy, float vz, float speed);
-	PxTransform GetSphereWorld();
+	
+    PxTransform GetSphereWorld();
 	PxTransform GetBoxWorld(int boxnum);
     int GetNumBoxes();
-	void Draw(PxTransform &transform);
+	
+    void Draw(PxTransform &transform);
 
-public:
+   
+
+private:
+
     PxFoundation*           mFoundation;
     PxPhysics*              mPhysics;
 	PxScene*				mScene;

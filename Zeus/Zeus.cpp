@@ -367,12 +367,12 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(116.0f), -4.0f/sqrtf(116.0f), 0.0f);
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(109.0f), -3.0f/sqrtf(109.0f), 0.0f);*/
 
-    mDirLights[1].Ambient  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+    mDirLights[1].Ambient  = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     mDirLights[1].Diffuse  = XMFLOAT4(0.40f, 0.40f, 0.40f, 1.0f);
     mDirLights[1].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[1].Direction = XMFLOAT3(0.0f, -0.8f, 0.3f);
 
-    mDirLights[2].Ambient  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+    mDirLights[2].Ambient  = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     mDirLights[2].Diffuse  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[2].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[2].Direction = XMFLOAT3(0.0f, 0.0, -1.0f);
@@ -482,13 +482,13 @@ bool ZeusApp::Init()
     mSky  = new Sky(md3dDevice, L"Textures/mountains1024.dds", 5000.0f);
 
     Terrain::InitInfo tii;
-    tii.HeightMapFilename = L"Textures/terrain3.raw";
+    tii.HeightMapFilename = L"Textures/terrain4.raw";
     tii.LayerMapFilename0 = L"Textures/grass.dds";
     tii.LayerMapFilename1 = L"Textures/darkdirt.dds";
     tii.LayerMapFilename2 = L"Textures/stone.dds";
     tii.LayerMapFilename3 = L"Textures/lightdirt.dds";
     tii.LayerMapFilename4 = L"Textures/snow.dds";
-    tii.BlendMapFilename = L"Textures/blend.dds";
+    tii.BlendMapFilename = L"Textures/blend2.dds";
     tii.HeightScale = 50.0f;
     tii.HeightmapWidth = 2049;
     tii.HeightmapHeight = 2049;
@@ -972,7 +972,8 @@ void ZeusApp::DrawScene()
     
     if(!((camPosition.x > 15.0f || camPosition.x < -25.0) ||
 		 (camPosition.y > 25.0f || camPosition.y < -25.0) ||
-         (camPosition.z > 15.0f || camPosition.z < -25.0)) ){
+         (camPosition.z > 15.0f || camPosition.z < -25.0)) )
+    {
     
 		// Sphere with dynamic cube mapping
 		BuildCubeFaceCamera(-5.0f, 4.0f, 5.0f); // Sphere position
@@ -1184,12 +1185,12 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
             mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
         
 	    Effects::NormalMapFX->SetPointLights(mPointLights);
-	    Effects::NormalMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+	    /*Effects::NormalMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());*/
 
 	    Effects::DisplacementMapFX->SetPointLights(mPointLights);
-	    Effects::DisplacementMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
+	    //Effects::DisplacementMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
+        //    mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());
     }
     else
     {
@@ -1326,9 +1327,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
                 Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
                 Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
                 Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
-				Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
                 Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(1.0f, 2.0f, 1.0f));
                 Effects::NormalMapFX->SetMaterial(mObjMat);
                 Effects::NormalMapFX->SetDiffuseMap(mBrickTexSRV);
@@ -1344,9 +1345,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
                 // space position, we just need the light view/proj.
                 Effects::DisplacementMapFX->SetShadowTransform(shadowTransform);
                 Effects::DisplacementMapFX->SetShadowTransform2(shadowTransform2);
-				Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
                 Effects::DisplacementMapFX->SetTexTransform(XMMatrixScaling(1.0f, 2.0f, 1.0f));
                 Effects::DisplacementMapFX->SetMaterial(mObjMat);
                 Effects::DisplacementMapFX->SetDiffuseMap(mBrickTexSRV);
@@ -1402,9 +1403,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
             Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
             Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
             Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
-			Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+			/*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
             Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(8.0f, 10.0f, 1.0f));
             Effects::NormalMapFX->SetMaterial(mGridMat);
             Effects::NormalMapFX->SetDiffuseMap(mStoneTexSRV);
@@ -1418,9 +1419,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
             
             Effects::DisplacementMapFX->SetShadowTransform(shadowTransform);				     // Note: No world pre-multiply for displacement mapping since 
             Effects::DisplacementMapFX->SetShadowTransform2(shadowTransform2);
-			Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+			/*Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
             Effects::DisplacementMapFX->SetTexTransform(XMMatrixScaling(8.0f, 10.0f, 1.0f));     // the DS computes the world space position, we just need the 
             Effects::DisplacementMapFX->SetMaterial(mGridMat);                                   // light view/proj.
             Effects::DisplacementMapFX->SetDiffuseMap(mStoneTexSRV);
@@ -1459,9 +1460,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 				Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
 				Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
 				Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
-				Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
 				Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(2.0f, 1.0f, 1.0f));
 				Effects::NormalMapFX->SetMaterial(mBoxMat);
 				Effects::NormalMapFX->SetDiffuseMap(mBrickTexSRV);
@@ -1474,9 +1475,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 				Effects::DisplacementMapFX->SetWorldViewProj(worldViewProj);
 				Effects::DisplacementMapFX->SetShadowTransform(shadowTransform);
 				Effects::DisplacementMapFX->SetShadowTransform2(shadowTransform2);
-				Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
 				Effects::DisplacementMapFX->SetTexTransform(XMMatrixScaling(2.0f, 1.0f, 1.0f));
 				Effects::DisplacementMapFX->SetMaterial(mBoxMat);
 				Effects::DisplacementMapFX->SetDiffuseMap(mBrickTexSRV);
@@ -1516,9 +1517,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
                 Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
                 Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
                 Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
-				Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
                 Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(1.0f, 2.0f, 1.0f));
                 Effects::NormalMapFX->SetMaterial(mCylinderMat);
                 Effects::NormalMapFX->SetDiffuseMap(mBrickTexSRV);
@@ -1531,9 +1532,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
                 Effects::DisplacementMapFX->SetWorldViewProj(worldViewProj);
                 Effects::DisplacementMapFX->SetShadowTransform(shadowTransform);
                 Effects::DisplacementMapFX->SetShadowTransform2(shadowTransform2);
-				Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
                 Effects::DisplacementMapFX->SetTexTransform(XMMatrixScaling(1.0f, 2.0f, 1.0f));
                 Effects::DisplacementMapFX->SetMaterial(mCylinderMat);
                 Effects::DisplacementMapFX->SetDiffuseMap(mBrickTexSRV);
@@ -1569,9 +1570,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
                 Effects::BasicFX->SetWorldViewProj(worldViewProj);
                 Effects::BasicFX->SetShadowTransform(world*shadowTransform);
                 Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
-				Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
                 Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
                 Effects::BasicFX->SetMaterial(mSphereMat);
                 Effects::BasicFX->SetCubeMap(mDynamicCubeMapSRVSphere);
@@ -1597,9 +1598,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
                 Effects::BasicFX->SetWorldViewProj(worldViewProj);
                 Effects::BasicFX->SetShadowTransform(world*shadowTransform);
                 Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
-				Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+				/*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
                 Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
                 Effects::BasicFX->SetMaterial(mSphereMat);
                 //Effects::BasicFX->SetCubeMap(mSky->CubeMapSRV());
@@ -1636,9 +1637,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
             Effects::BasicFX->SetMaterial(mSkullMat);
             Effects::BasicFX->SetShadowTransform(world*shadowTransform);
             Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
-			Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+			/*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
             Effects::BasicFX->SetCubeMap(mDynamicCubeMapSRVSkull);
 
             activeSkullTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
@@ -1659,9 +1660,9 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
             Effects::BasicFX->SetMaterial(mSkullMat);
             Effects::BasicFX->SetShadowTransform(world*shadowTransform);
             Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
-			Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+			/*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
 		world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));
+		world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
             //Effects::BasicFX->SetCubeMap(mSky->CubeMapSRV());
 
             activeSkullTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
