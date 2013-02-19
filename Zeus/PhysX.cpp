@@ -190,14 +190,12 @@ int* indes;
 PxVec3* vertas;
 
 void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
-							int numInds, int* inds, float x, float y, float z)
+							int numInds, int* inds, float x, float y, float z, float scale)
 {
 	PxRigidStatic* meshActor = pxPhysics->createRigidStatic(PxTransform::createIdentity());
 	PxShape* meshShape;
 	if(meshActor)
 	{
-			
-
 			PxTriangleMeshDesc meshDesc;
 			meshDesc.points.count           = numVerts;
 			meshDesc.points.stride          = sizeof(PxVec3);
@@ -216,7 +214,7 @@ void PhysX::SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts
 			
 			PxTriangleMeshGeometry triGeom;
 			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
-			triGeom.scale = PxMeshScale(PxVec3(8.0,8.0,8.0),PxQuat());
+			triGeom.scale = PxMeshScale(PxVec3(scale,scale,scale),PxQuat());
 
 			meshShape = meshActor->createShape(triGeom, *defaultMaterial);
 			meshShape->setLocalPose(PxTransform(PxVec3(x,y,z)));
@@ -294,7 +292,6 @@ void PhysX::CreateBox(float x, float y, float z, float lookx, float looky, float
 	float vz = look.z * firespeed;
 	boxActor->setLinearVelocity(PxVec3(vx,vy,vz));
 	boxActor->setAngularDamping(0.95);
-	boxActor->setLinearDamping(0.8);
 	PxRigidBodyExt::updateMassAndInertia(*boxActor, density);
 
 	//CCD
@@ -339,8 +336,7 @@ PxTransform PhysX::GetBoxWorld(int boxnum)
 void PhysX::InitParticles(int count, float x, float y, float z, float vx, float vy, float vz, bool gravity)
 {
 	PhysXParticles particles;
-
-	particles.InitParticles(count, pxPhysics, pxScene);
+	//particles.InitParticles(count, pxPhysics, pxScene);
 	//particles.CreateParticles();
 
 	//mParticles.push_back(particles);

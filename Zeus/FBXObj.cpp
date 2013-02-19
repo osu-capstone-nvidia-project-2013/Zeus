@@ -102,6 +102,45 @@ void FBXObj::Import(char* filename, ID3D11Device* dev)
     HR(dev->CreateBuffer(&ibd, &iinitData, &mIB));
 }
 
+void FBXObj::LoadTexture(ID3D11Device* dev, wchar_t* filename)
+{
+	ID3D11ShaderResourceView* texture;
+	HR(D3DX11CreateShaderResourceViewFromFile(dev, 
+        filename, 0, 0, &texture, 0 ));
+	mTextureArray.push_back(texture);
+}
+
+void FBXObj::LoadNormal(ID3D11Device* dev, wchar_t* filename)
+{
+	ID3D11ShaderResourceView* texture;
+	HR(D3DX11CreateShaderResourceViewFromFile(dev, 
+        filename, 0, 0, &texture, 0 ));
+	mNormalArray.push_back(texture);
+}
+
+
+void FBXObj::LoadTextures(ID3D11Device* dev, vector<wchar_t*> filenames)
+{
+	for(int i = 0; i < filenames.size() ; i++)
+	{
+		ID3D11ShaderResourceView* texture;
+		HR(D3DX11CreateShaderResourceViewFromFile(dev, 
+			filenames[i], 0, 0, &texture, 0 ));
+		mTextureArray.push_back(texture);
+	}
+}
+
+void FBXObj::LoadNormals(ID3D11Device* dev, vector<wchar_t*> filenames)
+{
+	for(int i = 0; i < filenames.size() ; i++)
+	{
+		ID3D11ShaderResourceView* texture;
+		HR(D3DX11CreateShaderResourceViewFromFile(dev, 
+			filenames[i], 0, 0, &texture, 0 ));
+		mNormalArray.push_back(texture);
+	}
+}
+
 UINT FBXObj::GetIndexCount()
 {
     return mIndexCount;

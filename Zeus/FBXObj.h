@@ -18,6 +18,12 @@ public:
     ~FBXObj();
 
     void Import(char* filename, ID3D11Device* dev);
+	
+	void LoadTexture(ID3D11Device* dev, wchar_t* filename);
+	void LoadNormal(ID3D11Device* dev, wchar_t* filename);
+
+	void LoadTextures(ID3D11Device* dev, vector<wchar_t*> filenames);
+	void LoadNormals(ID3D11Device* dev, vector<wchar_t*> filenames);
 
     UINT GetIndexCount();
     UINT GetVertexCount();

@@ -51,7 +51,7 @@ public:
 	void CreateTerrain( int numVerts, PxVec3* verts, int numInds, int* inds);
 
 	void SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
-							int numInds, int* inds, float x, float y, float z);
+							int numInds, int* inds, float x, float y, float z, float scale);
 
 	void PlaceTriangleMesh( ObjectNumbers objnum, float x, float y, float z, float scale, bool statc );
 	

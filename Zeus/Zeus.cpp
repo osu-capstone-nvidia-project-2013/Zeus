@@ -93,7 +93,7 @@ private:
 
     void PxtoXMMatrix(PxTransform input, XMMATRIX* start);
     void CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::vector<XMFLOAT3> verts,
-                                    int numInds, std::vector<int> inds, float x, float y, float z);
+                                    int numInds, std::vector<int> inds, float x, float y, float z, float scale);
     void CreatePhysXTriangleMeshTerrain( int numVerts, std::vector<XMFLOAT3> verts, int numInds, std::vector<int> inds);
 
 private:
@@ -362,8 +362,8 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     ////////////////////////////
     //    Lights/Materials    //
     ////////////////////////////
-    mPointLights[0].Ambient = XMFLOAT4(1.8f, 0.2f, 0.2f, 1.0f);
-    mPointLights[0].Diffuse = XMFLOAT4(1.7f, 1.7f, 1.6f, 1.0f);
+    mPointLights[0].Ambient = XMFLOAT4(2.8f, 1.0f, 0.2f, 1.0f);
+    mPointLights[0].Diffuse = XMFLOAT4(2.7f, 1.0f, 1.6f, 1.0f);
     mPointLights[0].Specular = XMFLOAT4(1.8f, 1.8f, 1.7f, 1.0f);
     mPointLights[0].Position = XMFLOAT3(-5.0f, 4.5f, 10.0f);
     mPointLights[0].Range = 40.3f;
@@ -380,12 +380,12 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(116.0f), -4.0f/sqrtf(116.0f), 0.0f);
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(109.0f), -3.0f/sqrtf(109.0f), 0.0f);*/
 
-    mDirLights[1].Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+    mDirLights[1].Ambient  = XMFLOAT4(0.99f, 0.99f, 0.99f, 0.002f);
     mDirLights[1].Diffuse  = XMFLOAT4(0.40f, 0.40f, 0.40f, 1.0f);
     mDirLights[1].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[1].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
 
-    mDirLights[2].Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+    mDirLights[2].Ambient  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
     mDirLights[2].Diffuse  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[2].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[2].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
@@ -415,10 +415,10 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mCylinderMat.Specular = XMFLOAT4(1.0f, 1.0f, 1.0f, 32.0f);
     mCylinderMat.Reflect  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 
-    mSphereMat.Ambient  = XMFLOAT4(0.2f, 0.3f, 0.4f, 1.0f);
-    mSphereMat.Diffuse  = XMFLOAT4(0.2f, 0.3f, 0.4f, 1.0f);
+    mSphereMat.Ambient  = XMFLOAT4(0.5f, 0.5f, 0.525f, 1.0f);
+    mSphereMat.Diffuse  = XMFLOAT4(0.7f, 0.7f, 0.725f, 1.0f);
     mSphereMat.Specular = XMFLOAT4(0.9f, 0.9f, 0.9f, 16.0f);
-    mSphereMat.Reflect  = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+    mSphereMat.Reflect  = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
 
     mBoxMat.Ambient  = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
     mBoxMat.Diffuse  = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -430,7 +430,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mSkullMat.Specular = XMFLOAT4(0.8f, 0.8f, 0.8f, 16.0f);
     mSkullMat.Reflect  = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
 
-    mTreeMat.Ambient  = XMFLOAT4(0.8f, 0.6f, 0.4f, 1.0f);
+    mTreeMat.Ambient  = XMFLOAT4(0.99f, 0.99f, 0.99f, 1.0f);
     mTreeMat.Diffuse  = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
     mTreeMat.Specular = XMFLOAT4(0.8f, 0.8f, 0.8f, 0.8f);
     mTreeMat.Reflect  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -595,9 +595,7 @@ bool ZeusApp::Init()
     LoadTreeBuffer();
     
     LoadFBXBuffers();
-    //[dc
-    mTreeVB = mFBXObjects[0]->GetVB();
-    mTreeIB = mFBXObjects[0]->GetIB();
+    
 
     BuildInstancedBuffer();
 
@@ -1026,7 +1024,7 @@ void ZeusApp::DrawScene()
          (camPosition.z > 15.0f || camPosition.z < -25.0)) ){
     
         // Sphere with dynamic cube mapping
-        BuildCubeFaceCamera(-5.0f, 4.0f, -10.0f); // Sphere position
+        BuildCubeFaceCamera(5.0f, 4.0f, 10.0f); // Sphere position
     
         for(int i = 0; i < 6; ++i) // for mirror, just do (int i = 0; i < 1; ++i) for 1 camera mapped to mirror surface
         {
@@ -1040,6 +1038,9 @@ void ZeusApp::DrawScene()
 
             // Draw the scene with the exception of the center sphere to this cube map face
             DrawScene(mCubeMapCamera[i], false, false, false);
+			md3dImmediateContext->ClearRenderTargetView(mDynamicCubeMapRTVSphere[i], reinterpret_cast<const float*>(&Colors::Silver));
+            md3dImmediateContext->ClearDepthStencilView(mDynamicCubeMapDSVSphere, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+			DrawScene(mCubeMapCamera[i], false, false, false);
         }
 
         // Have hardware generate lower mipmap levels of cube map
@@ -1323,11 +1324,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
         activeObjTech = Effects::NormalMapFX->Light3TexTech;
         md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         break;
-    case RenderOptionsDisplacementMap:
-        activeTech = Effects::DisplacementMapFX->Light3TexTech;
-        activeObjTech = Effects::DisplacementMapFX->Light3TexTech;
-        md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-        break;
     }
 
     XMMATRIX world;
@@ -1396,24 +1392,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 				Effects::NormalMapFX->SetNormalArray(normVec);
 				Effects::NormalMapFX->SetTextureArray(texVec);
                 break;
-            case RenderOptionsDisplacementMap:
-                Effects::DisplacementMapFX->SetWorld(world);
-                Effects::DisplacementMapFX->SetWorldInvTranspose(worldInvTranspose);
-                Effects::DisplacementMapFX->SetViewProj(viewProj);
-                Effects::DisplacementMapFX->SetWorldViewProj(worldViewProj);
-                    
-                // Note: No world pre-multiply for displacement mapping since the DS computes the world
-                // space position, we just need the light view/proj.
-                Effects::DisplacementMapFX->SetShadowTransform(shadowTransform);
-                Effects::DisplacementMapFX->SetShadowTransform2(shadowTransform2);
-                /*Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
-        world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-        world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
-                Effects::DisplacementMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
-                Effects::DisplacementMapFX->SetMaterial(mTreeMat);
-                Effects::DisplacementMapFX->SetDiffuseMap(mTreeTexSRV);
-                Effects::DisplacementMapFX->SetNormalMap(mTreeNormalTexSRV);
-                break;
             }
 
             activeObjTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
@@ -1421,73 +1399,66 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
         }
     }
 
+    
+
+    activeObjTech->GetDesc( &techDesc );
     // Draw the FBX objects
-    //md3dImmediateContext->IASetInputLayout(InputLayouts::PosNormalTexTan);
-    //md3dImmediateContext->IASetVertexBuffers(0, 1, &mFBXVB, &stride, &offset);
-    //md3dImmediateContext->IASetIndexBuffer(mFBXIB, DXGI_FORMAT_R32_UINT, 0);
+    for(int i = 0; i < 1; i++)
+    {
+		// Draw the FBX objects
+		mFBXVB = mFBXObjects[i]->GetVB();
+		mFBXIB = mFBXObjects[i]->GetIB();
+		md3dImmediateContext->IASetInputLayout(InputLayouts::PosNormalTexTan);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mFBXVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mFBXIB, DXGI_FORMAT_R32_UINT, 0);
+		
+		vector<ID3D11ShaderResourceView*> texVec = mFBXObjects[i]->GetTextureArray();
+		vector<ID3D11ShaderResourceView*> normVec = mFBXObjects[i]->GetNormalArray();
+		for(int j = 0; j < 5; j++)
+		{
+			for(UINT p = 0; p < techDesc.Passes; ++p)
+			{
+				world = XMLoadFloat4x4(&mFBXWorld[j]);
+				worldInvTranspose = MathHelper::InverseTranspose(world);
+				worldViewProj = world*view*proj;
 
-    //activeObjTech->GetDesc( &techDesc );
-    //// Draw the FBX objects
-    //for(int i = 0; i < mFBXObjCount; i++)
-    //{
-    //    for(UINT p = 0; p < techDesc.Passes; ++p)
-    //    {
-    //        world = XMLoadFloat4x4(&mFBXWorld[i]);
-    //        worldInvTranspose = MathHelper::InverseTranspose(world);
-    //        worldViewProj = world*view*proj;
 
-    //        switch(mRenderOptions)
-    //        {
-    //        case RenderOptionsBasic:
-    //            Effects::BasicFX->SetWorld(world);
-    //            Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-    //            Effects::BasicFX->SetWorldViewProj(worldViewProj);
-    //            Effects::BasicFX->SetShadowTransform(world*shadowTransform);
-    //            Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
-    //            /*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
-    //    world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-    //    world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
-    //            Effects::BasicFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
-    //            Effects::BasicFX->SetMaterial(mFBXMats[0]);
-    //            Effects::BasicFX->SetDiffuseMap(mClothTexSRV);
-    //            break;
-    //        case RenderOptionsNormalMap:
-    //            Effects::NormalMapFX->SetWorld(world);
-    //            Effects::NormalMapFX->SetWorldInvTranspose(worldInvTranspose);
-    //            Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
-    //            Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
-    //            Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
-    //            /*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
-    //    world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-    //    world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
-    //            Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
-    //            Effects::NormalMapFX->SetMaterial(mFBXMats[0]);
-    //            Effects::NormalMapFX->SetDiffuseMap(mClothTexSRV);
-    //            Effects::NormalMapFX->SetNormalMap(mTreeNormalTexSRV);
-    //            break;
-    //        case RenderOptionsDisplacementMap:
-    //            Effects::DisplacementMapFX->SetWorld(world);
-    //            Effects::DisplacementMapFX->SetWorldInvTranspose(worldInvTranspose);
-    //            Effects::DisplacementMapFX->SetViewProj(viewProj);
-    //            Effects::DisplacementMapFX->SetWorldViewProj(worldViewProj);
-    //                
-    //            // Note: No world pre-multiply for displacement mapping since the DS computes the world
-    //            // space position, we just need the light view/proj.
-    //            Effects::DisplacementMapFX->SetShadowTransform(shadowTransform);
-    //            Effects::DisplacementMapFX->SetShadowTransform2(shadowTransform2);
-    //            /*Effects::DisplacementMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
-    //    world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-    //    world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
-    //            Effects::DisplacementMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
-    //            Effects::DisplacementMapFX->SetMaterial(mFBXMats[0]);
-    //            Effects::DisplacementMapFX->SetDiffuseMap(mClothTexSRV);
-    //            break;
-    //        }
-    //    
-    //        activeObjTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-    //        md3dImmediateContext->DrawIndexed(mFBXIndexCount[i],mFBXIndexOffset[i], mFBXVertexOffset[i]);
-    //    }
-    //}
+				switch(mRenderOptions)
+				{
+				case RenderOptionsBasic:
+					Effects::BasicFX->SetWorld(world);
+					Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
+					Effects::BasicFX->SetWorldViewProj(worldViewProj);
+					Effects::BasicFX->SetShadowTransform(world*shadowTransform);
+					Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
+					/*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+			world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
+			world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
+					Effects::BasicFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
+					Effects::BasicFX->SetMaterial(mFBXMats[0]);
+					Effects::BasicFX->SetTextureArray(texVec);
+					break;
+				case RenderOptionsNormalMap:
+					Effects::NormalMapFX->SetWorld(world);
+					Effects::NormalMapFX->SetWorldInvTranspose(worldInvTranspose);
+					Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
+					Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
+					Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
+					/*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+			world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
+			world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
+					Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
+					Effects::NormalMapFX->SetMaterial(mFBXMats[0]);
+					Effects::NormalMapFX->SetNormalArray(normVec);
+					Effects::NormalMapFX->SetTextureArray(texVec);
+					break;
+				}
+        
+				activeObjTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+				md3dImmediateContext->DrawIndexed(mFBXObjects[i]->GetIndexCount(), 0, 0);
+			}
+		}
+    }
 
     // Draw the grid, cylinders, and box without any cubemap reflection.
     stride = sizeof(Vertex::PosNormalTexTan);
@@ -2728,7 +2699,7 @@ void ZeusApp::CreateTreeMatrixes()
         treeOffset = XMMatrixTranslation(treeposition.x,treeposition.y, treeposition.z);
         XMStoreFloat4x4(&mTreeWorld[i], XMMatrixMultiply(treeScale, treeOffset));
         CreatePhysXTriangleMesh(ObjectNumbers::tree, mTreeVertCount, mTreepositions,
-            mTreeIndexCount, mTreeIndices, treeposition.x, treeposition.y, treeposition.z);
+            mTreeIndexCount, mTreeIndices, treeposition.x, treeposition.y, treeposition.z, scale);
     }
 }
 
@@ -2745,6 +2716,10 @@ void ZeusApp::LoadFBXBuffers()
     {
         FBXObj object;
         object.Import(filenames[i], md3dDevice);
+		object.LoadTexture(md3dDevice, L"Textures/CommandoArmor_DM.dds");
+		object.LoadTexture(md3dDevice, L"Textures/Commando_DM.dds");
+		object.LoadNormal(md3dDevice, L"Textures/CommandoArmor_NM.dds");
+		object.LoadNormal(md3dDevice, L"Textures/Commando_NM.dds");
         mFBXObjects.push_back(&object);
     }
 }
@@ -2752,23 +2727,35 @@ void ZeusApp::LoadFBXBuffers()
 void ZeusApp::CreateFBXMatrixes()
 {
     XMVECTOR fbxpositions[] = {
-        {	10.0f,		0.0f,		50.0f	}
+        {	0.0f,		0.0f,		0.0f	},
+		{	100.0f,		0.0f,		-100.0f	},
+		{	80.0f,	    0.0f,	    -110.0f	},
+		{	110.0f,		0.0f,		-80.0f	},
+		{	75.0f,		0.0f,		80.0f	}
     };
 
     XMVECTOR fbxscales[] = {
-        {	8.0f,		8.0f,		8.0f    }
+        {	8.0f,		8.0f,		8.0f    },
+		{	8.0f,		8.0f,		8.0f    },
+		{	8.0f,		8.0f,		8.0f    },
+		{	8.0f,		8.0f,		8.0f    },
+		{	8.0f,		8.0f,		8.0f    }
     };
 
     XMVECTOR fbxrotations[] = {
-        {	0.0f,		0.0f,		0.0f	}
+        {	0.0f,		0.0f,		0.0f	},
+		{	0.0f,		0.0f,		0.0f	},
+		{	0.0f,		0.0f,		0.0f	},
+		{	0.0f,		0.0f,		0.0f	},
+		{	0.0f,		0.0f,		0.0f	}
     };
 
     mFBXWorldCount = sizeof( fbxpositions ) / sizeof( XMVECTOR );
     mFBXWorld = new XMFLOAT4X4[mFBXWorldCount];
     mFBXMats = new Material[mFBXWorldCount];
-    mFBXMats[0].Ambient  = XMFLOAT4(0.6f, 0.4f, 0.2f, 1.0f);
-    mFBXMats[0].Diffuse  = XMFLOAT4(0.6f, 0.45f, 0.2f, 1.0f);
-    mFBXMats[0].Specular = XMFLOAT4(0.8f, 0.8f, 0.8f, 1.0f);
+    mFBXMats[0].Ambient  = XMFLOAT4(0.99f, 0.99f, 0.99f, 1.0f);
+    mFBXMats[0].Diffuse  = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+    mFBXMats[0].Specular = XMFLOAT4(0.6f, 0.6f, 0.6f, 0.8f);
     mFBXMats[0].Reflect  = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 
     XMMATRIX fbxScale;
@@ -2790,8 +2777,8 @@ void ZeusApp::CreateFBXMatrixes()
 
         XMStoreFloat4x4(&mFBXWorld[i], XMMatrixMultiply(fbxScale, XMMatrixMultiply(fbxOffset, fbxRotation) ) );
         //Put into physx
-        //CreatePhysXTriangleMesh(ObjectNumbers::tree, mTreeVertCount, mTreepositions,
-        //    mTreeIndexCount, mTreeIndices, fbxposition.x, fbxposition.y, fbxposition.z);
+        CreatePhysXTriangleMesh(ObjectNumbers::tree, mTreeVertCount, mTreepositions,
+            mTreeIndexCount, mTreeIndices, fbxposition.x, fbxposition.y, fbxposition.z, fbxscale.x);
     }
 }
 
@@ -2871,7 +2858,7 @@ void ZeusApp::PxtoXMMatrix(PxTransform input, XMMATRIX* start)
 }
 
 void ZeusApp::CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::vector<XMFLOAT3> verts,
-                                        int numInds, std::vector<int> inds, float x, float y, float z)
+                                        int numInds, std::vector<int> inds, float x, float y, float z, float scale)
 
 {
     PxVec3* vertices = new PxVec3[numVerts];
@@ -2888,7 +2875,7 @@ void ZeusApp::CreatePhysXTriangleMesh(	ObjectNumbers objnum, int numVerts, std::
         indices[i] = inds[i];
     }
 
-    mPhysX->SetupTriangleMesh(objnum, numVerts, vertices, numInds, indices, x, y, z);
+    mPhysX->SetupTriangleMesh(objnum, numVerts, vertices, numInds, indices, x, y, z, scale);
     delete [] indices;
     delete [] vertices;
 }
