@@ -53,6 +53,13 @@ struct BoundingSphere
     float Radius;
 };
 
+struct objectInfo
+{
+	float x,y,z;
+	float sx,sy,sz;
+	float rx, ry, rz;
+};
+
 
 class ZeusApp : public D3DApp 
 {
@@ -489,6 +496,7 @@ ZeusApp::~ZeusApp()
 bool ZeusApp::Init()
 {
     mPhysX->Init();
+	mPhysX->InitParticles(10, 0, 20, 0);
 
     if(!D3DApp::Init())
         return false;
@@ -501,7 +509,7 @@ bool ZeusApp::Init()
     mSky  = new Sky(md3dDevice, L"Textures/mountains1024.dds", 5000.0f);
 
     Terrain::InitInfo tii;
-    tii.HeightMapFilename = L"Textures/terrain3.raw";
+    tii.HeightMapFilename = L"Textures/terrain5.raw";
     tii.LayerMapFilename0 = L"Textures/grass.dds";
     tii.LayerMapFilename1 = L"Textures/darkdirt.dds";
     tii.LayerMapFilename2 = L"Textures/stone.dds";
@@ -592,7 +600,7 @@ bool ZeusApp::Init()
     BuildShapeGeometryBuffers();
     BuildSkullGeometryBuffers();
     BuildScreenQuadGeometryBuffers();
-    LoadTreeBuffer();
+    //LoadTreeBuffer();
     
     LoadFBXBuffers();
     
@@ -600,7 +608,7 @@ bool ZeusApp::Init()
     BuildInstancedBuffer();
 
     // Trees
-    CreateTreeMatrixes();
+    //CreateTreeMatrixes();
 
     //FBX objects
     CreateFBXMatrixes();
@@ -612,7 +620,7 @@ bool ZeusApp::Init()
 void ZeusApp::OnResize()
 {
     D3DApp::OnResize();
-    mCam.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    mCam.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 5000.0f);
 
     // Build the frustum from the projection matrix in view space.
     ComputeFrustumFromProjection(&mCamFrustum, &mCam.Proj());
@@ -671,14 +679,14 @@ void ZeusApp::UpdateScene(float dt)
             //
             //pause for weapon animation
 
-            mCam.SetLens(0.12f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f); //setlens(zoom factor, , ,)
+            mCam.SetLens(0.12f*MathHelper::Pi, AspectRatio(), 1.0f, 5000.0f); //setlens(zoom factor, , ,)
             mCam.Walk((leftThumbY / 30000.0f) * dt * speed);
             mCam.Strafe((leftThumbX / 30000.0f) * dt * speed);
             mCam.Pitch((-rightThumbY / 102000.0f) * dt);
             mCam.RotateY((rightThumbX / 105000.0f) * dt);
         }
         else{
-            mCam.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+            mCam.SetLens(0.25f*MathHelper::Pi, AspectRatio(), 1.0f, 5000.0f);
             mCam.Walk((leftThumbY / 3000.0f) * dt * speed);
             mCam.Strafe((leftThumbX / 3000.0f) * dt * speed);
             mCam.Pitch((-rightThumbY / 12000.0f) * dt);
@@ -1239,10 +1247,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
         Effects::NormalMapFX->SetPointLights(mPointLights);
         /*Effects::NormalMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
             mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());*/
-
-        Effects::DisplacementMapFX->SetPointLights(mPointLights);
-        /*Effects::DisplacementMapFX->SetOmniShadowMaps(mOmniSmaps[0]->DepthMapSRV(), mOmniSmaps[1]->DepthMapSRV(),
-            mOmniSmaps[2]->DepthMapSRV(), mOmniSmaps[3]->DepthMapSRV(), mOmniSmaps[4]->DepthMapSRV(), mOmniSmaps[5]->DepthMapSRV());*/
     }
     else
     {
@@ -1250,7 +1254,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 
         Effects::BasicFX->SetPointLights(mNoPointLight);
         Effects::NormalMapFX->SetPointLights(mNoPointLight);
-        Effects::DisplacementMapFX->SetPointLights(mNoPointLight);
     }
 
     if(directionalLight)
@@ -1275,12 +1278,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
         //Effects::NormalMapFX->SetCubeMap(mSky->CubeMapSRV());
         Effects::NormalMapFX->SetShadowMap(mSmap->DepthMapSRV());
         Effects::NormalMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
-
-        Effects::DisplacementMapFX->SetDirLights(mDirLights);
-        Effects::DisplacementMapFX->SetEyePosW(mCam.GetPosition());
-        //Effects::DisplacementMapFX->SetCubeMap(mSky->CubeMapSRV());
-        Effects::DisplacementMapFX->SetShadowMap(mSmap->DepthMapSRV());
-        Effects::DisplacementMapFX->SetShadowMap2(mSmap2->DepthMapSRV());
     }
     else
     {
@@ -1288,7 +1285,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 
         Effects::BasicFX->SetDirLights(mNoLight);
         Effects::NormalMapFX->SetDirLights(mNoLight);
-        Effects::DisplacementMapFX->SetDirLights(mNoLight);
     }
 
     ID3D11Buffer* vbs[2] = {mSkullVB, mInstancedBuffer};
@@ -1298,14 +1294,6 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
     XMMATRIX viewProj = camera.ViewProj();
 
     float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
-
-    
-    // These properties could be set per object if needed.
-    Effects::DisplacementMapFX->SetHeightScale(0.07f);
-    Effects::DisplacementMapFX->SetMaxTessDistance(1.0f);
-    Effects::DisplacementMapFX->SetMinTessDistance(12.0f);
-    Effects::DisplacementMapFX->SetMinTessFactor(1.0f);
-    Effects::DisplacementMapFX->SetMaxTessFactor(3.0f);
  
     // Figure out which technique to use for different geometry.
     ID3DX11EffectTechnique* activeTech       = Effects::DisplacementMapFX->Light3TexTech;
@@ -1337,67 +1325,67 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
     D3DX11_TECHNIQUE_DESC techDesc;
 
     // Draw Loaded Objects
-    md3dImmediateContext->IASetInputLayout(InputLayouts::PosNormalTexTan);
-    md3dImmediateContext->IASetVertexBuffers(0, 1, &mTreeVB, &stride, &offset);
-    md3dImmediateContext->IASetIndexBuffer(mTreeIB, DXGI_FORMAT_R32_UINT, 0);
-     
-    activeObjTech->GetDesc( &techDesc );
-    for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-        //int ofs = 0;
-        // Draw the trees.
-        for(int i = 0; i < mTreecount; i++)
-        {
-            world = XMLoadFloat4x4(&mTreeWorld[i]);
-            worldInvTranspose = MathHelper::InverseTranspose(world);
-            worldViewProj = world*view*proj;
-			vector<ID3D11ShaderResourceView*> texVec;
-			vector<ID3D11ShaderResourceView*> normVec;
+   // md3dImmediateContext->IASetInputLayout(InputLayouts::PosNormalTexTan);
+   // md3dImmediateContext->IASetVertexBuffers(0, 1, &mTreeVB, &stride, &offset);
+   // md3dImmediateContext->IASetIndexBuffer(mTreeIB, DXGI_FORMAT_R32_UINT, 0);
+   //  
+   // activeObjTech->GetDesc( &techDesc );
+   // for(UINT p = 0; p < techDesc.Passes; ++p)
+   // {
+   //     //int ofs = 0;
+   //     // Draw the trees.
+   //     for(int i = 0; i < mTreecount; i++)
+   //     {
+   //         world = XMLoadFloat4x4(&mTreeWorld[i]);
+   //         worldInvTranspose = MathHelper::InverseTranspose(world);
+   //         worldViewProj = world*view*proj;
+			//vector<ID3D11ShaderResourceView*> texVec;
+			//vector<ID3D11ShaderResourceView*> normVec;
 
-			texVec.push_back(mCommandoArmor);
-			texVec.push_back(mCommandoSkin);
+			//texVec.push_back(mCommandoArmor);
+			//texVec.push_back(mCommandoSkin);
 
-			normVec.push_back(mCommandoArmorNM);
-			normVec.push_back(mCommandoSkinNM);
+			//normVec.push_back(mCommandoArmorNM);
+			//normVec.push_back(mCommandoSkinNM);
 
-            switch(mRenderOptions)
-            {
-            case RenderOptionsBasic:
-                Effects::BasicFX->SetWorld(world);
-                Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-                Effects::BasicFX->SetWorldViewProj(worldViewProj);
-                Effects::BasicFX->SetShadowTransform(world*shadowTransform);
-                Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
-                /*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
-        world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-        world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
-                Effects::BasicFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
-                Effects::BasicFX->SetMaterial(mTreeMat);
-                Effects::BasicFX->SetDiffuseMap(mTreeTexSRV);
-				Effects::BasicFX->SetTextureArray(texVec);
-                break;
-            case RenderOptionsNormalMap:
-                Effects::NormalMapFX->SetWorld(world);
-                Effects::NormalMapFX->SetWorldInvTranspose(worldInvTranspose);
-                Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
-                Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
-                Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
-                /*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
-        world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
-        world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
-                Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
-                Effects::NormalMapFX->SetMaterial(mTreeMat);
-                Effects::NormalMapFX->SetDiffuseMap(mCommandoArmor);
-                Effects::NormalMapFX->SetNormalMap(mCommandoArmorNM);
-				Effects::NormalMapFX->SetNormalArray(normVec);
-				Effects::NormalMapFX->SetTextureArray(texVec);
-                break;
-            }
+   //         switch(mRenderOptions)
+   //         {
+   //         case RenderOptionsBasic:
+   //             Effects::BasicFX->SetWorld(world);
+   //             Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
+   //             Effects::BasicFX->SetWorldViewProj(worldViewProj);
+   //             Effects::BasicFX->SetShadowTransform(world*shadowTransform);
+   //             Effects::BasicFX->SetShadowTransform2(world*shadowTransform2);
+   //             /*Effects::BasicFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+   //     world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
+   //     world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
+   //             Effects::BasicFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
+   //             Effects::BasicFX->SetMaterial(mTreeMat);
+   //             Effects::BasicFX->SetDiffuseMap(mTreeTexSRV);
+			//	Effects::BasicFX->SetTextureArray(texVec);
+   //             break;
+   //         case RenderOptionsNormalMap:
+   //             Effects::NormalMapFX->SetWorld(world);
+   //             Effects::NormalMapFX->SetWorldInvTranspose(worldInvTranspose);
+   //             Effects::NormalMapFX->SetWorldViewProj(worldViewProj);
+   //             Effects::NormalMapFX->SetShadowTransform(world*shadowTransform);
+   //             Effects::NormalMapFX->SetShadowTransform2(world*shadowTransform2);
+   //             /*Effects::NormalMapFX->SetShadowTransforms(world*XMLoadFloat4x4(&mShadowTransformOmni[0]),world*XMLoadFloat4x4(&mShadowTransformOmni[1]),
+   //     world*XMLoadFloat4x4(&mShadowTransformOmni[2]),world*XMLoadFloat4x4(&mShadowTransformOmni[3]),
+   //     world*XMLoadFloat4x4(&mShadowTransformOmni[4]),world*XMLoadFloat4x4(&mShadowTransformOmni[5]));*/
+   //             Effects::NormalMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
+   //             Effects::NormalMapFX->SetMaterial(mTreeMat);
+   //             Effects::NormalMapFX->SetDiffuseMap(mCommandoArmor);
+   //             Effects::NormalMapFX->SetNormalMap(mCommandoArmorNM);
+			//	Effects::NormalMapFX->SetNormalArray(normVec);
+			//	Effects::NormalMapFX->SetTextureArray(texVec);
+   //             break;
+   //         }
 
-            activeObjTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-            md3dImmediateContext->DrawIndexed(mTreeIndexCount, 0, 0);
-        }
-    }
+   //         activeObjTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+   //         md3dImmediateContext->DrawIndexed(mTreeIndexCount, 0, 0);
+   //     }
+   // }
 
     
 
@@ -1414,14 +1402,13 @@ void ZeusApp::DrawScene(const Camera& camera, bool drawSphere, bool drawSkull, b
 		
 		vector<ID3D11ShaderResourceView*> texVec = mFBXObjects[i]->GetTextureArray();
 		vector<ID3D11ShaderResourceView*> normVec = mFBXObjects[i]->GetNormalArray();
-		for(int j = 0; j < 5; j++)
+		for(int j = 0; j < mFBXWorldCount; j++)
 		{
 			for(UINT p = 0; p < techDesc.Passes; ++p)
 			{
 				world = XMLoadFloat4x4(&mFBXWorld[j]);
 				worldInvTranspose = MathHelper::InverseTranspose(world);
 				worldViewProj = world*view*proj;
-
 
 				switch(mRenderOptions)
 				{
@@ -2726,31 +2713,39 @@ void ZeusApp::LoadFBXBuffers()
 
 void ZeusApp::CreateFBXMatrixes()
 {
-    XMVECTOR fbxpositions[] = {
-        {	0.0f,		0.0f,		0.0f	},
-		{	100.0f,		0.0f,		-100.0f	},
-		{	80.0f,	    0.0f,	    -110.0f	},
-		{	110.0f,		0.0f,		-80.0f	},
-		{	75.0f,		0.0f,		80.0f	}
+    objectInfo fbxpsr[] = {
+        {	10.0f,	0.0f,	50.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	0.0f,	0.0f,	30.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-10.0f,	0.0f,	75.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	50.0f,	0.0f,	10.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	70.0f,	0.0f,	50.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	80.0f,	0.0f,	-30.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	30.0f,	0.0f,	-10.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	55.0f,	0.0f,	60.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	85.0f,	0.0f,	40.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	20.0f,	0.0f,	20.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	82.0f,	0.0f,	-3.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	}, 
+        {	46.0f,	0.0f,	-48.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	}, 
+        {	-35.0f,	0.0f,	-39.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	}, 
+        {	49.0f,	0.0f,	-27.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	56.0f,	0.0f,	-77.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	25.0f,	0.0f,	-72.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	14.0f,	0.0f,	-53.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-9.0f,	0.0f,	-38.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-58.0f,	0.0f,	-45.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-81.0f,	0.0f,	-23.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-99.0f,	0.0f,	-45.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	68.0f,	0.0f,	-89.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	100.0f,	0.0f,	-72.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	138.0f,	0.0f,	-36.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	120.0f,	0.0f,	4.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	79.0f,	0.0f,	84.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	32.0f,	0.0f,	95.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-3.0f,	0.0f,	104.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	},
+        {	-28.0f,	0.0f,	144.0f,	8.0,	8.0,	8.0,	0.0f,	0.0f,	0.0f	}
     };
 
-    XMVECTOR fbxscales[] = {
-        {	8.0f,		8.0f,		8.0f    },
-		{	8.0f,		8.0f,		8.0f    },
-		{	8.0f,		8.0f,		8.0f    },
-		{	8.0f,		8.0f,		8.0f    },
-		{	8.0f,		8.0f,		8.0f    }
-    };
-
-    XMVECTOR fbxrotations[] = {
-        {	0.0f,		0.0f,		0.0f	},
-		{	0.0f,		0.0f,		0.0f	},
-		{	0.0f,		0.0f,		0.0f	},
-		{	0.0f,		0.0f,		0.0f	},
-		{	0.0f,		0.0f,		0.0f	}
-    };
-
-    mFBXWorldCount = sizeof( fbxpositions ) / sizeof( XMVECTOR );
+    mFBXWorldCount = sizeof( fbxpsr ) / sizeof( objectInfo );
     mFBXWorld = new XMFLOAT4X4[mFBXWorldCount];
     mFBXMats = new Material[mFBXWorldCount];
     mFBXMats[0].Ambient  = XMFLOAT4(0.99f, 0.99f, 0.99f, 1.0f);
@@ -2761,24 +2756,18 @@ void ZeusApp::CreateFBXMatrixes()
     XMMATRIX fbxScale;
     XMMATRIX fbxOffset;
     XMMATRIX fbxRotation;
-    XMFLOAT3 fbxposition;
-    XMFLOAT3 fbxrotation;
-    XMFLOAT3 fbxscale;
 
     for(int i = 0; i < mFBXWorldCount; i++)
     {
-        XMStoreFloat3(&fbxposition, fbxpositions[i]);
-        XMStoreFloat3(&fbxrotation, fbxrotations[i]);
-        XMStoreFloat3(&fbxscale, fbxscales[i]);
-
-        fbxOffset = XMMatrixTranslation(fbxposition.x, fbxposition.y, fbxposition.z);
-        fbxScale = XMMatrixScaling(fbxscale.x, fbxscale.y, fbxscale.z);
-        fbxRotation = XMMatrixRotationX(fbxrotation.x) * XMMatrixRotationY(fbxrotation.y) * XMMatrixRotationZ(fbxrotation.z);
-
+		
+        fbxOffset = XMMatrixTranslation(fbxpsr[i].x, fbxpsr[i].y, fbxpsr[i].z);
+        fbxScale = XMMatrixScaling(fbxpsr[i].sx, fbxpsr[i].sy, fbxpsr[i].sz);
+        fbxRotation = XMMatrixRotationX(fbxpsr[i].rx) * XMMatrixRotationY(fbxpsr[i].ry) * XMMatrixRotationZ(fbxpsr[i].rz);
+		
         XMStoreFloat4x4(&mFBXWorld[i], XMMatrixMultiply(fbxScale, XMMatrixMultiply(fbxOffset, fbxRotation) ) );
         //Put into physx
-        CreatePhysXTriangleMesh(ObjectNumbers::tree, mTreeVertCount, mTreepositions,
-            mTreeIndexCount, mTreeIndices, fbxposition.x, fbxposition.y, fbxposition.z, fbxscale.x);
+		CreatePhysXTriangleMesh(ObjectNumbers::cow, mFBXObjects[0]->GetVertexCount(), mFBXObjects[0]->GetVertices(),
+			mFBXObjects[0]->GetIndexCount(), mFBXObjects[0]->GetIndices(), fbxpsr[i].x, fbxpsr[i].y, fbxpsr[i].z, fbxpsr[i].sx);
     }
 }
 

@@ -20,18 +20,19 @@ public:
 	~PhysXParticles();
 
 	void InitParticles(int maxParticles, PxPhysics* physics, PxScene* scene);
-	void CreateParticles(int count, vector<PxU32> indices, vector<PxVec3> positions);
+	void CreateParticles(int count, float x, float y, float z);
 	void ReleaseParticles();
 	void UpdateParticles();
+	vector<PxVec3> ReadParticlesPositions();
 	
 	void InitFluidParticles(int maxParticles, PxPhysics* physics, PxScene* scene);
 	void CreateFluidParticles();
 	void ReleaseFluidParticles();
 	void UpdateFluidParticles();
+	void ReadFluidParticles();
 
 private:
-	PxParticleSystem* ps;
-	PxParticleFluid* fluidps;
+	
 };
 
 #endif
