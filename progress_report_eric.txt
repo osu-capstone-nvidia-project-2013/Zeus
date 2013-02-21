@@ -1,3 +1,60 @@
+--- 2/14/12 ---
+Progress: 
+  Created cloth in Maya and Max using the PhysX plugin.
+  Created destructible objects using PhysXLab. 
+
+Todo: 
+  Rope (will be the same as cloth in Maya)
+  More more stuff in Maya and PhysXLab. 
+
+Issues: 
+  Exporting as .repx from Maya/Max.
+  Loading .repx into the engine.  
+
+
+
+
+--- 2/1/12 ---
+Progress: 
+  PhysX hooked in, boxes shooting, cheating the game timing for now. 
+
+Todo: 
+  Point light shadow map, still. 
+
+Issues: 
+  Omni-directional light shadow mapping is headache inducing.  
+
+
+
+
+--- 2/1/12 ---
+Progress: 
+  PhysX hooked in! 
+
+Todo: 
+  Fix game timing.
+
+Issues: 
+  Still having the flipped mapping in the reflection of the sphere.
+  Omni-directional light shadow mapping still not working properly. 
+
+
+
+
+--- 1/24/12 ---
+Progress: 
+  Omni-directional light.
+
+Todo: 
+  Finish shadow map for omni-directional light.
+
+Issues: 
+  Still having the flipped mapping in the reflection of the sphere.
+
+
+
+
+
 --- 1/17/12 ---
 Progress: 
   Dynamic environment mapping, particle systems, instancing, frustum culling,
@@ -13,6 +70,7 @@ Issues:
 
 
 
+
 --- 1/10/12 ---
 Progress: 
   Shadow mapping, environment mapping, tons o' stuff.
@@ -23,6 +81,7 @@ Todo:
 
 Issues: 
   Alt-Enter causes a screen refresh error, probably an easy fix. 
+
 
 
 
@@ -40,6 +99,7 @@ Blockers:
 
 
 
+
 --- 11/29/12 ---
 Progress: 
   Finished normal mapping. 
@@ -51,6 +111,7 @@ Todo:
 
 Blockers: 
   Normal mapping was difficult, but Patrick helped us through it.
+
 
 
 
@@ -67,6 +128,7 @@ Blockers:
 
 
 
+
 --- 11/08/12 ---
 Progress: 
   Milestone 1 completed. 
@@ -80,6 +142,7 @@ Todo:
 
 Blockers: 
   None.
+
 
 
 

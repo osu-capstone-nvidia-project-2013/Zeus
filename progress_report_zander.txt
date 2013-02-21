@@ -1,3 +1,29 @@
+Date: 2/14/2013
+Progress: Figured out that our tirangle mesh loader works, but we need to enable continuous collision. Also the way we create our terrain doesn't allow just loading in the triangle mesh because it is tessalated. 
+Starting Initializing particles and cloth.
+Todo: Create particles and cloth by hand.
+Blockers: Updating each vertex in a vertex buffer without recreating the buffer. Also getting another access violation error when updating the cloth particles.
+
+///////////////////////
+Date: 2/7/2013
+Progress: Initialized physx and created a box shooter. Triangle mesh loader somewhat works.
+Todo: Next I will do the particles card on trello to make smoke, then move onto the cloth, rope and water card.
+Blockers: PhysX plug in for maya would help us create attributes for our objects, but isn't installed on the lab computers (we just got maya yesterday).
+I tried installing it on my home machine but was having trouble.
+
+///////////////////////
+Date: 1/31/2013
+Progress: Omni-direction shadow map mostly works. Starting physx initialization.
+Todo: Initialize physx. Fix omni shadow map problem
+Blockers: Can't get physx to initialize. 
+
+//////////////////////
+Date: 1/24/2013
+Progress: we have a point light. Working on initializing Physx.
+Todo: Point light shadow maps, create Physx scene object. Planning demo.
+Blockers: Physx libraries conflicting with current libraries. Working on build and linking settings and creating Physx in its own project and recreating it in our graphics engine.
+
+//////////////////////
 Date: 1/17/2013
 Progress: Multiple light source shadow mapping, shadow mapping on terrain, text on screen, particle system (Based on shader),
 multiple dynamic environment maps, instanced trees

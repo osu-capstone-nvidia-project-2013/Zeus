@@ -1,3 +1,24 @@
+2-14
+Progress: modified engine to take multiple textures for objects with multiple meshes
+
+Todo: Animation loading
+
+Blocks: Midterms
+
+2-7
+Progress: Wrote an fbx loader that loads in the model vertices, normals, and indices.
+
+Todo: Load in the rest of the fbx data such as textures and animation
+
+Blocks: Midterms
+
+1-24
+Progress: Omnidirectional light
+
+Todo: omnidirectional shadows
+
+Blocks: Spent a week sick. not dead now though. All alive and mostly fixed.
+
 1-17
 Progress: On Screen Text
 

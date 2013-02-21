@@ -1,4 +1,31 @@
 =============
+2/14/2013
+
+Progress: Able to have multiple textures on a given object
+
+Todo: Convert how vertices are going to be inserted to keep it to one type as opposed to multiple
+
+Blockers: none
+
+
+
+=============
+2/4/2013
+
+Progress: Working on creating a rope in phsyx
+
+
+=============
+1/24/2013
+
+Progress: Added point light, issues with our basic shader resolved.
+
+Todo: Omni-directional shadow map
+
+Blockers: None thus far
+
+
+=============
 11/29/2012
 
 Progress: We have normal mapping. 
