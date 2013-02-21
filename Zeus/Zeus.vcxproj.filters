@@ -97,6 +97,9 @@
     <None Include="FX\Sprite.fx">
       <Filter>Effects\FX</Filter>
     </None>
+    <None Include="FX\compile.bat">
+      <Filter>Effects\FX</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">

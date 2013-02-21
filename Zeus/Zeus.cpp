@@ -376,7 +376,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mPointLights[0].Range = 40.3f;
     mPointLights[0].Att = XMFLOAT3(1.0f, .05f, .0075f);
 
-    mDirLights[0].Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+    mDirLights[0].Ambient  = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     mDirLights[0].Diffuse  = XMFLOAT4(0.7f, 0.7f, 0.6f, 1.0f);
     mDirLights[0].Specular = XMFLOAT4(0.8f, 0.8f, 0.7f, 1.0f);
     mDirLights[0].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
@@ -387,7 +387,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(116.0f), -4.0f/sqrtf(116.0f), 0.0f);
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(109.0f), -3.0f/sqrtf(109.0f), 0.0f);*/
 
-    mDirLights[1].Ambient  = XMFLOAT4(0.99f, 0.99f, 0.99f, 0.002f);
+    mDirLights[1].Ambient  = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
     mDirLights[1].Diffuse  = XMFLOAT4(0.40f, 0.40f, 0.40f, 1.0f);
     mDirLights[1].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[1].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
@@ -496,7 +496,7 @@ ZeusApp::~ZeusApp()
 bool ZeusApp::Init()
 {
     mPhysX->Init();
-	mPhysX->InitParticles(10, 0, 20, 0);
+	//mPhysX->InitParticles(10, 0, 20, 0);
 
     if(!D3DApp::Init())
         return false;
@@ -509,12 +509,12 @@ bool ZeusApp::Init()
     mSky  = new Sky(md3dDevice, L"Textures/mountains1024.dds", 5000.0f);
 
     Terrain::InitInfo tii;
-    tii.HeightMapFilename = L"Textures/terrain5.raw";
-    tii.LayerMapFilename0 = L"Textures/grass.dds";
-    tii.LayerMapFilename1 = L"Textures/darkdirt.dds";
-    tii.LayerMapFilename2 = L"Textures/stone.dds";
-    tii.LayerMapFilename3 = L"Textures/lightdirt.dds";
-    tii.LayerMapFilename4 = L"Textures/snow.dds";
+    tii.HeightMapFilename = L"Textures/terrain3.raw";
+    tii.LayerMapFilename0 = L"Textures/newdarkdirt.dds";
+    tii.LayerMapFilename1 = L"Textures/newdarkdirt.dds";
+    tii.LayerMapFilename2 = L"Textures/newstone.dds";
+    tii.LayerMapFilename3 = L"Textures/newstonepath.dds";
+    tii.LayerMapFilename4 = L"Textures/newdrydirt.dds";
     tii.BlendMapFilename = L"Textures/blend.dds";
     tii.HeightScale = 100.0f;
     tii.HeightmapWidth = 2049;
@@ -2132,25 +2132,38 @@ void ZeusApp::DrawSceneToShadowMap()
     //md3dImmediateContext->IASetVertexBuffers(0, 1, &mFBXVB, &stride, &offset);
     //md3dImmediateContext->IASetIndexBuffer(mFBXIB, DXGI_FORMAT_R32_UINT, 0);
 
-    //tessSmapTech->GetDesc( &techDesc );
-    //// Draw the FBX objects
-    //for(int i = 0; i < mFBXObjCount; i++)
-    //{
-    //    for(UINT p = 0; p < techDesc.Passes; ++p)
-    //    {
-    //        world = XMLoadFloat4x4(&mFBXWorld[i]);
-    //        worldInvTranspose = MathHelper::InverseTranspose(world);
-    //        worldViewProj = world*view*proj;
-    //    
-    //        Effects::BuildShadowMapFX->SetWorld(world);
-    //        Effects::BuildShadowMapFX->SetWorldInvTranspose(worldInvTranspose);
-    //        Effects::BuildShadowMapFX->SetWorldViewProj(worldViewProj);
-    //        Effects::BuildShadowMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
+    tessSmapTech->GetDesc( &techDesc );
+    // Draw the FBX objects
+    for(int i = 0; i < 1; i++)
+    {
+		// Draw the FBX objects
+		mFBXVB = mFBXObjects[i]->GetVB();
+		mFBXIB = mFBXObjects[i]->GetIB();
+		md3dImmediateContext->IASetInputLayout(InputLayouts::PosNormalTexTan);
+		md3dImmediateContext->IASetVertexBuffers(0, 1, &mFBXVB, &stride, &offset);
+		md3dImmediateContext->IASetIndexBuffer(mFBXIB, DXGI_FORMAT_R32_UINT, 0);
+		
+		vector<ID3D11ShaderResourceView*> texVec = mFBXObjects[i]->GetTextureArray();
+		vector<ID3D11ShaderResourceView*> normVec = mFBXObjects[i]->GetNormalArray();
+		for(int j = 0; j < mFBXWorldCount; j++)
+		{
+			for(UINT p = 0; p < techDesc.Passes; ++p)
+			{
+				world = XMLoadFloat4x4(&mFBXWorld[j]);
+				worldInvTranspose = MathHelper::InverseTranspose(world);
+				worldViewProj = world*view*proj;
 
-    //        tessSmapTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-    //        md3dImmediateContext->DrawIndexed(mFBXIndexCount[i],mFBXIndexOffset[i], mFBXVertexOffset[i]);
-    //    }
-    //}
+				Effects::BuildShadowMapFX->SetWorld(world);
+                Effects::BuildShadowMapFX->SetWorldInvTranspose(worldInvTranspose);
+                Effects::BuildShadowMapFX->SetWorldViewProj(worldViewProj);
+                Effects::BuildShadowMapFX->SetTexTransform(XMMatrixScaling(1.0f, 1.0f, 1.0f));
+        
+				tessSmapTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+				md3dImmediateContext->DrawIndexed(mFBXObjects[i]->GetIndexCount(), 0, 0);
+			}
+		}
+    }
+
 
     // Draw the grid, cylinders, and box.
     stride = sizeof(Vertex::PosNormalTexTan);

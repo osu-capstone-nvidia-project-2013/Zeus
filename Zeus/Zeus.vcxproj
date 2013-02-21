@@ -92,6 +92,7 @@
   <ItemGroup>
     <None Include="FX\Basic.fx" />
     <None Include="FX\BuildShadowMap.fx" />
+    <None Include="FX\compile.bat" />
     <None Include="FX\DebugTexture.fx" />
     <None Include="FX\DisplacementMap.fx" />
     <None Include="FX\Fire.fx" />
