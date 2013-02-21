@@ -524,7 +524,7 @@ bool ZeusApp::Init()
     mTerrain.Init(md3dDevice, md3dImmediateContext, tii);
 
     terrainMeshInfo terMesh = mTerrain.GetMeshInfo();
-    //CreatePhysXTriangleMeshTerrain(terMesh.vertcount,terMesh.positions,terMesh.indcount,terMesh.indices);
+	mPhysX->CreateTerrain("Textures/terrain5.raw");
 
     mSmap = new ShadowMap(md3dDevice, SMapSize, SMapSize);
     mSmap2 = new ShadowMap(md3dDevice, SMapSize, SMapSize);
@@ -2898,7 +2898,7 @@ void ZeusApp::CreatePhysXTriangleMeshTerrain( int numVerts, std::vector<XMFLOAT3
         indices[i] = inds[i];
     }
 
-    mPhysX->CreateTerrain(numVerts,vertices,numInds,indices);
+    //mPhysX->CreateTerrain(numVerts,vertices,numInds,indices);
     delete [] indices;
     delete [] vertices;
 }

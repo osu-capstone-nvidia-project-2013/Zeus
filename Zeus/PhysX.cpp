@@ -125,6 +125,12 @@ void PhysX::Init()
 	if (!plane)
 		return;
 	
+	//CCD
+	PxShape** shapes = new PxShape*[1];
+	plane->getShapes(shapes, 1, 0);
+	shapes[0]->setFlag(PxShapeFlag::ePARTICLE_DRAIN, true);
+	delete [] shapes;
+
 	pxScene->addActor(*plane);
 	
 }
@@ -153,36 +159,11 @@ void PhysX::fetch()
     pxScene->fetchResults(true);
 }
 
-void PhysX::CreateTerrain( int numVerts, PxVec3* verts, int numInds, int* inds)
+
+void PhysX::CreateTerrain( const char* filename)
 {
-	PxRigidStatic* meshActor = pxPhysics->createRigidStatic(PxTransform::createIdentity());
-	PxShape* meshShape;
-	if(meshActor)
-	{
-			
-			PxTriangleMeshDesc meshDesc;
-			meshDesc.points.count           = numVerts;
-			meshDesc.points.stride          = sizeof(PxVec3);
-			meshDesc.points.data            = verts;
-
-			meshDesc.triangles.count        = numInds/3.;
-			meshDesc.triangles.stride       = 3*sizeof(int);
-			meshDesc.triangles.data         = inds;
-
-			PxToolkit::MemoryOutputStream writeBuffer;
-			bool status = pxCooking->cookTriangleMesh(meshDesc, writeBuffer);
-			if(!status)
-				return;
-
-			PxToolkit::MemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
-			
-			PxTriangleMeshGeometry triGeom;
-			triGeom.triangleMesh = pxPhysics->createTriangleMesh(readBuffer);
-
-			meshShape = meshActor->createShape(triGeom, *defaultMaterial);
-
-			pxScene->addActor(*meshActor);
-	}
+	PhysXHeightfield heightfield;
+	heightfield.InitHeightfield(pxPhysics, pxScene, filename);
 }
 
 int nv,ni;
@@ -333,11 +314,19 @@ PxTransform PhysX::GetBoxWorld(int boxnum)
 	return pt;
 }
 
-void PhysX::InitParticles(int count, float x, float y, float z, float vx, float vy, float vz, bool gravity)
-{
-	PhysXParticles particles;
-	//particles.InitParticles(count, pxPhysics, pxScene);
-	//particles.CreateParticles();
+vector<PhysXParticles> mParticles;
 
-	//mParticles.push_back(particles);
+void PhysX::InitParticles(int count, float x, float y, float z)
+{
+	/*PhysXParticles particles;
+	
+	particles.InitParticles(count, pxPhysics, pxScene);
+	particles.CreateParticles(count, x, y, z);
+
+	mParticles.push_back(particles);*/
+}
+
+vector<PxVec3> GetParticlePositions()
+{
+	return mParticles[0].ReadParticlesPositions();
 }

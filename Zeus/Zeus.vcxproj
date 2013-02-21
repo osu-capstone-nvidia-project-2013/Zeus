@@ -117,6 +117,7 @@
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="PhysX.h" />
+    <ClInclude Include="PhysXHeightField.h" />
     <ClInclude Include="PhysXParticles.h" />
     <ClInclude Include="RenderStates.h" />
     <ClInclude Include="ShadowMap.h" />
@@ -141,6 +142,7 @@
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="PhysX.cpp" />
+    <ClCompile Include="PhysXHeightField.cpp" />
     <ClCompile Include="PhysXParticles.cpp" />
     <ClCompile Include="RenderStates.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
