@@ -157,7 +157,7 @@ void Terrain::Draw(ID3D11DeviceContext* dc, const Camera& cam, DirectionalLight 
 	Effects::TerrainFX->SetFogRange(175.0f);
 	Effects::TerrainFX->SetMinDist(20.0f);
 	Effects::TerrainFX->SetMaxDist(500.0f);
-	Effects::TerrainFX->SetMinTess(0.0f);
+	Effects::TerrainFX->SetMinTess(5.0f);
 	Effects::TerrainFX->SetMaxTess(5.0f);
 	Effects::TerrainFX->SetTexelCellSpaceU(1.0f / mInfo.HeightmapWidth);
 	Effects::TerrainFX->SetTexelCellSpaceV(1.0f / mInfo.HeightmapHeight);

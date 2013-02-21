@@ -509,7 +509,7 @@ bool ZeusApp::Init()
     mSky  = new Sky(md3dDevice, L"Textures/mountains1024.dds", 5000.0f);
 
     Terrain::InitInfo tii;
-    tii.HeightMapFilename = L"Textures/terrain3.raw";
+    tii.HeightMapFilename = L"Textures/terrain5.raw";
     tii.LayerMapFilename0 = L"Textures/newdarkdirt.dds";
     tii.LayerMapFilename1 = L"Textures/newdarkdirt.dds";
     tii.LayerMapFilename2 = L"Textures/newstone.dds";
