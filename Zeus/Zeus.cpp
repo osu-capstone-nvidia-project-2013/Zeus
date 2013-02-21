@@ -376,7 +376,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mPointLights[0].Range = 40.3f;
     mPointLights[0].Att = XMFLOAT3(1.0f, .05f, .0075f);
 
-    mDirLights[0].Ambient  = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+    mDirLights[0].Ambient  = XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f);
     mDirLights[0].Diffuse  = XMFLOAT4(0.7f, 0.7f, 0.6f, 1.0f);
     mDirLights[0].Specular = XMFLOAT4(0.8f, 0.8f, 0.7f, 1.0f);
     mDirLights[0].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
@@ -387,7 +387,7 @@ ZeusApp::ZeusApp(HINSTANCE hInstance)
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(116.0f), -4.0f/sqrtf(116.0f), 0.0f);
     mDirLights[0].Direction = XMFLOAT3(10.0f/sqrtf(109.0f), -3.0f/sqrtf(109.0f), 0.0f);*/
 
-    mDirLights[1].Ambient  = XMFLOAT4(0.99f, 0.99f, 0.99f, 0.002f);
+    mDirLights[1].Ambient  = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
     mDirLights[1].Diffuse  = XMFLOAT4(0.40f, 0.40f, 0.40f, 1.0f);
     mDirLights[1].Specular = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
     mDirLights[1].Direction = XMFLOAT3(-0.57735f, -0.57735f, 0.57735f);
@@ -524,7 +524,7 @@ bool ZeusApp::Init()
     mTerrain.Init(md3dDevice, md3dImmediateContext, tii);
 
     terrainMeshInfo terMesh = mTerrain.GetMeshInfo();
-    //CreatePhysXTriangleMeshTerrain(terMesh.vertcount,terMesh.positions,terMesh.indcount,terMesh.indices);
+	mPhysX->CreateTerrain("Textures/terrain5.raw");
 
     mSmap = new ShadowMap(md3dDevice, SMapSize, SMapSize);
     mSmap2 = new ShadowMap(md3dDevice, SMapSize, SMapSize);
@@ -2885,7 +2885,7 @@ void ZeusApp::CreatePhysXTriangleMeshTerrain( int numVerts, std::vector<XMFLOAT3
         indices[i] = inds[i];
     }
 
-    mPhysX->CreateTerrain(numVerts,vertices,numInds,indices);
+    //mPhysX->CreateTerrain(numVerts,vertices,numInds,indices);
     delete [] indices;
     delete [] vertices;
 }

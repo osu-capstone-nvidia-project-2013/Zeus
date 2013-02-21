@@ -12,6 +12,7 @@
 #include < extensions/PxDefaultAllocator.h > 
 #include < PxToolkit.h >
 #include "PhysXParticles.h"
+#include "PhysXHeightField.h"
 
 #include <vector>
 
@@ -48,7 +49,7 @@ public:
 	bool advance(float dt);
     void fetch();
 
-	void CreateTerrain( int numVerts, PxVec3* verts, int numInds, int* inds);
+	void CreateTerrain( const char* filename );
 
 	void SetupTriangleMesh(	ObjectNumbers objnum, int numVerts, PxVec3* verts,
 							int numInds, int* inds, float x, float y, float z, float scale);
@@ -59,7 +60,8 @@ public:
 	PxTransform GetBoxWorld(int boxnum);
     int GetNumBoxes();
 
-	void InitParticles(int count, float x, float y, float z, float vx, float vy, float vz, bool gravity);
+	void InitParticles(int count, float x, float y, float z);
+	vector<PxVec3> GetParticlePositions();
 
 public:
     PxFoundation*					mFoundation;

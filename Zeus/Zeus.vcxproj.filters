@@ -168,6 +168,9 @@
     <ClInclude Include="FBXObj.h">
       <Filter>Objects\FBX</Filter>
     </ClInclude>
+    <ClInclude Include="PhysXHeightField.h">
+      <Filter>PhysX\PhysXHeightField</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Zeus.cpp" />
@@ -236,6 +239,9 @@
     </ClCompile>
     <ClCompile Include="FBXObj.cpp">
       <Filter>Objects\FBX</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysXHeightField.cpp">
+      <Filter>PhysX\PhysXHeightField</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

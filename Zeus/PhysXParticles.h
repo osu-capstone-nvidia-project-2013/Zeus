@@ -13,6 +13,11 @@
 using namespace std;
 using namespace physx;
 
+struct Emitter
+{
+
+};
+
 class PhysXParticles
 {
 public:
