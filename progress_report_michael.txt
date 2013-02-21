@@ -1,3 +1,10 @@
+2-21
+Progress: Reading up on implementing animations ( how to store the information from fbx file, how to use it etc )
+
+Todo: Animation Loading
+
+Blocks: shadow debugging
+
 2-14
 Progress: modified engine to take multiple textures for objects with multiple meshes
 
