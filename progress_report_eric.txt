@@ -1,5 +1,20 @@
 --- 2/14/12 ---
 Progress: 
+  Hacking away at repx loading.
+
+Todo: 
+  Get repx loaded and attached to a model
+  from Maya.
+
+Issues: 
+  Lack of information about loading repx.
+
+
+
+
+
+--- 2/14/12 ---
+Progress: 
   Created cloth in Maya and Max using the PhysX plugin.
   Created destructible objects using PhysXLab. 
 
