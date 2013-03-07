@@ -1,8 +1,12 @@
 3-7
-Progress: Bug fixes. Changed the fire to only update at a 6th of the rate when in the cubemap. I could also create
-another fire particle system with less detail for the cubemap as well. We were having an issue with alpha textures
-getting clipped in odd ways. This has been dealt with by moving the blending setting up in the draw scene. Also added
-alpha textures to shadow maps for better tree shadows
+Progress: Bug fixes. 
+-Changed the fire to only update at a 6th of the rate when in the cubemap. I could also create
+ another fire particle system with less detail for the cubemap as well.
+-We were having an issue with alpha textures getting clipped in odd ways. This has been dealt with by moving the blending
+ setting up to the top of the draw function.
+-added alpha textures to shadow maps for better tree shadows
+-got rid of shadowmap bounding box creating a dark area over the world.
+-moved second dirlight so that it is twice as high as first dirlight so that we see low quality shadows farther away
 
 Todo: Animations loading
 
