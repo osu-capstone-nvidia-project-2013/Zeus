@@ -1,3 +1,9 @@
+Date: 3/7/2013
+Progress: Implementing Apex SDK 1.2. Downgraded our physX version from 3.2.3 to 3.2.2 so Apex could support it. Working on making a small apex focused project to make it work, then will integrate it with the rest of the engine.
+Todo: Init Apex, Apex Particles, RepX loading.
+Blockers: Apex SDK wants a resource manager that inherits from the NxUserResourceManager, as well as an error reporting system too. Trying to rip from the samples but thier resource manager is huge, and creating my own may take a while.
+
+///////////////////////
 Date: 2/14/2013
 Progress: Figured out that our tirangle mesh loader works, but we need to enable continuous collision. Also the way we create our terrain doesn't allow just loading in the triangle mesh because it is tessalated. 
 Starting Initializing particles and cloth.
