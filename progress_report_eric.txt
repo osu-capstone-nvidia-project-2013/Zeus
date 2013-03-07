@@ -1,3 +1,18 @@
+--- 3/7/12 ---
+Progress: 
+  Hacking away at repx loading.
+
+Todo: 
+  Get repx loaded and attached to a model
+  from Maya.
+
+Issues: 
+  Lack of information about loading repx.
+
+
+
+
+
 --- 2/14/12 ---
 Progress: 
   Hacking away at repx loading.
