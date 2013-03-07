@@ -1,7 +1,8 @@
 3-7
 Progress: Bug fixes. Changed the fire to only update at a 6th of the rate when in the cubemap. I could also create
 another fire particle system with less detail for the cubemap as well. We were having an issue with alpha textures
-getting clipped in odd ways. This has been dealt with by moving the blending setting up in the draw scene. 
+getting clipped in odd ways. This has been dealt with by moving the blending setting up in the draw scene. Also added
+alpha textures to shadow maps for better tree shadows
 
 Todo: Animations loading
 
