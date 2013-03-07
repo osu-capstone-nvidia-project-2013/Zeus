@@ -1,3 +1,11 @@
+3/7/2013
+
+Progress: Have a good idea for motion blur, started implementation
+
+Todo: Complete motion blur
+
+Blockers: Other classes having projects and midterms this week
+
 =============
 2/14/2013
 
