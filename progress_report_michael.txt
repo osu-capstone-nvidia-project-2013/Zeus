@@ -1,3 +1,12 @@
+3-7
+Progress: Bug fixes. Changed the fire to only update at a 6th of the rate when in the cubemap. I could also create
+another fire particle system with less detail for the cubemap as well. We were having an issue with alpha textures
+getting clipped in odd ways. This has been dealt with by moving the blending setting up in the draw scene. 
+
+Todo: Animations loading
+
+Blocks: Midterms and Projects due this week oh boy. and cat poster
+
 2-21
 Progress: Reading up on implementing animations ( how to store the information from fbx file, how to use it etc )
 
