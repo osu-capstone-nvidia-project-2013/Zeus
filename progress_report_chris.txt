@@ -4,7 +4,7 @@ Progress: Created a side project for implementing the motion blur effect from GP
 
 Todo: Finish motion blur and continue working on bokeh filter and depth of field. 
 
-Blockers: http://www.youtube.com/watch?v=pUjh9Id6Id8
+Blockers: (NSFW sorta) http://www.youtube.com/watch?v=pUjh9Id6Id8
 
 =============
 
