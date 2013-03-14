@@ -1,3 +1,10 @@
+3-14
+Progress: tweaks
+
+Todo: work on project
+
+Blocks: Final Projects and studying for finals
+
 3-7
 Progress: Bug fixes. 
 -Changed the fire to only update at a 6th of the rate when in the cubemap. I could also create
