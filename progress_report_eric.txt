@@ -3,7 +3,7 @@ Progress:
   See issues.
 
 Todo: 
-  Get PhysX/APEX loaded and attached to a model
+  Get PhysX/APEX loaded and attached to a model 
   from Maya. 
 
 Issues: 
