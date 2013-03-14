@@ -1,3 +1,9 @@
+Date: 3/14/2013
+Progress: Working with Patrick on Apex SDK implementation. Slow progress.
+Todo: Implement the RenderResourceManager and all RenderResource classes. After that, get an apex module working, such as particles.
+Blockers: Working on syntax and required functionality of virtual functions.
+
+///////////////////////
 Date: 3/7/2013
 Progress: Implementing Apex SDK 1.2. Downgraded our physX version from 3.2.3 to 3.2.2 so Apex could support it. Working on making a small apex focused project to make it work, then will integrate it with the rest of the engine.
 Todo: Init Apex, Apex Particles, RepX loading.
