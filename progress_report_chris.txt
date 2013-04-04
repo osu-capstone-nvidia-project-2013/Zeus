@@ -1,3 +1,12 @@
+4/4/2013
+
+Progress: Motion Blur side project working
+
+Todo: Begin to plan code refactor for ease of implementation of APEX/PhysX features 
+
+
+=============
+
 3/14/2013
 
 Progress: Created a side project for implementing the motion blur effect from GPU Gems 3, should complete soon
