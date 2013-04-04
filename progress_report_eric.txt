@@ -1,3 +1,17 @@
+--- 4/4/12 ---
+Progress: 
+  Working on a fluid emitter.
+
+Todo: 
+  Get PhysX/APEX loaded and attached to a model 
+  from Maya. 
+
+Issues: 
+  APEX
+
+
+
+
 --- 3/14/12 ---
 Progress: 
   See issues.
