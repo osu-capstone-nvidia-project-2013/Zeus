@@ -1,3 +1,10 @@
+4-4
+Progress: Motion Blur using velocity maps and creating sample programs useful for testing
+
+Todo: Depth of Field
+
+Blocks: Debugging time
+
 3-14
 Progress: tweaks
 
