@@ -1,3 +1,12 @@
+Date: 4/4/2013
+Progress: Finally have deserialized an apb file into an asset in the physx scene. See https://www.youtube.com/watch?v=5mpV6mAAPFg for a video of it running in physx visual debugger!
+Todo: Here is what I need to do to get the particles rendered:
+  - convert a sprite buffer to a vertex buffer made up of quads at sprite's positions 
+  - write to a sprite buffer / vertex buffer (giving me errors right now)
+  - create a shader to make the quds screen aligned
+  - Render it! Then after a colored quad, add textures with Default material library
+
+///////////////////////
 Date: 3/14/2013
 Progress: Working with Patrick on Apex SDK implementation. Slow progress.
 Todo: Implement the RenderResourceManager and all RenderResource classes. After that, get an apex module working, such as particles.
