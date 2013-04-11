@@ -1,3 +1,16 @@
+--- 4/11/12 ---
+Progress: 
+  APEX Particles, Code Refactoring.
+
+Todo: 
+  Load APEX Clothing and Destructibles. 
+
+Issues: 
+  Time.
+
+
+
+
 --- 4/4/12 ---
 Progress: 
   Working on a fluid emitter.
