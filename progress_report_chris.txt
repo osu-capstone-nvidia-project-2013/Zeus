@@ -1,3 +1,22 @@
+
+4/4/2013
+
+Progress: -Depth of field is working at a somewhat satisfactory level, some tweaking is needed. 
+          -Transferring motion blur over wasn't as smooth as it hoped to be
+          -So far, refactoring of code has proved to be beneficial, allowing the ease of APEX/PhsyX integration
+                    + What has been succesfully added:
+                      - Object loader
+                      - Render to full screen quad
+                      - Sky box
+                      - Camera controls
+
+Todo:     -Continue push to add features to complete the refactoring.
+          -Figure out issues with motion blur
+
+Blockers: Nothing we haven't gotten through
+
+
+=============
 4/4/2013
 
 Progress: Motion Blur side project working
