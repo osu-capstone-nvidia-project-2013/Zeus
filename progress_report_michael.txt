@@ -1,3 +1,10 @@
+4-11
+Progress: Most of the engine has been rewritten
+
+Todo: Properly port over the depth of field and the motion blur
+
+Blocks: Depth stencil broke between version, debugging nightmare
+
 4-4
 Progress: Motion Blur using velocity maps and creating sample programs useful for testing
 
